@@ -8,9 +8,8 @@ import (
 )
 
 const (
-	SampleDataFormat  = 1
-	CounterDataFormat = 2
-	FlowDataFormat    = 3
+	SampleDataFormat  = 1 // Packet Flow Sampling
+	CounterDataFormat = 2 // Counter Sampling
 )
 
 type SFDecoder struct {
@@ -50,8 +49,10 @@ func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 	var (
 		datagram     = &SFDatagram{}
-		ipLen    int = 4
-		err      error
+		formatSample uint32
+		lengthSample uint32
+		ipLen        int = 4
+		err          error
 	)
 
 	if err = binary.Read(d.reader, binary.BigEndian, &datagram.Version); err != nil {
@@ -89,29 +90,30 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		return nil, err
 	}
 
-	fmt.Printf("%#v\n", datagram)
-
-	var (
-		format uint32
-		length uint32
-	)
-
+	// decode sample(s)
 	for i := uint32(0); i < datagram.SamplesNo; i++ {
-		if err = binary.Read(d.reader, binary.BigEndian, &format); err != nil {
+		if err = binary.Read(d.reader, binary.BigEndian, &formatSample); err != nil {
 			return nil, err
 		}
-		if err = binary.Read(d.reader, binary.BigEndian, &length); err != nil {
+		if err = binary.Read(d.reader, binary.BigEndian, &lengthSample); err != nil {
 			return nil, err
 		}
 
-		if m := d.isFilterMatch(format); m {
-			d.reader.Seek(int64(length), 1)
+		if m := d.isFilterMatch(formatSample); m {
+			d.reader.Seek(int64(lengthSample), 1)
 			continue
 		}
 
-		// TODO
-		println("sample", format, length)
-		d.reader.Seek(int64(length), 1)
+		switch formatSample {
+		case SampleDataFormat:
+			// TODO
+			d.reader.Seek(int64(lengthSample), 1)
+		case CounterDataFormat:
+			// TODO
+		default:
+			d.reader.Seek(int64(lengthSample), 1)
+
+		}
 	}
 
 	return datagram, nil
