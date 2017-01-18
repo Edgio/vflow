@@ -7,8 +7,15 @@ import (
 	"net"
 )
 
+const (
+	SampleDataFormat  = 1
+	CounterDataFormat = 2
+	FlowDataFormat    = 3
+)
+
 type SFDecoder struct {
 	reader io.ReadSeeker
+	filter []uint32 // Filter data format(s)
 }
 
 type SFDatagram struct {
@@ -19,8 +26,7 @@ type SFDatagram struct {
 	SysUpTime  uint32 // Current time (in milliseconds since device last booted
 	SamplesNo  uint32 // Number of samples
 
-	IPAddress  net.IP // Agent IP address
-	FilterType []int
+	IPAddress net.IP // Agent IP address
 }
 
 type SFSampledHeader struct {
@@ -34,8 +40,11 @@ type SFSampledHeader struct {
 type SFSample interface {
 }
 
-func NewSFDecoder(r io.ReadSeeker) SFDecoder {
-	return SFDecoder{r}
+func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
+	return SFDecoder{
+		reader: r,
+		filter: f,
+	}
 }
 
 func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
@@ -82,5 +91,37 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 	fmt.Printf("%#v\n", datagram)
 
+	var (
+		format uint32
+		length uint32
+	)
+
+	for i := uint32(0); i < datagram.SamplesNo; i++ {
+		if err = binary.Read(d.reader, binary.BigEndian, &format); err != nil {
+			return nil, err
+		}
+		if err = binary.Read(d.reader, binary.BigEndian, &length); err != nil {
+			return nil, err
+		}
+
+		if m := d.isFilterMatch(format); m {
+			d.reader.Seek(int64(length), 1)
+			continue
+		}
+
+		// TODO
+		println("sample", format, length)
+		d.reader.Seek(int64(length), 1)
+	}
+
 	return datagram, nil
+}
+
+func (d *SFDecoder) isFilterMatch(f uint32) bool {
+	for _, v := range d.filter {
+		if v == f {
+			return true
+		}
+	}
+	return false
 }
