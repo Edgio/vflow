@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	SampleDataFormat  = 1 // Packet Flow Sampling
-	CounterDataFormat = 2 // Counter Sampling
+	DataFlowSample    = 1 // Packet Flow Sampling
+	DataCounterSample = 2 // Counter Sampling
 )
 
 type SFDecoder struct {
@@ -36,8 +36,7 @@ type SFSampledHeader struct {
 	HeaderBytes    []byte // Header bytes
 }
 
-type SFSample interface {
-}
+type SFSample interface{}
 
 func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 	return SFDecoder{
@@ -55,7 +54,7 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		err          error
 	)
 
-	if err = binary.Read(d.reader, binary.BigEndian, &datagram.Version); err != nil {
+	if err = read(d.reader, &datagram.Version); err != nil {
 		return nil, err
 	}
 
@@ -63,7 +62,7 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		return nil, fmt.Errorf("sflow version doesn't support")
 	}
 
-	if err = binary.Read(d.reader, binary.BigEndian, &datagram.IPVersion); err != nil {
+	if err = read(d.reader, &datagram.IPVersion); err != nil {
 		return nil, err
 	}
 
@@ -77,25 +76,25 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 	}
 	datagram.IPAddress = buff
 
-	if err = binary.Read(d.reader, binary.BigEndian, &datagram.AgentSubId); err != nil {
+	if err = read(d.reader, &datagram.AgentSubId); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(d.reader, binary.BigEndian, &datagram.SequenceNo); err != nil {
+	if err = read(d.reader, &datagram.SequenceNo); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(d.reader, binary.BigEndian, &datagram.SysUpTime); err != nil {
+	if err = read(d.reader, &datagram.SysUpTime); err != nil {
 		return nil, err
 	}
-	if err = binary.Read(d.reader, binary.BigEndian, &datagram.SamplesNo); err != nil {
+	if err = read(d.reader, &datagram.SamplesNo); err != nil {
 		return nil, err
 	}
 
-	// decode sample(s)
+	// decode sample(s) - loop over sample records
 	for i := uint32(0); i < datagram.SamplesNo; i++ {
-		if err = binary.Read(d.reader, binary.BigEndian, &formatSample); err != nil {
+		if err = read(d.reader, &formatSample); err != nil {
 			return nil, err
 		}
-		if err = binary.Read(d.reader, binary.BigEndian, &lengthSample); err != nil {
+		if err = read(d.reader, &lengthSample); err != nil {
 			return nil, err
 		}
 
@@ -105,10 +104,10 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		}
 
 		switch formatSample {
-		case SampleDataFormat:
-			// TODO
+		case DataFlowSample:
+			decodeFlowSample(d.reader)
 			d.reader.Seek(int64(lengthSample), 1)
-		case CounterDataFormat:
+		case DataCounterSample:
 			// TODO
 		default:
 			d.reader.Seek(int64(lengthSample), 1)
@@ -126,4 +125,8 @@ func (d *SFDecoder) isFilterMatch(f uint32) bool {
 		}
 	}
 	return false
+}
+
+func read(r io.ReadSeeker, v interface{}) error {
+	return binary.Read(r, binary.BigEndian, v)
 }
