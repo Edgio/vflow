@@ -2,7 +2,7 @@ package sflow
 
 import (
 	"encoding/binary"
-	"fmt"
+	"errors"
 	"io"
 	"net"
 )
@@ -38,6 +38,12 @@ type SFSampledHeader struct {
 
 type SFSample interface{}
 
+var (
+	nonEnterpriseStandard = errors.New("the enterprise is not standard sflow data")
+	dataLengthUnknown     = errors.New("the sflow data length is unknown")
+	sfVersionNotSupport   = errors.New("the sflow version doesn't support")
+)
+
 func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 	return SFDecoder{
 		reader: r,
@@ -48,10 +54,8 @@ func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 	var (
 		datagram     = &SFDatagram{}
-		formatSample uint32
-		lengthSample uint32
-		ipLen        int = 4
-		err          error
+		ipLen    int = 4
+		err      error
 	)
 
 	if err = read(d.reader, &datagram.Version); err != nil {
@@ -59,7 +63,7 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 	}
 
 	if datagram.Version != 5 {
-		return nil, fmt.Errorf("sflow version doesn't support")
+		return nil, sfVersionNotSupport
 	}
 
 	if err = read(d.reader, &datagram.IPVersion); err != nil {
@@ -91,31 +95,56 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 	// decode sample(s) - loop over sample records
 	for i := uint32(0); i < datagram.SamplesNo; i++ {
-		if err = read(d.reader, &formatSample); err != nil {
-			return nil, err
-		}
-		if err = read(d.reader, &lengthSample); err != nil {
-			return nil, err
-		}
-
-		if m := d.isFilterMatch(formatSample); m {
-			d.reader.Seek(int64(lengthSample), 1)
-			continue
-		}
-
-		switch formatSample {
-		case DataFlowSample:
-			decodeFlowSample(d.reader)
-			d.reader.Seek(int64(lengthSample), 1)
-		case DataCounterSample:
-			// TODO
-		default:
-			d.reader.Seek(int64(lengthSample), 1)
-
-		}
+		d.decodeSample()
 	}
 
 	return datagram, nil
+}
+
+func (d *SFDecoder) decodeSample() error {
+	var (
+		sfType           uint32
+		sfTypeFormat     uint32
+		sfTypeEnterprise uint32
+		sfDataLength     uint32
+
+		err error
+	)
+
+	if err = read(d.reader, &sfType); err != nil {
+		return err
+	}
+
+	sfTypeEnterprise = sfType >> 12 // 20 bytes enterprise
+	sfTypeFormat = sfType & 4095    // 12 bytes format
+
+	// supports standard sflow data
+	if sfTypeEnterprise != 0 {
+		d.reader.Seek(int64(sfDataLength), 1)
+		return nonEnterpriseStandard
+	}
+
+	if err = read(d.reader, &sfDataLength); err != nil {
+		return dataLengthUnknown
+	}
+
+	if m := d.isFilterMatch(sfTypeFormat); m {
+		d.reader.Seek(int64(sfDataLength), 1)
+		return err // TODO
+	}
+
+	switch sfTypeFormat {
+	case DataFlowSample:
+		decodeFlowSample(d.reader)
+		d.reader.Seek(int64(sfDataLength), 1)
+	case DataCounterSample:
+		// TODO
+	default:
+		d.reader.Seek(int64(sfDataLength), 1)
+
+	}
+
+	return nil
 }
 
 func (d *SFDecoder) isFilterMatch(f uint32) bool {
