@@ -160,6 +160,6 @@ func (d *SFDecoder) isFilterMatch(f uint32) bool {
 	return false
 }
 
-func read(r io.ReadSeeker, v interface{}) error {
+func read(r io.Reader, v interface{}) error {
 	return binary.Read(r, binary.BigEndian, v)
 }

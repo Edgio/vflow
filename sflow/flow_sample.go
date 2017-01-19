@@ -27,13 +27,21 @@ const (
 
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
-	SourceId     byte
-	SamplingRate uint32
-	SamplePool   uint32
-	Drops        uint32
-	Input        uint32
-	Output       uint32
-	RecordsNo    uint32
+	SourceId     byte   // fsSourceId
+	SamplingRate uint32 // fsPacketSamplingRate
+	SamplePool   uint32 // Total number of packets that could have been sampled
+	Drops        uint32 // Number of times a packet was dropped due to lack of resources
+	Input        uint32 // SNMP ifIndex of input interface
+	Output       uint32 // SNMP ifIndex of input interface
+	RecordsNo    uint32 // Number of records to follow
+}
+
+type SampledHeader struct {
+	Protocol     uint32 // (enum SFLHeader_protocol)
+	FrameLength  uint32 // Original length of packet before sampling
+	Stripped     uint32 // Header/trailer bytes stripped by sender
+	HeaderLength uint32 // Length of sampled header bytes to follow
+	Header       []byte // Header bytes
 }
 
 func decodeFlowSample(r io.ReadSeeker) error {
@@ -103,8 +111,39 @@ func decodeFlowSample(r io.ReadSeeker) error {
 	return nil
 }
 
-func decodeSampledHeader(r io.Reader) {
+func decodeSampledHeader(r io.Reader) error {
 	// TODO
+	var (
+		h   = new(SampledHeader)
+		err error
+	)
+	if err = read(r, &h.Protocol); err != nil {
+		return err
+	}
+
+	if err = read(r, &h.FrameLength); err != nil {
+		return err
+	}
+
+	if err = read(r, &h.Stripped); err != nil {
+		return err
+	}
+
+	if err = read(r, &h.HeaderLength); err != nil {
+		return err
+	}
+
+	// TODO: make sure the padding works!!
+	// cut off a header length mod 4 == 0 number of bytes
+	tmp := 4 - (h.HeaderLength % 4)
+
+	h.Header = make([]byte, h.HeaderLength+tmp)
+	r.Read(h.Header)
+	h.Header = h.Header[:h.HeaderLength]
+
+	fmt.Printf("%#v\n", h)
+
+	return nil
 }
 
 func decodeSampledExtSwitch(r io.Reader) {
