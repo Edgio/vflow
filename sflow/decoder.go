@@ -95,7 +95,10 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 	// decode sample(s) - loop over sample records
 	for i := uint32(0); i < datagram.SamplesNo; i++ {
-		d.decodeSample()
+		if err = d.decodeSample(); err != nil {
+			// TODO
+			continue
+		}
 	}
 
 	return datagram, nil
@@ -138,6 +141,7 @@ func (d *SFDecoder) decodeSample() error {
 		decodeFlowSample(d.reader)
 		d.reader.Seek(int64(sfDataLength), 1)
 	case DataCounterSample:
+		d.reader.Seek(int64(sfDataLength), 1)
 		// TODO
 	default:
 		d.reader.Seek(int64(sfDataLength), 1)
