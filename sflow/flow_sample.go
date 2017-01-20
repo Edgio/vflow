@@ -1,6 +1,7 @@
 package sflow
 
 import (
+	"errors"
 	"fmt"
 	"io"
 )
@@ -43,6 +44,10 @@ type SampledHeader struct {
 	HeaderLength uint32 // Length of sampled header bytes to follow
 	Header       []byte // Header bytes
 }
+
+var (
+	maxOutEthernetLength = errors.New("the ethernet lenght is greater than 1500")
+)
 
 func decodeFlowSample(r io.ReadSeeker) error {
 	var (
@@ -133,9 +138,18 @@ func decodeSampledHeader(r io.Reader) error {
 		return err
 	}
 
+	println("Header Len:", h.HeaderLength)
+
+	if h.HeaderLength > 1500 {
+		return maxOutEthernetLength
+	}
+
 	// TODO: make sure the padding works!!
 	// cut off a header length mod 4 == 0 number of bytes
-	tmp := 4 - (h.HeaderLength % 4)
+	tmp := (4 - h.HeaderLength) % 4
+	if tmp < 0 {
+		tmp += 4
+	}
 
 	h.Header = make([]byte, h.HeaderLength+tmp)
 	if _, err = r.Read(h.Header); err != nil {
@@ -144,7 +158,12 @@ func decodeSampledHeader(r io.Reader) error {
 
 	h.Header = h.Header[:h.HeaderLength]
 
-	fmt.Printf("%#v\n", h)
+	//fmt.Printf("%#v\n", h)
+	d, err := decodeISO88023(h.Header)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("%#v\n", d)
 
 	return nil
 }
