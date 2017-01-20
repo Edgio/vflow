@@ -139,7 +139,6 @@ func (d *SFDecoder) decodeSample() error {
 	switch sfTypeFormat {
 	case DataFlowSample:
 		decodeFlowSample(d.reader)
-		d.reader.Seek(int64(sfDataLength), 1)
 	case DataCounterSample:
 		d.reader.Seek(int64(sfDataLength), 1)
 		// TODO
