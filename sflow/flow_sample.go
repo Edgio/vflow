@@ -138,7 +138,10 @@ func decodeSampledHeader(r io.Reader) error {
 	tmp := 4 - (h.HeaderLength % 4)
 
 	h.Header = make([]byte, h.HeaderLength+tmp)
-	r.Read(h.Header)
+	if _, err = r.Read(h.Header); err != nil {
+		return err
+	}
+
 	h.Header = h.Header[:h.HeaderLength]
 
 	fmt.Printf("%#v\n", h)
