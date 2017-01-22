@@ -1,4 +1,4 @@
-package sflow
+package packet
 
 import (
 	"errors"

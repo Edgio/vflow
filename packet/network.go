@@ -1,4 +1,4 @@
-package sflow
+package packet
 
 import (
 	"errors"
@@ -183,4 +183,8 @@ func decodeIEEE802(b []byte) (Datalink, error) {
 	}
 
 	return d, nil
+}
+
+func Decoder(b []byte) (Packet, error) {
+	return decodeISO88023(b)
 }
