@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"io"
+
+	"git.edgecastcdn.net/vflow/packet"
 )
 
 const (
@@ -159,7 +161,7 @@ func decodeSampledHeader(r io.Reader) error {
 	h.Header = h.Header[:h.HeaderLength]
 
 	//fmt.Printf("%#v\n", h)
-	d, err := decodeISO88023(h.Header)
+	d, err := packet.Decoder(h.Header)
 	if err != nil {
 		return err
 	}
