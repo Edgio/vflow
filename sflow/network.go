@@ -3,6 +3,7 @@ package sflow
 import (
 	"errors"
 	"fmt"
+	"net"
 )
 
 // IPv4Header represents an IPv4 header
@@ -46,6 +47,9 @@ type Packet struct {
 }
 
 const (
+	IPv4HLen = 20
+	IPv6HLen = 40
+
 	EtherTypeIPv4      = 0x0800
 	EtherTypeIPv6      = 0x86DD
 	EtherTypeIEEE8021Q = 0x8100
@@ -83,7 +87,7 @@ func decodeISO88023(b []byte) (Packet, error) {
 			return packet, err
 		}
 
-		packet.L4, err = decodeTransportLayer(int(b[9]), b[20:])
+		packet.L4, err = decodeTransportLayer(int(b[9]), b[IPv4HLen:])
 		if err != nil {
 			return packet, err
 		}
@@ -91,6 +95,20 @@ func decodeISO88023(b []byte) (Packet, error) {
 		return packet, nil
 
 	case EtherTypeIPv6:
+		b = b[14:]
+
+		packet.L3, err = decodeIPv6Header(b)
+		if err != nil {
+			return packet, err
+		}
+
+		packet.L4, err = decodeTransportLayer(int(b[6]), b[IPv6HLen:])
+		if err != nil {
+			return packet, err
+		}
+
+		return packet, nil
+
 	case EtherTypeIEEE8021Q:
 		vlan := int(b[14])<<8 | int(b[15])
 		b[12], b[13] = b[16], b[17]
@@ -110,15 +128,29 @@ func decodeISO88023(b []byte) (Packet, error) {
 }
 
 func decodeIPv6Header(b []byte) (IPv6Header, error) {
-	if len(b) < 40 {
+	if len(b) < IPv6HLen {
 		return IPv6Header{}, errShortIPv6HeaderLength
 	}
 
-	return IPv6Header{}, nil
+	var (
+		src net.IP = b[8:24]
+		dst net.IP = b[24:40]
+	)
+
+	return IPv6Header{
+		Version:      int(b[0]) >> 4,
+		TrafficClass: int(b[0]&0x0f)<<4 | int(b[1])>>4,
+		FlowLabel:    int(b[1]&0x0f)<<16 | int(b[2])<<8 | int(b[3]),
+		PayloadLen:   int(uint16(b[4])<<8 | uint16(b[5])),
+		NextHeader:   int(b[6]),
+		HopLimit:     int(b[7]),
+		Src:          src.String(),
+		Dst:          dst.String(),
+	}, nil
 }
 
 func decodeIPv4Header(b []byte) (IPv4Header, error) {
-	if len(b) < 20 {
+	if len(b) < IPv4HLen {
 		return IPv4Header{}, errShortIPv4HeaderLength
 	}
 
