@@ -33,7 +33,11 @@ var (
 func decodeTransportLayer(proto int, b []byte) (interface{}, error) {
 	switch proto {
 	case IANAProtoICMP:
-		println("*** ICMP ***")
+		icmp, err := decodeICMP(b)
+		if err != nil {
+			return nil, err
+		}
+		return icmp, nil
 	case IANAProtoTCP:
 		tcp, err := decoderTCP(b)
 		if err != nil {
