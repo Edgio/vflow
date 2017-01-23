@@ -140,8 +140,6 @@ func decodeSampledHeader(r io.Reader) error {
 		return err
 	}
 
-	println("Header Len:", h.HeaderLength)
-
 	if h.HeaderLength > 1500 {
 		return maxOutEthernetLength
 	}
