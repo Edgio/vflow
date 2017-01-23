@@ -160,11 +160,13 @@ func decodeSampledHeader(r io.Reader) error {
 
 	h.Header = h.Header[:h.HeaderLength]
 
-	//fmt.Printf("%#v\n", h)
-	d, err := packet.Decoder(h.Header)
+	p := packet.NewPacket()
+	d, err := p.Decoder(h.Header)
 	if err != nil {
+		println("ERROR::::", err.Error())
 		return err
 	}
+
 	fmt.Printf("%#v\n", d)
 
 	return nil
