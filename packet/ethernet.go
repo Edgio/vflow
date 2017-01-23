@@ -12,6 +12,14 @@ type Datalink struct {
 	EtherType uint16
 }
 
+const (
+	EtherTypeARP       = 0x0806
+	EtherTypeIPv4      = 0x0800
+	EtherTypeIPv6      = 0x86DD
+	EtherTypeLACP      = 0x8809
+	EtherTypeIEEE8021Q = 0x8100
+)
+
 var (
 	errShortEthernetHeaderLength = errors.New("the ethernet header is too small")
 )

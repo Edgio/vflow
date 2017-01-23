@@ -35,10 +35,6 @@ type IPv6Header struct {
 const (
 	IPv4HLen = 20
 	IPv6HLen = 40
-
-	EtherTypeIPv4      = 0x0800
-	EtherTypeIPv6      = 0x86DD
-	EtherTypeIEEE8021Q = 0x8100
 )
 
 var (
