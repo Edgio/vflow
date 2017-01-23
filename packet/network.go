@@ -2,7 +2,6 @@ package packet
 
 import (
 	"errors"
-	"fmt"
 	"net"
 )
 
@@ -33,19 +32,6 @@ type IPv6Header struct {
 	Dst          string // destination address
 }
 
-type Datalink struct {
-	SrcMAC    string
-	DstMAC    string
-	Vlan      int
-	EtherType uint16
-}
-
-type Packet struct {
-	L2 Datalink
-	L3 interface{}
-	L4 interface{}
-}
-
 const (
 	IPv4HLen = 20
 	IPv6HLen = 40
@@ -56,135 +42,113 @@ const (
 )
 
 var (
-	errShortEthernetHeaderLength = errors.New("the ethernet header is too small")
-	errShortIPv4HeaderLength     = errors.New("short ipv4 header length")
-	errShortIPv6HeaderLength     = errors.New("short ipv6 header length")
-	errShortEthernetLength       = errors.New("short ethernet header length")
-	errUnknownEtherType          = errors.New("unknown ether type")
+	errShortIPv4HeaderLength = errors.New("short ipv4 header length")
+	errShortIPv6HeaderLength = errors.New("short ipv6 header length")
+	errShortEthernetLength   = errors.New("short ethernet header length")
+	errUnknownTransportLayer = errors.New("unknown transport layer")
+	errUnknownL3Protocol     = errors.New("unknown network layer protocol")
 )
 
-func decodeISO88023(b []byte) (Packet, error) {
+func (p *Packet) decodeNextLayer() error {
+
 	var (
-		err    error
-		packet Packet
+		proto int
+		len   int
 	)
 
-	if len(b) < 14 {
-		return packet, errShortEthernetHeaderLength
-	}
-
-	packet.L2, err = decodeIEEE802(b)
-	if err != nil {
-		return packet, err
-	}
-
-	switch packet.L2.EtherType {
-	case EtherTypeIPv4:
-		b = b[14:]
-
-		packet.L3, err = decodeIPv4Header(b)
-		if err != nil {
-			return packet, err
-		}
-
-		packet.L4, err = decodeTransportLayer(int(b[9]), b[IPv4HLen:])
-		if err != nil {
-			return packet, err
-		}
-
-		return packet, nil
-
-	case EtherTypeIPv6:
-		b = b[14:]
-
-		packet.L3, err = decodeIPv6Header(b)
-		if err != nil {
-			return packet, err
-		}
-
-		packet.L4, err = decodeTransportLayer(int(b[6]), b[IPv6HLen:])
-		if err != nil {
-			return packet, err
-		}
-
-		return packet, nil
-
-	case EtherTypeIEEE8021Q:
-		vlan := int(b[14])<<8 | int(b[15])
-		b[12], b[13] = b[16], b[17]
-		b = append(b[:14], b[18:]...)
-		packet, err = decodeISO88023(b)
-		if err != nil {
-			return packet, err
-		}
-		packet.L2.Vlan = vlan
-		return packet, nil
-
+	switch p.L3.(type) {
+	case IPv4Header:
+		proto = p.L3.(IPv4Header).Protocol
+	case IPv6Header:
+		proto = p.L3.(IPv6Header).NextHeader
 	default:
-		return packet, errUnknownEtherType
+		return errUnknownL3Protocol
 	}
 
-	return packet, nil
+	switch proto {
+	case IANAProtoICMP:
+		icmp, err := decodeICMP(p.data)
+		if err != nil {
+			return err
+		}
+
+		p.L4 = icmp
+		len = 4
+	case IANAProtoTCP:
+		tcp, err := decoderTCP(p.data)
+		if err != nil {
+			return err
+		}
+
+		p.L4 = tcp
+		len = 20
+	case IANAProtoUDP:
+		udp, err := decoderUDP(p.data)
+		if err != nil {
+			return err
+		}
+
+		p.L4 = udp
+		len = 8
+	default:
+		return errUnknownTransportLayer
+	}
+
+	p.data = p.data[len:]
+
+	return nil
 }
 
-func decodeIPv6Header(b []byte) (IPv6Header, error) {
-	if len(b) < IPv6HLen {
-		return IPv6Header{}, errShortIPv6HeaderLength
+func (p *Packet) decodeIPv6Header() error {
+	if len(p.data) < IPv6HLen {
+		return errShortIPv6HeaderLength
 	}
 
 	var (
-		src net.IP = b[8:24]
-		dst net.IP = b[24:40]
+		src net.IP = p.data[8:24]
+		dst net.IP = p.data[24:40]
 	)
 
-	return IPv6Header{
-		Version:      int(b[0]) >> 4,
-		TrafficClass: int(b[0]&0x0f)<<4 | int(b[1])>>4,
-		FlowLabel:    int(b[1]&0x0f)<<16 | int(b[2])<<8 | int(b[3]),
-		PayloadLen:   int(uint16(b[4])<<8 | uint16(b[5])),
-		NextHeader:   int(b[6]),
-		HopLimit:     int(b[7]),
+	p.L3 = IPv6Header{
+		Version:      int(p.data[0]) >> 4,
+		TrafficClass: int(p.data[0]&0x0f)<<4 | int(p.data[1])>>4,
+		FlowLabel:    int(p.data[1]&0x0f)<<16 | int(p.data[2])<<8 | int(p.data[3]),
+		PayloadLen:   int(uint16(p.data[4])<<8 | uint16(p.data[5])),
+		NextHeader:   int(p.data[6]),
+		HopLimit:     int(p.data[7]),
 		Src:          src.String(),
 		Dst:          dst.String(),
-	}, nil
-}
-
-func decodeIPv4Header(b []byte) (IPv4Header, error) {
-	if len(b) < IPv4HLen {
-		return IPv4Header{}, errShortIPv4HeaderLength
 	}
 
-	return IPv4Header{
-		Version:  int(b[0] & 0xf0 >> 4),
-		TOS:      int(b[1]),
-		TotalLen: int(b[2])<<8 | int(b[3]),
-		ID:       int(b[4])<<8 | int(b[5]),
-		Flags:    int(b[6] & 0x07),
-		TTL:      int(b[8]),
-		Protocol: int(b[9]),
-		Checksum: int(b[10])<<8 | int(b[11]),
-		Src:      fmt.Sprintf("%d.%d.%d.%d", b[12], b[13], b[14], b[15]),
-		Dst:      fmt.Sprintf("%d.%d.%d.%d", b[16], b[17], b[18], b[19]),
-	}, nil
+	p.data = p.data[IPv6HLen:]
+
+	return nil
 }
 
-func decodeIEEE802(b []byte) (Datalink, error) {
-	var d Datalink
-
-	if len(b) < 14 {
-		return d, errShortEthernetLength
+func (p *Packet) decodeIPv4Header() error {
+	if len(p.data) < IPv4HLen {
+		return errShortIPv4HeaderLength
 	}
 
-	d.EtherType = uint16(b[13]) | uint16(b[12])<<8
+	var (
+		src net.IP = p.data[12:16]
+		dst net.IP = p.data[16:20]
+	)
 
-	if d.EtherType != EtherTypeIEEE8021Q {
-		d.SrcMAC = fmt.Sprintf("%0.2x:%0.2x:%0.2x:%0.2x:%0.2x:%0.2x", b[0], b[1], b[2], b[3], b[4], b[5])
-		d.DstMAC = fmt.Sprintf("%0.2x:%0.2x:%0.2x:%0.2x:%0.2x:%0.2x", b[6], b[7], b[8], b[9], b[10], b[11])
+	p.L3 = IPv4Header{
+		Version:  int(p.data[0] & 0xf0 >> 4),
+		TOS:      int(p.data[1]),
+		TotalLen: int(p.data[2])<<8 | int(p.data[3]),
+		ID:       int(p.data[4])<<8 | int(p.data[5]),
+		Flags:    int(p.data[6] & 0x07),
+		TTL:      int(p.data[8]),
+		Protocol: int(p.data[9]),
+		Checksum: int(p.data[10])<<8 | int(p.data[11]),
+		Src:      src.String(),
+		Dst:      dst.String(),
 	}
 
-	return d, nil
-}
+	p.data = p.data[IPv4HLen:]
 
-func Decoder(b []byte) (Packet, error) {
-	return decodeISO88023(b)
+	return nil
 }
