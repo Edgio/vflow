@@ -25,37 +25,9 @@ type UDPHeader struct {
 }
 
 var (
-	errShortTCPHeaderLength  = errors.New("short TCP header length")
-	errShortUDPHeaderLength  = errors.New("short UDP header length")
-	errUnknownTransportLayer = errors.New("unknown transport layer")
+	errShortTCPHeaderLength = errors.New("short TCP header length")
+	errShortUDPHeaderLength = errors.New("short UDP header length")
 )
-
-func decodeTransportLayer(proto int, b []byte) (interface{}, error) {
-	switch proto {
-	case IANAProtoICMP:
-		icmp, err := decodeICMP(b)
-		if err != nil {
-			return nil, err
-		}
-		return icmp, nil
-	case IANAProtoTCP:
-		tcp, err := decoderTCP(b)
-		if err != nil {
-			return nil, err
-		}
-		return tcp, nil
-	case IANAProtoUDP:
-		udp, err := decoderUDP(b)
-		if err != nil {
-			return nil, err
-		}
-		return udp, nil
-	default:
-		println("UNKNOWN", proto)
-	}
-
-	return nil, errUnknownTransportLayer
-}
 
 func decoderTCP(b []byte) (TCPHeader, error) {
 	if len(b) < 20 {
