@@ -93,8 +93,6 @@ func decodeFlowSample(r io.ReadSeeker) error {
 		return err
 	}
 
-	fmt.Printf("%#v\n", fs) // just for test
-
 	for i := uint32(0); i < fs.RecordsNo; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
 			return err
@@ -106,7 +104,6 @@ func decodeFlowSample(r io.ReadSeeker) error {
 		switch rTypeFormat {
 		case SFDataRawHeader:
 			decodeSampledHeader(r)
-			r.Seek(int64(rTypeLength), 1)
 		case SFDataExtSwitch:
 			decodeSampledExtSwitch(r)
 			r.Seek(int64(rTypeLength), 1)
