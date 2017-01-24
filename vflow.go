@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"net"
 	"os"
@@ -90,7 +89,7 @@ func sFlowWorker() {
 			break
 		}
 
-		log.Println("rcvd", msg.body.Size())
+		log.Println("rcvd sflow data", msg.body.Size())
 		d := sflow.NewSFDecoder(msg.body, filter)
 		data, err := d.SFDecode()
 		if err != nil {
@@ -99,7 +98,7 @@ func sFlowWorker() {
 
 		switch data.(type) {
 		case *packet.Packet:
-			fmt.Printf("%#v\n", data)
+			log.Printf("%#v\n", data)
 		}
 	}
 }
