@@ -57,9 +57,9 @@ func (s *SFServer) run() {
 	}
 
 	for !s.stop {
+		conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
-			log.Println(err)
 			continue
 		}
 		udpChn <- UDPMsg{raddr, bytes.NewReader(b[:n])}
