@@ -2,7 +2,6 @@ package sflow
 
 import (
 	"errors"
-	"fmt"
 	"io"
 
 	"git.edgecastcdn.net/vflow/packet"
@@ -51,7 +50,7 @@ var (
 	maxOutEthernetLength = errors.New("the ethernet lenght is greater than 1500")
 )
 
-func decodeFlowSample(r io.ReadSeeker) error {
+func decodeFlowSample(r io.ReadSeeker) (interface{}, error) {
 	var (
 		fs          = new(FlowSample)
 		rTypeFormat uint32
@@ -60,85 +59,85 @@ func decodeFlowSample(r io.ReadSeeker) error {
 	)
 
 	if err = read(r, &fs.SequenceNo); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &fs.SourceId); err != nil {
-		return err
+		return nil, err
 	}
 
 	r.Seek(3, 1) // skip counter sample decoding
 
 	if err = read(r, &fs.SamplingRate); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &fs.SamplePool); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &fs.Drops); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &fs.Input); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &fs.Output); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &fs.RecordsNo); err != nil {
-		return err
+		return nil, err
 	}
 
 	for i := uint32(0); i < fs.RecordsNo; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
-			return err
+			return nil, err
 		}
 		if err = read(r, &rTypeLength); err != nil {
-			return err
+			return nil, err
 		}
 
 		switch rTypeFormat {
 		case SFDataRawHeader:
-			decodeSampledHeader(r)
+			h, err := decodeSampledHeader(r)
+			return h, err
 		case SFDataExtSwitch:
-			decodeSampledExtSwitch(r)
 			r.Seek(int64(rTypeLength), 1)
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
-func decodeSampledHeader(r io.Reader) error {
+func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
 	// TODO
 	var (
 		h   = new(SampledHeader)
 		err error
 	)
 	if err = read(r, &h.Protocol); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &h.FrameLength); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &h.Stripped); err != nil {
-		return err
+		return nil, err
 	}
 
 	if err = read(r, &h.HeaderLength); err != nil {
-		return err
+		return nil, err
 	}
 
 	if h.HeaderLength > 1500 {
-		return maxOutEthernetLength
+		return nil, maxOutEthernetLength
 	}
 
 	// TODO: make sure the padding works!!
@@ -150,7 +149,7 @@ func decodeSampledHeader(r io.Reader) error {
 
 	h.Header = make([]byte, h.HeaderLength+tmp)
 	if _, err = r.Read(h.Header); err != nil {
-		return err
+		return nil, err
 	}
 
 	h.Header = h.Header[:h.HeaderLength]
@@ -158,23 +157,8 @@ func decodeSampledHeader(r io.Reader) error {
 	p := packet.NewPacket()
 	d, err := p.Decoder(h.Header)
 	if err != nil {
-		println("ERROR::::", err.Error())
-		return err
+		return nil, err
 	}
 
-	fmt.Printf("%#v\n", d)
-
-	return nil
-}
-
-func decodeSampledExtSwitch(r io.Reader) {
-	// TODO
-}
-
-func decodeSampledIPv4() {
-	// TODO
-}
-
-func decodeSampledIPv6() {
-	// TODO
+	return d, nil
 }

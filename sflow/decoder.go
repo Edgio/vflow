@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"log"
 	"net"
 )
 
@@ -51,7 +52,41 @@ func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 	}
 }
 
-func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
+func (d *SFDecoder) SFDecode() (interface{}, error) {
+	datagram, err := d.sfHeaderDecode()
+	if err != nil {
+		return nil, err
+	}
+
+	for i := uint32(0); i < datagram.SamplesNo; i++ {
+		sfTypeFormat, sfDataLength, err := d.getSampleInfo()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+
+		if m := d.isFilterMatch(sfTypeFormat); m {
+			d.reader.Seek(int64(sfDataLength), 1)
+			continue
+		}
+
+		switch sfTypeFormat {
+		case DataFlowSample:
+			h, err := decodeFlowSample(d.reader)
+			return h, err
+		case DataCounterSample:
+			d.reader.Seek(int64(sfDataLength), 1)
+		default:
+			d.reader.Seek(int64(sfDataLength), 1)
+
+		}
+
+	}
+
+	return nil, nil
+}
+
+func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
 	var (
 		datagram     = &SFDatagram{}
 		ipLen    int = 4
@@ -93,18 +128,10 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		return nil, err
 	}
 
-	// decode sample(s) - loop over sample records
-	for i := uint32(0); i < datagram.SamplesNo; i++ {
-		if err = d.decodeSample(); err != nil {
-			// TODO
-			continue
-		}
-	}
-
 	return datagram, nil
 }
 
-func (d *SFDecoder) decodeSample() error {
+func (d *SFDecoder) getSampleInfo() (uint32, uint32, error) {
 	var (
 		sfType           uint32
 		sfTypeFormat     uint32
@@ -115,39 +142,23 @@ func (d *SFDecoder) decodeSample() error {
 	)
 
 	if err = read(d.reader, &sfType); err != nil {
-		return err
+		return 0, 0, err
 	}
 
 	sfTypeEnterprise = sfType >> 12 // 20 bytes enterprise
-	sfTypeFormat = sfType & 4095    // 12 bytes format
+	sfTypeFormat = sfType & 0xfff   // 12 bytes format
 
 	// supports standard sflow data
 	if sfTypeEnterprise != 0 {
 		d.reader.Seek(int64(sfDataLength), 1)
-		return nonEnterpriseStandard
+		return 0, 0, nonEnterpriseStandard
 	}
 
 	if err = read(d.reader, &sfDataLength); err != nil {
-		return dataLengthUnknown
+		return 0, 0, dataLengthUnknown
 	}
 
-	if m := d.isFilterMatch(sfTypeFormat); m {
-		d.reader.Seek(int64(sfDataLength), 1)
-		return err // TODO
-	}
-
-	switch sfTypeFormat {
-	case DataFlowSample:
-		decodeFlowSample(d.reader)
-	case DataCounterSample:
-		d.reader.Seek(int64(sfDataLength), 1)
-		// TODO
-	default:
-		d.reader.Seek(int64(sfDataLength), 1)
-
-	}
-
-	return nil
+	return sfTypeFormat, sfDataLength, nil
 }
 
 func (d *SFDecoder) isFilterMatch(f uint32) bool {

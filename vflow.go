@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -10,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"git.edgecastcdn.net/vflow/packet"
 	"git.edgecastcdn.net/vflow/sflow"
 )
 
@@ -87,9 +89,18 @@ func sFlowWorker() {
 		if msg, ok = <-udpChn; !ok {
 			break
 		}
+
 		log.Println("rcvd", msg.body.Size())
 		d := sflow.NewSFDecoder(msg.body, filter)
-		d.SFDecode()
+		data, err := d.SFDecode()
+		if err != nil {
+			log.Println(err)
+		}
+
+		switch data.(type) {
+		case *packet.Packet:
+			fmt.Printf("%#v\n", data)
+		}
 	}
 }
 
