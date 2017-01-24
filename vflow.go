@@ -2,11 +2,12 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"log"
 	"net"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
 	"time"
 
 	"git.edgecastcdn.net/vflow/sflow"
@@ -19,6 +20,7 @@ type SFServer struct {
 	readTimeout time.Duration
 	udpSize     int
 	workers     int
+	stop        bool
 }
 
 type UDPMsg struct {
@@ -54,7 +56,7 @@ func (s *SFServer) run() {
 		}()
 	}
 
-	for {
+	for !s.stop {
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
 			log.Println(err)
@@ -66,24 +68,49 @@ func (s *SFServer) run() {
 	wg.Wait()
 }
 
+func (s *SFServer) shutdown() {
+	s.stop = true
+	log.Println("stopped sflow service gracefully ...")
+	time.Sleep(1 * time.Second)
+	log.Println("vFlow has been shutdown")
+	close(udpChn)
+}
+
 func sFlowWorker() {
-	filter := []uint32{sflow.DataCounterSample}
+	var (
+		msg    UDPMsg
+		ok     bool
+		filter = []uint32{sflow.DataCounterSample}
+	)
 
 	for {
-		msg := <-udpChn
-		println("rcvd", msg.body.Size())
+		if msg, ok = <-udpChn; !ok {
+			break
+		}
+		log.Println("rcvd", msg.body.Size())
 		d := sflow.NewSFDecoder(msg.body, filter)
 		d.SFDecode()
 	}
 }
 
 func main() {
-	fmt.Println("start listening")
+	var wg sync.WaitGroup
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
 
 	sFlow := SFServer{
 		port:    "6343",
 		udpSize: 1500,
 		workers: 10,
 	}
-	sFlow.run()
+
+	go func() {
+		wg.Add(1)
+		defer wg.Done()
+		sFlow.run()
+	}()
+
+	<-signalCh
+	sFlow.shutdown()
+	wg.Wait()
 }
