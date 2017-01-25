@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"log"
 	"net"
-	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -20,6 +19,8 @@ type SFUDPMsg struct {
 
 var (
 	sFlowUdpCh = make(chan SFUDPMsg, 1000)
+	logger     *log.Logger
+	verbose    bool
 )
 
 type SFServer struct {
@@ -33,6 +34,9 @@ type SFServer struct {
 }
 
 func NewSFlow(opts *Options) *SFServer {
+	logger = opts.Logger
+	verbose = opts.Verbose
+
 	return &SFServer{
 		port:    opts.SFlowPort,
 		udpSize: opts.SFlowUDPSize,
@@ -51,8 +55,7 @@ func (s *SFServer) run() {
 
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		log.Println(err)
-		os.Exit(1)
+		logger.Fatal(err)
 	}
 
 	for i := 0; i < s.workers; i++ {
@@ -78,9 +81,9 @@ func (s *SFServer) run() {
 
 func (s *SFServer) shutdown() {
 	s.stop = true
-	log.Println("stopped sflow service gracefully ...")
+	logger.Println("stopped sflow service gracefully ...")
 	time.Sleep(1 * time.Second)
-	log.Println("vFlow has been shutdown")
+	logger.Println("vFlow has been shutdown")
 	close(sFlowUdpCh)
 }
 
@@ -96,16 +99,22 @@ func sFlowWorker() {
 			break
 		}
 
-		log.Println("rcvd sflow data", msg.body.Size())
+		if verbose {
+			logger.Printf("rcvd sflow data form: %s, size: %d bytes",
+				msg.raddr, msg.body.Size())
+		}
+
 		d := sflow.NewSFDecoder(msg.body, filter)
 		data, err := d.SFDecode()
 		if err != nil {
-			log.Println(err)
+			logger.Println(err)
 		}
 
 		switch data.(type) {
 		case *packet.Packet:
-			log.Printf("%#v\n", data)
+			if verbose {
+				logger.Printf("%#v\n", data)
+			}
 		}
 	}
 }

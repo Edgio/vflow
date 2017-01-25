@@ -4,7 +4,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"log"
 	"net"
 )
 
@@ -61,8 +60,7 @@ func (d *SFDecoder) SFDecode() (interface{}, error) {
 	for i := uint32(0); i < datagram.SamplesNo; i++ {
 		sfTypeFormat, sfDataLength, err := d.getSampleInfo()
 		if err != nil {
-			log.Println(err)
-			continue
+			return nil, err
 		}
 
 		if m := d.isFilterMatch(sfTypeFormat); m {

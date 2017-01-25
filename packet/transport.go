@@ -1,9 +1,6 @@
 package packet
 
-import (
-	"errors"
-	_ "fmt"
-)
+import "errors"
 
 const (
 	IANAProtoICMP = 1

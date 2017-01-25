@@ -1,8 +1,14 @@
 package main
 
+import (
+	"log"
+	"os"
+)
+
 type Options struct {
 	// global options
 	Verbose bool
+	Logger  *log.Logger
 
 	// sFlow options
 	SFlowEnabled bool
@@ -14,6 +20,7 @@ type Options struct {
 func NewOptions() *Options {
 	return &Options{
 		Verbose: true,
+		Logger:  log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
 		SFlowEnabled: true,
 		SFlowPort:    6343,
