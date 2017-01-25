@@ -11,7 +11,7 @@ func main() {
 	var (
 		wg       sync.WaitGroup
 		signalCh = make(chan os.Signal, 1)
-		opts     = NewOptions()
+		opts     = GetOptions()
 	)
 
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
