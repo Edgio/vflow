@@ -14,7 +14,7 @@ func main() {
 		opts     = NewOptions()
 	)
 
-	signal.Notify(signalCh, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
 	sFlow := NewSFlow(opts)
 
