@@ -67,6 +67,8 @@ func (s *SFServer) run() {
 		}()
 	}
 
+	logger.Printf("sFlow is running (workers#: %d)", s.workers)
+
 	for !s.stop {
 		conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
