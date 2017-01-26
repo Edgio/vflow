@@ -41,14 +41,20 @@ func vFlowFlagSet(opts *Options) {
 
 	var config string
 
-	flag.StringVar(&config, "config", "", "enable verbose logging")
+	flag.StringVar(&config, "config", "", "path to config file")
 
 	if config != "" {
 		vFlowLoadCfg(config, opts)
 	}
 
-	// global
+	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
+
+	// sflow options
+	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable sflow listener")
+	flag.IntVar(&opts.SFlowPort, "sflow-port", opts.SFlowPort, "sflow port number")
+	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
+	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers / concurrency number")
 
 	flag.Parse()
 }
