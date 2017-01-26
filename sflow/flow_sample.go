@@ -132,7 +132,6 @@ func decodeFlowSample(r io.ReadSeeker) ([]interface{}, error) {
 }
 
 func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
-	// TODO
 	var (
 		h   = new(SampledHeader)
 		err error
@@ -157,13 +156,8 @@ func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
 		return nil, maxOutEthernetLength
 	}
 
-	// TODO: make sure the padding works!!
 	// cut off a header length mod 4 == 0 number of bytes
-	tmp := (4 - h.HeaderLength) % 4
-	if tmp < 0 {
-		tmp += 4
-	}
-
+	tmp := 4 - (h.HeaderLength % 4)
 	h.Header = make([]byte, h.HeaderLength+tmp)
 	if _, err = r.Read(h.Header); err != nil {
 		return nil, err
