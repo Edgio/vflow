@@ -46,13 +46,21 @@ type SampledHeader struct {
 	Header       []byte // Header bytes
 }
 
+type ExtSwitchData struct {
+	SrcVlan     uint32
+	SrcPriority uint32
+	DstVlan     uint32
+	DstPriority uint32
+}
+
 var (
 	maxOutEthernetLength = errors.New("the ethernet lenght is greater than 1500")
 )
 
-func decodeFlowSample(r io.ReadSeeker) (interface{}, error) {
+func decodeFlowSample(r io.ReadSeeker) ([]interface{}, error) {
 	var (
 		fs          = new(FlowSample)
+		data        []interface{}
 		rTypeFormat uint32
 		rTypeLength uint32
 		err         error
@@ -92,6 +100,8 @@ func decodeFlowSample(r io.ReadSeeker) (interface{}, error) {
 		return nil, err
 	}
 
+	data = append(data, fs)
+
 	for i := uint32(0); i < fs.RecordsNo; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
 			return nil, err
@@ -103,15 +113,22 @@ func decodeFlowSample(r io.ReadSeeker) (interface{}, error) {
 		switch rTypeFormat {
 		case SFDataRawHeader:
 			h, err := decodeSampledHeader(r)
-			return h, err
+			if err != nil {
+				return data, err
+			}
+			data = append(data, h)
 		case SFDataExtSwitch:
-			r.Seek(int64(rTypeLength), 1)
+			d, err := decodeExtSwitchData(r)
+			if err != nil {
+				return data, err
+			}
+			data = append(data, d)
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}
 
-	return nil, nil
+	return data, nil
 }
 
 func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
@@ -157,6 +174,31 @@ func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
 	p := packet.NewPacket()
 	d, err := p.Decoder(h.Header)
 	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
+func decodeExtSwitchData(r io.Reader) (*ExtSwitchData, error) {
+	var (
+		d   = new(ExtSwitchData)
+		err error
+	)
+
+	if err = read(r, &d.SrcVlan); err != nil {
+		return nil, err
+	}
+
+	if err = read(r, &d.SrcPriority); err != nil {
+		return nil, err
+	}
+
+	if err = read(r, &d.DstVlan); err != nil {
+		return nil, err
+	}
+
+	if err = read(r, &d.SrcPriority); err != nil {
 		return nil, err
 	}
 
