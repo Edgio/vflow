@@ -39,7 +39,9 @@ func GetOptions() *Options {
 
 func vFlowFlagSet(opts *Options) {
 
-	config := flag.Bool("verbose", opts.Verbose, "enable verbose logging")
+	var config string
+
+	flag.StringVar(&config, "config", "", "enable verbose logging")
 
 	if config != "" {
 		vFlowLoadCfg(config, opts)
@@ -49,8 +51,6 @@ func vFlowFlagSet(opts *Options) {
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
 
 	flag.Parse()
-
-	log.Printf("%#v\n", opts)
 }
 
 func vFlowLoadCfg(file string, opts *Options) {
