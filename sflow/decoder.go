@@ -51,7 +51,7 @@ func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 	}
 }
 
-func (d *SFDecoder) SFDecode() (interface{}, error) {
+func (d *SFDecoder) SFDecode() ([]interface{}, error) {
 	datagram, err := d.sfHeaderDecode()
 	if err != nil {
 		return nil, err

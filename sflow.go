@@ -107,15 +107,24 @@ func sFlowWorker() {
 		}
 
 		d := sflow.NewSFDecoder(msg.body, filter)
-		data, err := d.SFDecode()
+		records, err := d.SFDecode()
 		if err != nil {
 			logger.Println(err)
 		}
-
-		switch data.(type) {
-		case *packet.Packet:
-			if verbose {
-				logger.Printf("%#v\n", data)
+		for _, data := range records {
+			switch data.(type) {
+			case *packet.Packet:
+				if verbose {
+					logger.Printf("%#v\n", data)
+				}
+			case *sflow.ExtSwitchData:
+				if verbose {
+					logger.Printf("%#v\n", data)
+				}
+			case *sflow.FlowSample:
+				if verbose {
+					logger.Printf("%#v\n", data)
+				}
 			}
 		}
 	}
