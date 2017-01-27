@@ -24,6 +24,8 @@ func main() {
 		sFlow.run()
 	}()
 
+	go statsHTTPServer(opts)
+
 	<-signalCh
 	sFlow.shutdown()
 	wg.Wait()

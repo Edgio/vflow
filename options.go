@@ -11,6 +11,10 @@ type Options struct {
 	Verbose bool
 	Logger  *log.Logger
 
+	// stats options
+	StatsEnabled  bool
+	StatsHTTPPort int
+
 	// sFlow options
 	SFlowEnabled bool
 	SFlowPort    int
@@ -22,6 +26,9 @@ func NewOptions() *Options {
 	return &Options{
 		Verbose: true,
 		Logger:  log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
+
+		StatsEnabled:  true,
+		StatsHTTPPort: 8080,
 
 		SFlowEnabled: true,
 		SFlowPort:    6343,
@@ -49,6 +56,10 @@ func vFlowFlagSet(opts *Options) {
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
+
+	// stats options
+	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable stats listener")
+	flag.IntVar(&opts.StatsHTTPPort, "stats-http-port", opts.StatsHTTPPort, "stats port listener")
 
 	// sflow options
 	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable sflow listener")
