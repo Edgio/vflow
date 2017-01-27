@@ -157,7 +157,11 @@ func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
 	}
 
 	// cut off a header length mod 4 == 0 number of bytes
-	tmp := 4 - (h.HeaderLength % 4)
+	tmp := (4 - h.HeaderLength) % 4
+	if tmp < 0 {
+		tmp += 4
+	}
+
 	h.Header = make([]byte, h.HeaderLength+tmp)
 	if _, err = r.Read(h.Header); err != nil {
 		return nil, err
