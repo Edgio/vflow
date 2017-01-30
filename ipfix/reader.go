@@ -11,7 +11,7 @@ type reader struct {
 
 var errReader = errors.New("can not read the data")
 
-func NewReader(b []byte) {
+func NewReader(b []byte) reader {
 	return reader{
 		data: b,
 	}
@@ -24,7 +24,7 @@ func (r *reader) Uint8() (uint8, error) {
 
 	r.data = r.data[1:]
 
-	return r.data[0]
+	return r.data[0], nil
 }
 
 func (r *reader) Uint16() (uint16, error) {
@@ -32,10 +32,10 @@ func (r *reader) Uint16() (uint16, error) {
 		return 0, errReader
 	}
 
-	d := binary.Uint16(r.data)
+	d := binary.BigEndian.Uint16(r.data)
 	r.data = r.data[2:]
 
-	return d
+	return d, nil
 }
 
 func (r *reader) Uint32() (uint32, error) {
@@ -43,10 +43,10 @@ func (r *reader) Uint32() (uint32, error) {
 		return 0, errReader
 	}
 
-	d := binary.Uint32(r.data)
+	d := binary.BigEndian.Uint32(r.data)
 	r.data = r.data[4:]
 
-	return d
+	return d, nil
 }
 
 func (r *reader) Uint64() (uint64, error) {
@@ -54,8 +54,8 @@ func (r *reader) Uint64() (uint64, error) {
 		return 0, errReader
 	}
 
-	d := binary.Uint64(r.data)
+	d := binary.BigEndian.Uint64(r.data)
 	r.data = r.data[8:]
 
-	return d
+	return d, nil
 }
