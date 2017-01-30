@@ -23,7 +23,7 @@ var (
 	verbose    bool
 )
 
-type SFServer struct {
+type SFlow struct {
 	port        int
 	addr        string
 	laddr       *net.UDPAddr
@@ -33,18 +33,18 @@ type SFServer struct {
 	stop        bool
 }
 
-func NewSFlow(opts *Options) *SFServer {
+func NewSFlow(opts *Options) *SFlow {
 	logger = opts.Logger
 	verbose = opts.Verbose
 
-	return &SFServer{
+	return &SFlow{
 		port:    opts.SFlowPort,
 		udpSize: opts.SFlowUDPSize,
 		workers: opts.SFlowWorkers,
 	}
 }
 
-func (s *SFServer) run() {
+func (s *SFlow) run() {
 	var (
 		b  = make([]byte, s.udpSize)
 		wg sync.WaitGroup
@@ -81,7 +81,7 @@ func (s *SFServer) run() {
 	wg.Wait()
 }
 
-func (s *SFServer) shutdown() {
+func (s *SFlow) shutdown() {
 	s.stop = true
 	logger.Println("stopped sflow service gracefully ...")
 	time.Sleep(1 * time.Second)
@@ -102,7 +102,7 @@ func sFlowWorker() {
 		}
 
 		if verbose {
-			logger.Printf("rcvd sflow data form: %s, size: %d bytes",
+			logger.Printf("rcvd sflow data from: %s, size: %d bytes",
 				msg.raddr, msg.body.Size())
 		}
 
