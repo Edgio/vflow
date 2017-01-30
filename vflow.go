@@ -17,6 +17,7 @@ func main() {
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
 	sFlow := NewSFlow(opts)
+	ipfix := NewIPFIX(opts)
 
 	go func() {
 		wg.Add(1)
@@ -24,9 +25,16 @@ func main() {
 		sFlow.run()
 	}()
 
+	go func() {
+		wg.Add(1)
+		defer wg.Done()
+		ipfix.run()
+	}()
+
 	go statsHTTPServer(opts)
 
 	<-signalCh
 	sFlow.shutdown()
+	ipfix.shutdown()
 	wg.Wait()
 }
