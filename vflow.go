@@ -34,7 +34,7 @@ func main() {
 	go statsHTTPServer(opts)
 
 	<-signalCh
-	sFlow.shutdown()
-	ipfix.shutdown()
+	go sFlow.shutdown()
+	go ipfix.shutdown()
 	wg.Wait()
 }
