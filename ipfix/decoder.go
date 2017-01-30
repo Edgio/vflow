@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-type IFDecoder struct {
+type IPFIXDecoder struct {
 	reader io.Reader
 }
 
@@ -17,13 +17,13 @@ type MessageHeader struct {
 	DomainID   uint32
 }
 
-func NewDecoder(r io.Reader) IFDecoder {
+func NewDecoder(r io.Reader) IPFIXDecoder {
 	return IFDecoder{
 		reader: r,
 	}
 }
 
-func (d *IFDecoder) Decode() error {
+func (d *IPFIXDecoder) Decode() error {
 	var (
 		h   MessageHeader
 		err error
