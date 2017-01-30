@@ -18,7 +18,7 @@ type MessageHeader struct {
 }
 
 func NewDecoder(r io.Reader) IPFIXDecoder {
-	return IFDecoder{
+	return IPFIXDecoder{
 		reader: r,
 	}
 }
