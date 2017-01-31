@@ -24,8 +24,8 @@ type TemplateHeader struct {
 }
 
 type TemplateRecord struct {
-	TemplateID              uint16
-	TemplateFieldSpecifiers []TemplateFieldSpecifier
+	TemplateID      uint16
+	FieldSpecifiers []TemplateFieldSpecifier
 }
 
 type TemplateFieldSpecifier struct {
@@ -41,6 +41,7 @@ type Message struct {
 }
 
 type TemplateSet struct {
+	Records []TemplateRecord
 }
 
 type DataSet struct {
@@ -68,19 +69,19 @@ func NewDecoder(r io.Reader) (*IPFIXDecoder, error) {
 	return &IPFIXDecoder{NewReader(data[:n])}, nil
 }
 
-func (d *IPFIXDecoder) Decode() error {
+func (d *IPFIXDecoder) Decode() (*Message, error) {
 	var (
-		msg Message
+		msg = new(Message)
 		err error
 	)
 
 	// IPFIX Message Header decoding
 	if err = msg.Header.unmarshal(d.reader); err != nil {
-		return err
+		return nil, err
 	}
 	// IPFIX Message Header validation
 	if err = msg.Header.validate(); err != nil {
-		return err
+		return nil, err
 	}
 
 	for d.reader.Len() > 0 {
@@ -89,14 +90,15 @@ func (d *IPFIXDecoder) Decode() error {
 		setHeader.unmarshal(d.reader)
 
 		if setHeader.Length < 4 {
-			return io.ErrUnexpectedEOF
+			return nil, io.ErrUnexpectedEOF
 		}
 
 		switch {
 		case setHeader.SetID == 2:
 			// Template set
-			ts := new(TemplateSet)
+			ts := TemplateSet{}
 			ts.unmarshal(d.reader)
+			msg.TemplateSets = append(msg.TemplateSets, ts)
 		case setHeader.SetID == 3:
 			// Option set
 		case setHeader.SetID >= 4 && setHeader.SetID <= 255:
@@ -109,7 +111,7 @@ func (d *IPFIXDecoder) Decode() error {
 
 	}
 
-	return nil
+	return msg, nil
 }
 
 // RFC 7011 - part 3.1. Message Header Format
@@ -220,10 +222,11 @@ func (f *TemplateFieldSpecifier) unmarshal(r *Reader) error {
 	if f.ElementID, err = r.Uint16(); err != nil {
 		return err
 	}
+
 	if f.Length, err = r.Uint16(); err != nil {
 		return err
 	}
-	println(f.ElementID)
+
 	if f.ElementID > 0x8000 {
 		f.ElementID = f.ElementID & 0x7fff
 		if f.EnterpriseNo, err = r.Uint32(); err != nil {
@@ -235,13 +238,21 @@ func (f *TemplateFieldSpecifier) unmarshal(r *Reader) error {
 }
 
 func (t *TemplateSet) unmarshal(r *Reader) error {
-	th := new(TemplateHeader)
-	tr := new(TemplateRecord)
-	tf := new(TemplateFieldSpecifier)
+	var (
+		th = TemplateHeader{}
+		tr = TemplateRecord{}
+		tf = TemplateFieldSpecifier{}
+	)
 
 	th.unmarshal(r)
-	tf.unmarshal(r)
-	_ = tr
+	tr.TemplateID = th.TemplateID
+
+	for i := th.FieldCount; i > 0; i-- {
+		tf.unmarshal(r)
+		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
+	}
+
+	t.Records = append(t.Records, tr)
 
 	return nil
 }
