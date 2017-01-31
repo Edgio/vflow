@@ -23,6 +23,17 @@ type TemplateHeader struct {
 	FieldCount uint16
 }
 
+type TemplateRecord struct {
+	TemplateID              uint16
+	TemplateFieldSpecifiers []TemplateFieldSpecifier
+}
+
+type TemplateFieldSpecifier struct {
+	ElementID    uint16
+	Length       uint16
+	EnterpriseNo uint32
+}
+
 type Message struct {
 	Header       MessageHeader
 	TemplateSets []TemplateSet
@@ -175,6 +186,8 @@ func (h *SetHeader) unmarshal(r *Reader) error {
 // 0                   1                   2                   3
 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |       Set ID = (2 or 3)       |          Length               |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |         Template ID           |         Field Count           |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
@@ -193,11 +206,42 @@ func (t *TemplateHeader) unmarshal(r *Reader) error {
 
 }
 
+// RFC 7011
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |E|  Information Element ident. |        Field Length           |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |                      Enterprise Number                        |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (f *TemplateFieldSpecifier) unmarshal(r *Reader) error {
+	var err error
+
+	if f.ElementID, err = r.Uint16(); err != nil {
+		return err
+	}
+	if f.Length, err = r.Uint16(); err != nil {
+		return err
+	}
+	println(f.ElementID)
+	if f.ElementID > 0x8000 {
+		f.ElementID = f.ElementID & 0x7fff
+		if f.EnterpriseNo, err = r.Uint32(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func (t *TemplateSet) unmarshal(r *Reader) error {
 	th := new(TemplateHeader)
-	th.unmarshal(r)
+	tr := new(TemplateRecord)
+	tf := new(TemplateFieldSpecifier)
 
-	println(th.TemplateID, th.FieldCount)
+	th.unmarshal(r)
+	tf.unmarshal(r)
+	_ = tr
 
 	return nil
 }
