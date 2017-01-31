@@ -8,7 +8,7 @@ func TestDecoderUDP(t *testing.T) {
 		0x3d, 0xc8, 0xdc, 0x81, 0x9f,
 	}
 
-	udp, err := decoderUDP(b)
+	udp, err := decodeUDP(b)
 	if err != nil {
 		t.Error("unexpected error", err)
 	}
@@ -30,7 +30,7 @@ func TestDecodeTCP(t *testing.T) {
 		0x2a, 0xbb, 0xde, 0x0, 0x0,
 	}
 
-	tcp, err := decoderTCP(b)
+	tcp, err := decodeTCP(b)
 	if err != nil {
 		t.Error("unexpected error", err)
 	}

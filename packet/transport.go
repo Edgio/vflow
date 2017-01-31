@@ -26,7 +26,7 @@ var (
 	errShortUDPHeaderLength = errors.New("short UDP header length")
 )
 
-func decoderTCP(b []byte) (TCPHeader, error) {
+func decodeTCP(b []byte) (TCPHeader, error) {
 	if len(b) < 20 {
 		return TCPHeader{}, errShortTCPHeaderLength
 	}
@@ -42,7 +42,7 @@ func decoderTCP(b []byte) (TCPHeader, error) {
 	}, nil
 }
 
-func decoderUDP(b []byte) (UDPHeader, error) {
+func decodeUDP(b []byte) (UDPHeader, error) {
 	if len(b) < 8 {
 		return UDPHeader{}, errShortUDPHeaderLength
 	}

@@ -71,7 +71,7 @@ func (p *Packet) decodeNextLayer() error {
 		p.L4 = icmp
 		len = 4
 	case IANAProtoTCP:
-		tcp, err := decoderTCP(p.data)
+		tcp, err := decodeTCP(p.data)
 		if err != nil {
 			return err
 		}
@@ -79,7 +79,7 @@ func (p *Packet) decodeNextLayer() error {
 		p.L4 = tcp
 		len = 20
 	case IANAProtoUDP:
-		udp, err := decoderUDP(p.data)
+		udp, err := decodeUDP(p.data)
 		if err != nil {
 			return err
 		}
