@@ -11,8 +11,8 @@ type reader struct {
 
 var errReader = errors.New("can not read the data")
 
-func NewReader(b []byte) reader {
-	return reader{
+func NewReader(b []byte) *reader {
+	return &reader{
 		data: b,
 	}
 }
@@ -58,4 +58,19 @@ func (r *reader) Uint64() (uint64, error) {
 	r.data = r.data[8:]
 
 	return d, nil
+}
+
+func (r *reader) Read(n int) ([]byte, error) {
+	if len(r.data) < n {
+		return []byte{}, errReader
+	}
+
+	d := r.data[:n]
+	r.data = r.data[n:]
+
+	return d, nil
+}
+
+func (r *reader) Len() int {
+	return len(r.data)
 }
