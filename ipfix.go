@@ -6,6 +6,8 @@ import (
 	"strconv"
 	"sync"
 	"time"
+
+	"git.edgecastcdn.net/vflow/ipfix"
 )
 
 type IPFIX struct {
@@ -94,5 +96,7 @@ func ipfixWorker() {
 				msg.raddr, msg.body.Size())
 		}
 
+		d, _ := ipfix.NewDecoder(msg.body)
+		d.Decode()
 	}
 }
