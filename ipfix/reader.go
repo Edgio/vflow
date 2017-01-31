@@ -5,19 +5,19 @@ import (
 	"errors"
 )
 
-type reader struct {
+type Reader struct {
 	data []byte
 }
 
 var errReader = errors.New("can not read the data")
 
-func NewReader(b []byte) *reader {
-	return &reader{
+func NewReader(b []byte) *Reader {
+	return &Reader{
 		data: b,
 	}
 }
 
-func (r *reader) Uint8() (uint8, error) {
+func (r *Reader) Uint8() (uint8, error) {
 	if len(r.data) < 1 {
 		return 0, errReader
 	}
@@ -27,7 +27,7 @@ func (r *reader) Uint8() (uint8, error) {
 	return r.data[0], nil
 }
 
-func (r *reader) Uint16() (uint16, error) {
+func (r *Reader) Uint16() (uint16, error) {
 	if len(r.data) < 2 {
 		return 0, errReader
 	}
@@ -38,7 +38,7 @@ func (r *reader) Uint16() (uint16, error) {
 	return d, nil
 }
 
-func (r *reader) Uint32() (uint32, error) {
+func (r *Reader) Uint32() (uint32, error) {
 	if len(r.data) < 4 {
 		return 0, errReader
 	}
@@ -49,7 +49,7 @@ func (r *reader) Uint32() (uint32, error) {
 	return d, nil
 }
 
-func (r *reader) Uint64() (uint64, error) {
+func (r *Reader) Uint64() (uint64, error) {
 	if len(r.data) < 8 {
 		return 0, errReader
 	}
@@ -60,7 +60,7 @@ func (r *reader) Uint64() (uint64, error) {
 	return d, nil
 }
 
-func (r *reader) Read(n int) ([]byte, error) {
+func (r *Reader) Read(n int) ([]byte, error) {
 	if len(r.data) < n {
 		return []byte{}, errReader
 	}
@@ -71,6 +71,6 @@ func (r *reader) Read(n int) ([]byte, error) {
 	return d, nil
 }
 
-func (r *reader) Len() int {
+func (r *Reader) Len() int {
 	return len(r.data)
 }
