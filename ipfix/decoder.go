@@ -18,6 +18,11 @@ type MessageHeader struct {
 	DomainID   uint32 // A 32-bit id that is locally unique to the Exporting Process
 }
 
+type TemplateHeader struct {
+	TemplateID uint16
+	FieldCount uint16
+}
+
 type Message struct {
 	Header       MessageHeader
 	TemplateSets []TemplateSet
@@ -79,14 +84,14 @@ func (d *IPFIXDecoder) Decode() error {
 		switch {
 		case setHeader.SetID == 2:
 			// Template set
-			println("Template")
+			ts := new(TemplateSet)
+			ts.unmarshal(d.reader)
 		case setHeader.SetID == 3:
-			println("option")
+			// Option set
 		case setHeader.SetID >= 4 && setHeader.SetID <= 255:
-			println("silent")
+			// Reserved
 		default:
-			println("data")
-
+			// data
 		}
 
 		break
@@ -162,6 +167,37 @@ func (h *SetHeader) unmarshal(r *Reader) error {
 	if h.Length, err = r.Uint16(); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+// RFC 7011
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |         Template ID           |         Field Count           |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (t *TemplateHeader) unmarshal(r *Reader) error {
+	var err error
+
+	if t.TemplateID, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if t.FieldCount, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (t *TemplateSet) unmarshal(r *Reader) error {
+	th := new(TemplateHeader)
+	th.unmarshal(r)
+
+	println(th.TemplateID, th.FieldCount)
 
 	return nil
 }
