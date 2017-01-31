@@ -1,67 +1,167 @@
 package ipfix
 
 import (
-	"encoding/binary"
+	"errors"
 	"io"
+	"sync"
 )
 
 type IPFIXDecoder struct {
-	reader io.Reader
+	reader *Reader
 }
 
 type MessageHeader struct {
-	Version    uint16
-	Length     uint16
-	ExportTime uint32
-	SequenceNo uint32
-	DomainID   uint32
+	Version    uint16 // Version of IPFIX to which this Message conforms
+	Length     uint16 // Total length of the IPFIX Message, measured in octets
+	ExportTime uint32 // Time at which the IPFIX Message Header leaves the Exporter
+	SequenceNo uint32 // Incremental sequence counter modulo 2^32
+	DomainID   uint32 // A 32-bit id that is locally unique to the Exporting Process
 }
 
-func NewDecoder(r io.Reader) IPFIXDecoder {
-	return IPFIXDecoder{
-		reader: r,
+type Message struct {
+	Header       MessageHeader
+	TemplateSets []TemplateSet
+	DataSets     []DataSet
+}
+
+type TemplateSet struct {
+}
+
+type DataSet struct {
+}
+
+type Session struct {
+	buff *sync.Pool
+}
+
+type SetHeader struct {
+	SetID  uint16
+	Length uint16
+}
+
+var (
+	errInvalidVersion = errors.New("invalid ipfix version")
+)
+
+func NewDecoder(r io.Reader) (*IPFIXDecoder, error) {
+	data := make([]byte, 1500)
+	n, err := r.Read(data)
+	if err != nil {
+		return nil, err
 	}
+	return &IPFIXDecoder{NewReader(data[:n])}, nil
 }
 
 func (d *IPFIXDecoder) Decode() error {
 	var (
-		h   MessageHeader
+		msg Message
 		err error
 	)
 
-	if err = h.unmarshal(d.reader); err != nil {
+	// IPFIX Message Header decoding
+	if err = msg.Header.unmarshal(d.reader); err != nil {
 		return err
+	}
+	// IPFIX Message Header validation
+	if err = msg.Header.validate(); err != nil {
+		return err
+	}
+
+	for d.reader.Len() > 0 {
+
+		setHeader := new(SetHeader)
+		setHeader.unmarshal(d.reader)
+
+		if setHeader.Length < 4 {
+			return io.ErrUnexpectedEOF
+		}
+
+		switch {
+		case setHeader.SetID == 2:
+			// Template set
+			println("Template")
+		case setHeader.SetID == 3:
+			println("option")
+		case setHeader.SetID >= 4 && setHeader.SetID <= 255:
+			println("silent")
+		default:
+			println("data")
+
+		}
+
+		break
+
 	}
 
 	return nil
 }
 
-func (h *MessageHeader) unmarshal(d io.Reader) error {
+// RFC 7011 - part 3.1. Message Header Format
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |       Version Number          |            Length             |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |                           Export Time                         |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |                       Sequence Number                         |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |                    Observation Domain ID                      |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (h *MessageHeader) unmarshal(r *Reader) error {
 	var err error
 
-	if err = read(d, &h.Version); err != nil {
+	if h.Version, err = r.Uint16(); err != nil {
 		return err
 	}
 
-	if err = read(d, &h.Length); err != nil {
+	if h.Length, err = r.Uint16(); err != nil {
 		return err
 	}
 
-	if err = read(d, &h.ExportTime); err != nil {
+	if h.ExportTime, err = r.Uint32(); err != nil {
 		return err
 	}
 
-	if err = read(d, &h.SequenceNo); err != nil {
+	if h.SequenceNo, err = r.Uint32(); err != nil {
 		return err
 	}
 
-	if err = read(d, &h.DomainID); err != nil {
+	if h.DomainID, err = r.Uint32(); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func read(r io.Reader, v interface{}) error {
-	return binary.Read(r, binary.BigEndian, v)
+func (h *MessageHeader) validate() error {
+	if h.Version != 0x000a {
+		return errInvalidVersion
+	}
+
+	// TODO: needs more validation
+
+	return nil
+}
+
+// RFC 7011 - part 3.3.2 Set Header Format
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |          Set ID               |          Length               |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (h *SetHeader) unmarshal(r *Reader) error {
+	var err error
+
+	if h.SetID, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if h.Length, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	return nil
 }
