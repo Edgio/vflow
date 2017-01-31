@@ -47,10 +47,10 @@ type SampledHeader struct {
 }
 
 type ExtSwitchData struct {
-	SrcVlan     uint32
-	SrcPriority uint32
-	DstVlan     uint32
-	DstPriority uint32
+	SrcVlan     uint32 // The 802.1Q VLAN id of incoming frame
+	SrcPriority uint32 // The 802.1p priority of incoming frame
+	DstVlan     uint32 // The 802.1Q VLAN id of outgoing frame
+	DstPriority uint32 // The 802.1p priority of outgoing frame
 }
 
 var (
