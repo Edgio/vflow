@@ -29,9 +29,9 @@ var (
 
 func NewIPFIX(opts *Options) *IPFIX {
 	return &IPFIX{
-		port:    4739,
-		udpSize: 1500,
-		workers: 1,
+		port:    opts.IPFIXPort,
+		udpSize: opts.IPFIXUDPSize,
+		workers: opts.IPFIXWorkers,
 	}
 }
 
