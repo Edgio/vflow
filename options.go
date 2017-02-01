@@ -20,6 +20,12 @@ type Options struct {
 	SFlowPort    int
 	SFlowUDPSize int
 	SFlowWorkers int
+
+	// IPFIX options
+	IPFIXEnabled bool
+	IPFIXPort    int
+	IPFIXUDPSize int
+	IPFIXWorkers int
 }
 
 func NewOptions() *Options {
@@ -34,6 +40,11 @@ func NewOptions() *Options {
 		SFlowPort:    6343,
 		SFlowUDPSize: 1500,
 		SFlowWorkers: 10,
+
+		IPFIXEnabled: true,
+		IPFIXPort:    4739,
+		IPFIXUDPSize: 1500,
+		IPFIXWorkers: 10,
 	}
 }
 
@@ -66,6 +77,12 @@ func vFlowFlagSet(opts *Options) {
 	flag.IntVar(&opts.SFlowPort, "sflow-port", opts.SFlowPort, "sflow port number")
 	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
 	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers / concurrency number")
+
+	// ipfix options
+	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable IPFIX listener")
+	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
+	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
+	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers / concurrency number")
 
 	flag.Parse()
 }
