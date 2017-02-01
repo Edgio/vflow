@@ -60,13 +60,8 @@ var (
 	errInvalidVersion = errors.New("invalid ipfix version")
 )
 
-func NewDecoder(r io.Reader) (*IPFIXDecoder, error) {
-	data := make([]byte, 1500)
-	n, err := r.Read(data)
-	if err != nil {
-		return nil, err
-	}
-	return &IPFIXDecoder{NewReader(data[:n])}, nil
+func NewDecoder(b []byte) *IPFIXDecoder {
+	return &IPFIXDecoder{NewReader(b)}
 }
 
 func (d *IPFIXDecoder) Decode() (*Message, error) {

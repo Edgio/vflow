@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"net"
 	"strconv"
 	"sync"
@@ -20,7 +19,7 @@ type IPFIX struct {
 
 type IPFIXUDPMsg struct {
 	raddr *net.UDPAddr
-	body  *bytes.Reader
+	body  []byte
 }
 
 var (
@@ -36,10 +35,7 @@ func NewIPFIX(opts *Options) *IPFIX {
 }
 
 func (i *IPFIX) run() {
-	var (
-		b  = make([]byte, i.udpSize)
-		wg sync.WaitGroup
-	)
+	var wg sync.WaitGroup
 
 	hostPort := net.JoinHostPort(i.addr, strconv.Itoa(i.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
@@ -61,12 +57,13 @@ func (i *IPFIX) run() {
 	logger.Printf("ipfix is running (workers#: %d)", i.workers)
 
 	for !i.stop {
+		b := make([]byte, i.udpSize)
 		conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
 			continue
 		}
-		ipfixUdpCh <- IPFIXUDPMsg{raddr, bytes.NewReader(b[:n])}
+		ipfixUdpCh <- IPFIXUDPMsg{raddr, b[:n]}
 	}
 
 	wg.Wait()
@@ -93,10 +90,10 @@ func ipfixWorker() {
 
 		if verbose {
 			logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
-				msg.raddr, msg.body.Size())
+				msg.raddr, len(msg.body))
 		}
 
-		d, _ := ipfix.NewDecoder(msg.body)
+		d := ipfix.NewDecoder(msg.body)
 		d.Decode()
 	}
 }

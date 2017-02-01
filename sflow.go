@@ -14,7 +14,7 @@ import (
 
 type SFUDPMsg struct {
 	raddr *net.UDPAddr
-	body  *bytes.Reader
+	body  []byte
 }
 
 var (
@@ -45,10 +45,7 @@ func NewSFlow(opts *Options) *SFlow {
 }
 
 func (s *SFlow) run() {
-	var (
-		b  = make([]byte, s.udpSize)
-		wg sync.WaitGroup
-	)
+	var wg sync.WaitGroup
 
 	hostPort := net.JoinHostPort(s.addr, strconv.Itoa(s.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
@@ -70,12 +67,13 @@ func (s *SFlow) run() {
 	logger.Printf("sFlow is running (workers#: %d)", s.workers)
 
 	for !s.stop {
+		b := make([]byte, s.udpSize)
 		conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
 			continue
 		}
-		sFlowUdpCh <- SFUDPMsg{raddr, bytes.NewReader(b[:n])}
+		sFlowUdpCh <- SFUDPMsg{raddr, b[:n]}
 	}
 
 	wg.Wait()
@@ -93,6 +91,7 @@ func sFlowWorker() {
 	var (
 		msg    SFUDPMsg
 		ok     bool
+		reader *bytes.Reader
 		filter = []uint32{sflow.DataCounterSample}
 	)
 
@@ -103,10 +102,11 @@ func sFlowWorker() {
 
 		if verbose {
 			logger.Printf("rcvd sflow data from: %s, size: %d bytes",
-				msg.raddr, msg.body.Size())
+				msg.raddr, len(msg.body))
 		}
 
-		d := sflow.NewSFDecoder(msg.body, filter)
+		reader = bytes.NewReader(msg.body)
+		d := sflow.NewSFDecoder(reader, filter)
 		records, err := d.SFDecode()
 		if err != nil {
 			logger.Println(err)
