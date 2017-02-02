@@ -22,23 +22,31 @@
 package main
 
 import (
+	"log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 )
 
+var (
+	opts    *Options
+	logger  *log.Logger
+	verbose bool
+)
+
 func main() {
 	var (
 		wg       sync.WaitGroup
 		signalCh = make(chan os.Signal, 1)
-		opts     = GetOptions()
 	)
+
+	opts = GetOptions()
 
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 
-	sFlow := NewSFlow(opts)
-	ipfix := NewIPFIX(opts)
+	sFlow := NewSFlow()
+	ipfix := NewIPFIX()
 
 	go func() {
 		wg.Add(1)
@@ -52,7 +60,7 @@ func main() {
 		ipfix.run()
 	}()
 
-	go statsHTTPServer(opts)
+	go statsHTTPServer()
 
 	<-signalCh
 	go sFlow.shutdown()
