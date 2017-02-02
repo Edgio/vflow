@@ -23,6 +23,7 @@ package main
 
 import (
 	"encoding/json"
+	"net"
 	"net/http"
 	"runtime"
 	"time"
@@ -65,9 +66,7 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(j)
 }
 
-func statsHTTPServer(opts *Options) {
-	var logger = opts.Logger
-
+func statsHTTPServer() {
 	if !opts.StatsEnabled {
 		return
 	}
@@ -75,6 +74,8 @@ func statsHTTPServer(opts *Options) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sys", StatsSysHandler)
 
+	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
+
 	logger.Println("starting stats web server ...")
-	logger.Println(http.ListenAndServe(":8080", mux))
+	logger.Println(http.ListenAndServe(addr, mux))
 }
