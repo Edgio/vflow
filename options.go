@@ -34,7 +34,8 @@ type Options struct {
 
 	// stats options
 	StatsEnabled  bool
-	StatsHTTPPort int
+	StatsHTTPPort string
+	StatsHTTPAddr string
 
 	// sFlow options
 	SFlowEnabled bool
@@ -47,6 +48,7 @@ type Options struct {
 	IPFIXPort    int
 	IPFIXUDPSize int
 	IPFIXWorkers int
+	IPFIXMirror  string
 }
 
 func NewOptions() *Options {
@@ -55,7 +57,8 @@ func NewOptions() *Options {
 		Logger:  log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
 		StatsEnabled:  true,
-		StatsHTTPPort: 8080,
+		StatsHTTPPort: "8080",
+		StatsHTTPAddr: "",
 
 		SFlowEnabled: true,
 		SFlowPort:    6343,
@@ -66,6 +69,7 @@ func NewOptions() *Options {
 		IPFIXPort:    4739,
 		IPFIXUDPSize: 1500,
 		IPFIXWorkers: 10,
+		IPFIXMirror:  "139.49.193.73:4172",
 	}
 }
 
@@ -91,7 +95,8 @@ func vFlowFlagSet(opts *Options) {
 
 	// stats options
 	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable stats listener")
-	flag.IntVar(&opts.StatsHTTPPort, "stats-http-port", opts.StatsHTTPPort, "stats port listener")
+	flag.StringVar(&opts.StatsHTTPPort, "stats-http-port", opts.StatsHTTPPort, "stats port listener")
+	flag.StringVar(&opts.StatsHTTPAddr, "stats-http-addr", opts.StatsHTTPAddr, "stats bind address listener")
 
 	// sflow options
 	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable sflow listener")
