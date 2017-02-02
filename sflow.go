@@ -23,7 +23,6 @@ package main
 
 import (
 	"bytes"
-	"log"
 	"net"
 	"strconv"
 	"sync"
@@ -38,11 +37,7 @@ type SFUDPMsg struct {
 	body  []byte
 }
 
-var (
-	sFlowUdpCh = make(chan SFUDPMsg, 1000)
-	logger     *log.Logger
-	verbose    bool
-)
+var sFlowUdpCh = make(chan SFUDPMsg, 1000)
 
 type SFlow struct {
 	port        int
@@ -54,7 +49,7 @@ type SFlow struct {
 	stop        bool
 }
 
-func NewSFlow(opts *Options) *SFlow {
+func NewSFlow() *SFlow {
 	logger = opts.Logger
 	verbose = opts.Verbose
 
