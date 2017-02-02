@@ -30,6 +30,7 @@ const (
 	IPv4HLen = 20
 	IPv6HLen = 40
 	UDPHLen  = 8
+	UDPProto = 17
 )
 
 type Conn struct {
