@@ -35,27 +35,19 @@ type IPv4 struct {
 	TTL      uint8
 	Protocol uint8
 	Checksum uint16
-	SrcAddr  net.IP
-	DstAddr  net.IP
 }
 
-func NewIPv4Header(src, dst net.IP, proto int) IPv4 {
+func NewIPv4HeaderTpl(proto int) IPv4 {
 	return IPv4{
 		Version:  4,
 		IHL:      5,
 		TOS:      0,
 		TTL:      64,
 		Protocol: uint8(proto),
-		SrcAddr:  src,
-		DstAddr:  dst,
 	}
 }
 
-func (ip *IPv4) SetLen(b []byte, n int) {
-	binary.BigEndian.PutUint16(b[2:], uint16(n))
-}
-
-func (ip *IPv4) Marshal() ([]byte, error) {
+func (ip *IPv4) Marshal() []byte {
 	b := make([]byte, IPv4HLen)
 	b[0] = byte((ip.Version << 4) | ip.IHL)
 	b[1] = byte(ip.TOS)
@@ -65,8 +57,14 @@ func (ip *IPv4) Marshal() ([]byte, error) {
 	b[8] = byte(ip.TTL)
 	b[9] = byte(ip.Protocol)
 
-	copy(b[12:16], ip.SrcAddr[12:16])
-	copy(b[16:20], ip.DstAddr[12:16])
+	return b
+}
 
-	return b, nil
+func (ip *IPv4) SetLen(b []byte, n int) {
+	binary.BigEndian.PutUint16(b[2:], IPv4HLen+uint16(n))
+}
+
+func (ip *IPv4) SetAddrs(b []byte, src, dst net.IP) {
+	copy(b[12:16], src[12:16])
+	copy(b[16:20], dst[12:16])
 }
