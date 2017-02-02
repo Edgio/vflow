@@ -28,6 +28,7 @@ import (
 	"time"
 
 	"git.edgecastcdn.net/vflow/ipfix"
+	"git.edgecastcdn.net/vflow/mirror"
 )
 
 type IPFIX struct {
@@ -44,10 +45,12 @@ type IPFIXUDPMsg struct {
 }
 
 var (
-	ipfixUdpCh = make(chan IPFIXUDPMsg, 1000)
+	ipfixUdpCh         = make(chan IPFIXUDPMsg, 1000)
+	ipfixMCh           = make(chan IPFIXUDPMsg, 1000)
+	ipfixMirrorEnabled bool
 )
 
-func NewIPFIX(opts *Options) *IPFIX {
+func NewIPFIX() *IPFIX {
 	return &IPFIX{
 		port:    opts.IPFIXPort,
 		udpSize: opts.IPFIXUDPSize,
@@ -76,6 +79,10 @@ func (i *IPFIX) run() {
 	}
 
 	logger.Printf("ipfix is running (workers#: %d)", i.workers)
+
+	go func() {
+		mirrorIPFIX(ipfixMCh)
+	}()
 
 	for !i.stop {
 		b := make([]byte, i.udpSize)
@@ -114,7 +121,82 @@ func ipfixWorker() {
 				msg.raddr, len(msg.body))
 		}
 
+		if ipfixMirrorEnabled {
+			ipfixMCh <- IPFIXUDPMsg{msg.raddr, append([]byte{}, msg.body...)}
+		}
+
 		d := ipfix.NewDecoder(msg.body)
 		d.Decode()
+	}
+}
+
+func mirrorIPFIXv4(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
+	var (
+		packet = make([]byte, 1500)
+		msg    IPFIXUDPMsg
+		pLen   int
+		err    error
+	)
+
+	conn, err := mirror.NewRawConn(dst)
+	if err != nil {
+		return err
+	}
+
+	udp := mirror.UDP{4041, port, 0, 0}
+	udpHdr := udp.Marshal()
+
+	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
+	ipHdr := ip.Marshal()
+
+	for {
+		msg = <-ch
+		pLen = len(msg.body)
+
+		ip.SetAddrs(ipHdr, msg.raddr.IP, dst)
+		ip.SetLen(ipHdr, pLen+mirror.UDPHLen)
+		udp.SetLen(udpHdr, pLen)
+
+		copy(packet[0:20], ipHdr)
+		copy(packet[20:28], udpHdr)
+		copy(packet[28:], msg.body)
+
+		if err = conn.Send(packet[0 : 28+pLen]); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func mirrorIPFIX(ch chan IPFIXUDPMsg) {
+	var (
+		ch4 = make(chan IPFIXUDPMsg, 1000)
+		msg IPFIXUDPMsg
+	)
+
+	if opts.IPFIXMirror == "" {
+		return
+	}
+
+	host, port, err := net.SplitHostPort(opts.IPFIXMirror)
+	if err != nil {
+		logger.Fatalf("wrong ipfix mirror address%s", opts.IPFIXMirror)
+	}
+
+	portNo, _ := strconv.Atoi(port)
+	dst := net.ParseIP(host)
+
+	if dst.To4() != nil {
+		go mirrorIPFIXv4(dst, portNo, ch4)
+	}
+
+	ipfixMirrorEnabled = true
+	logger.Println("ipfix mirror service is running ...")
+
+	for {
+		msg = <-ch
+		if msg.raddr.IP.To4() != nil {
+			ch4 <- msg
+		}
 	}
 }
