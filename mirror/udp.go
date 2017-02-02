@@ -24,10 +24,10 @@ package mirror
 import "encoding/binary"
 
 type UDP struct {
-	SrcPort  uint16
-	DstPort  uint16
-	Length   uint16
-	Checksum uint16
+	SrcPort  int
+	DstPort  int
+	Length   int
+	Checksum int
 }
 
 func (u *UDP) Marshal() []byte {
@@ -39,4 +39,9 @@ func (u *UDP) Marshal() []byte {
 	binary.BigEndian.PutUint16(b[6:], uint16(u.Checksum))
 
 	return b
+}
+
+// SetLen sets the payload length
+func (u *UDP) SetLen(b []byte, n int) {
+	binary.BigEndian.PutUint16(b[4:], uint16(UDPHLen+n))
 }
