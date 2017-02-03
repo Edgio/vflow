@@ -77,5 +77,8 @@ func statsHTTPServer() {
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
 
 	logger.Println("starting stats web server ...")
-	logger.Println(http.ListenAndServe(addr, mux))
+	err := http.ListenAndServe(addr, mux)
+	if err != nil {
+		logger.Fatal(err)
+	}
 }
