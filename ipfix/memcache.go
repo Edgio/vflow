@@ -22,7 +22,7 @@ type TemplatesShard struct {
 	sync.RWMutex
 }
 
-func newCache() MemCache {
+func NewCache() MemCache {
 	m := make(MemCache, ShardNo)
 	for i := 0; i < ShardNo; i++ {
 		m[i] = TemplatesShard{template: make(map[string]Data)}
@@ -43,14 +43,14 @@ func (m MemCache) getShard(id uint16, addr net.IP) (TemplatesShard, []byte) {
 func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecord) {
 	shard, key := m.getShard(id, addr)
 	shard.Lock()
-	defer shard.Lock()
+	defer shard.Unlock()
 	shard.template[string(key)] = Data{tr, time.Now().Unix()}
 }
 
 func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecord, bool) {
 	shard, key := m.getShard(id, addr)
 	shard.RLock()
-	defer shard.RLock()
+	defer shard.RUnlock()
 	v, ok := shard.template[string(key)]
 	return v.TemplateRecord, ok
 }
