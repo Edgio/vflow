@@ -24,10 +24,12 @@ package ipfix
 import (
 	"errors"
 	"io"
+	"net"
 	"sync"
 )
 
 type IPFIXDecoder struct {
+	raddr  net.IP
 	reader *Reader
 }
 
@@ -81,8 +83,8 @@ var (
 	errInvalidVersion = errors.New("invalid ipfix version")
 )
 
-func NewDecoder(b []byte) *IPFIXDecoder {
-	return &IPFIXDecoder{NewReader(b)}
+func NewDecoder(raddr net.IP, b []byte) *IPFIXDecoder {
+	return &IPFIXDecoder{raddr, NewReader(b)}
 }
 
 func (d *IPFIXDecoder) Decode() (*Message, error) {

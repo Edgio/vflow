@@ -125,7 +125,7 @@ func ipfixWorker() {
 			ipfixMCh <- IPFIXUDPMsg{msg.raddr, append([]byte{}, msg.body...)}
 		}
 
-		d := ipfix.NewDecoder(msg.body)
+		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
 		d.Decode()
 	}
 }
@@ -143,7 +143,7 @@ func mirrorIPFIXv4(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 		return err
 	}
 
-	udp := mirror.UDP{4041, port, 0, 0}
+	udp := mirror.UDP{55117, port, 0, 0}
 	udpHdr := udp.Marshal()
 
 	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
