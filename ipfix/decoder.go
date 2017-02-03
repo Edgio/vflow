@@ -129,10 +129,12 @@ func (d *IPFIXDecoder) Decode(mem MemCache) (*Message, error) {
 			// Option set
 			tr := OptsTemplateRecords{}
 			tr.unmarshal(d.reader)
+			mem.insert(tr.TemplateID, d.raddr, tr)
 		case setHeader.SetID >= 4 && setHeader.SetID <= 255:
 			// Reserved
 		default:
 			// data
+			mem.retrieve(setHeader.SetID, d.raddr)
 		}
 
 		break
