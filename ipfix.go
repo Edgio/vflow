@@ -48,6 +48,9 @@ var (
 	ipfixUdpCh         = make(chan IPFIXUDPMsg, 1000)
 	ipfixMCh           = make(chan IPFIXUDPMsg, 1000)
 	ipfixMirrorEnabled bool
+
+	// templates memory cache
+	mCache ipfix.MemCache
 )
 
 func NewIPFIX() *IPFIX {
@@ -79,6 +82,8 @@ func (i *IPFIX) run() {
 	}
 
 	logger.Printf("ipfix is running (workers#: %d)", i.workers)
+
+	mCache = ipfix.NewCache()
 
 	go func() {
 		mirrorIPFIX(ipfixMCh)
@@ -126,7 +131,7 @@ func ipfixWorker() {
 		}
 
 		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
-		d.Decode()
+		d.Decode(mCache)
 	}
 }
 
