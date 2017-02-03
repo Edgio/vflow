@@ -46,8 +46,9 @@ type TemplateHeader struct {
 	FieldCount uint16
 }
 
-type TemplateRecord struct {
+type TemplateRecords struct {
 	TemplateID      uint16
+	FieldCount      uint16
 	FieldSpecifiers []TemplateFieldSpecifier
 }
 
@@ -57,14 +58,21 @@ type TemplateFieldSpecifier struct {
 	EnterpriseNo uint32
 }
 
-type Message struct {
-	Header       MessageHeader
-	TemplateSets []TemplateSet
-	DataSets     []DataSet
+type OptsTemplateHeader struct {
+	TemplateID      uint16
+	FieldCount      uint16
+	ScopeFieldCount uint16
 }
 
-type TemplateSet struct {
-	Records []TemplateRecord
+type OptsTemplateRecords struct {
+	TemplateID      uint16
+	FieldCount      uint16
+	ScopeFieldCount uint16
+}
+
+type Message struct {
+	Header   MessageHeader
+	DataSets []DataSet
 }
 
 type DataSet struct {
@@ -87,7 +95,7 @@ func NewDecoder(raddr net.IP, b []byte) *IPFIXDecoder {
 	return &IPFIXDecoder{raddr, NewReader(b)}
 }
 
-func (d *IPFIXDecoder) Decode() (*Message, error) {
+func (d *IPFIXDecoder) Decode(mem MemCache) (*Message, error) {
 	var (
 		msg = new(Message)
 		err error
@@ -114,11 +122,13 @@ func (d *IPFIXDecoder) Decode() (*Message, error) {
 		switch {
 		case setHeader.SetID == 2:
 			// Template set
-			ts := TemplateSet{}
-			ts.unmarshal(d.reader)
-			msg.TemplateSets = append(msg.TemplateSets, ts)
+			tr := TemplateRecords{}
+			tr.unmarshal(d.reader)
+			mem.insert(tr.TemplateID, d.raddr, tr)
 		case setHeader.SetID == 3:
 			// Option set
+			tr := OptsTemplateRecords{}
+			tr.unmarshal(d.reader)
 		case setHeader.SetID >= 4 && setHeader.SetID <= 255:
 			// Reserved
 		default:
@@ -226,6 +236,36 @@ func (t *TemplateHeader) unmarshal(r *Reader) error {
 
 }
 
+// RFC 7011 3.4.2.2.  Options Template Record Format
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |          Set ID = 3           |          Length               |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |         Template ID           |         Field Count = N + M   |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |     Scope Field Count = N     |0|  Scope 1 Infor. Element id. |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (t *OptsTemplateHeader) unmarshal(r *Reader) error {
+	var err error
+
+	if t.TemplateID, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if t.FieldCount, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if t.ScopeFieldCount, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 // RFC 7011
 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -255,22 +295,31 @@ func (f *TemplateFieldSpecifier) unmarshal(r *Reader) error {
 	return nil
 }
 
-func (t *TemplateSet) unmarshal(r *Reader) error {
+func (tr *TemplateRecords) unmarshal(r *Reader) {
 	var (
 		th = TemplateHeader{}
-		tr = TemplateRecord{}
 		tf = TemplateFieldSpecifier{}
 	)
 
 	th.unmarshal(r)
 	tr.TemplateID = th.TemplateID
+	tr.FieldCount = th.FieldCount
 
 	for i := th.FieldCount; i > 0; i-- {
 		tf.unmarshal(r)
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
+}
 
-	t.Records = append(t.Records, tr)
+func (tr *OptsTemplateRecords) unmarshal(r *Reader) {
+	var (
+		th = OptsTemplateHeader{}
+	)
 
-	return nil
+	th.unmarshal(r)
+	tr.TemplateID = th.TemplateID
+	tr.FieldCount = th.FieldCount
+	tr.ScopeFieldCount = th.ScopeFieldCount
+
+	// TODO
 }
