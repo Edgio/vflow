@@ -13,7 +13,7 @@ var ShardNo = 32
 type MemCache []TemplatesShard
 
 type Data struct {
-	TemplateRecord
+	TemplateRecords
 	timestamp int64
 }
 
@@ -40,19 +40,19 @@ func (m MemCache) getShard(id uint16, addr net.IP) (TemplatesShard, []byte) {
 	return m[uint(hash.Sum32())%uint(ShardNo)], key
 }
 
-func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecord) {
+func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecords) {
 	shard, key := m.getShard(id, addr)
 	shard.Lock()
 	defer shard.Unlock()
 	shard.template[string(key)] = Data{tr, time.Now().Unix()}
 }
 
-func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecord, bool) {
+func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecords, bool) {
 	shard, key := m.getShard(id, addr)
 	shard.RLock()
 	defer shard.RUnlock()
 	v, ok := shard.template[string(key)]
-	return v.TemplateRecord, ok
+	return v.TemplateRecords, ok
 }
 
 func (m *MemCache) remove(id int, addr string) {
