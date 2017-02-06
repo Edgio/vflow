@@ -65,9 +65,11 @@ type OptsTemplateHeader struct {
 }
 
 type OptsTemplateRecords struct {
-	TemplateID      uint16
-	FieldCount      uint16
-	ScopeFieldCount uint16
+	TemplateID           uint16
+	FieldCount           uint16
+	ScopeFieldCount      uint16
+	ScopeFieldSpecifiers []TemplateFieldSpecifier
+	FieldSpecifiers      []TemplateFieldSpecifier
 }
 
 type Message struct {
@@ -297,6 +299,22 @@ func (f *TemplateFieldSpecifier) unmarshal(r *Reader) error {
 	return nil
 }
 
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |          Set ID = 2           |          Length               |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |      Template ID = 256        |         Field Count = N       |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |1| Information Element id. 1.1 |        Field Length 1.1       |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |                    Enterprise Number  1.1                     |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |0| Information Element id. 1.2 |        Field Length 1.2       |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |             ...               |              ...              |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 func (tr *TemplateRecords) unmarshal(r *Reader) {
 	var (
 		th = TemplateHeader{}
@@ -313,9 +331,38 @@ func (tr *TemplateRecords) unmarshal(r *Reader) {
 	}
 }
 
+//  0                   1                   2                   3
+//  0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |          Set ID = 3           |          Length               |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |         Template ID = X       |         Field Count = N + M   |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |     Scope Field Count = N     |0|  Scope 1 Infor. Element id. |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |     Scope 1 Field Length      |0|  Scope 2 Infor. Element id. |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |     Scope 2 Field Length      |             ...               |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |            ...                |1|  Scope N Infor. Element id. |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |     Scope N Field Length      |   Scope N Enterprise Number  ...
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// ...  Scope N Enterprise Number   |1| Option 1 Infor. Element id. |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |    Option 1 Field Length      |  Option 1 Enterprise Number  ...
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// ... Option 1 Enterprise Number   |              ...              |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |             ...               |0| Option M Infor. Element id. |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//  |     Option M Field Length     |      Padding (optional)       |
+//  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 func (tr *OptsTemplateRecords) unmarshal(r *Reader) {
 	var (
 		th = OptsTemplateHeader{}
+		tf = TemplateFieldSpecifier{}
 	)
 
 	th.unmarshal(r)
@@ -323,5 +370,13 @@ func (tr *OptsTemplateRecords) unmarshal(r *Reader) {
 	tr.FieldCount = th.FieldCount
 	tr.ScopeFieldCount = th.ScopeFieldCount
 
-	// TODO
+	for i := th.ScopeFieldCount; i > 0; i-- {
+		tf.unmarshal(r)
+		tr.ScopeFieldSpecifiers = append(tr.FieldSpecifiers, tf)
+	}
+
+	for i := th.FieldCount - th.ScopeFieldCount; i > 0; i-- {
+		tf.unmarshal(r)
+		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
+	}
 }
