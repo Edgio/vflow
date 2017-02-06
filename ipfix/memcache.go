@@ -10,7 +10,7 @@ import (
 
 var ShardNo = 32
 
-type MemCache []TemplatesShard
+type MemCache []*TemplatesShard
 
 type Data struct {
 	TemplateRecords interface{}
@@ -25,12 +25,12 @@ type TemplatesShard struct {
 func NewCache() MemCache {
 	m := make(MemCache, ShardNo)
 	for i := 0; i < ShardNo; i++ {
-		m[i] = TemplatesShard{template: make(map[string]Data)}
+		m[i] = &TemplatesShard{template: make(map[string]Data)}
 	}
 	return m
 }
 
-func (m MemCache) getShard(id uint16, addr net.IP) (TemplatesShard, []byte) {
+func (m MemCache) getShard(id uint16, addr net.IP) (*TemplatesShard, []byte) {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, id)
 	key := append(addr, b...)
