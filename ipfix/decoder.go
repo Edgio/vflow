@@ -42,34 +42,23 @@ type MessageHeader struct {
 }
 
 type TemplateHeader struct {
-	TemplateID uint16
-	FieldCount uint16
+	TemplateID      uint16
+	FieldCount      uint16
+	ScopeFieldCount uint16
 }
 
 type TemplateRecords struct {
-	TemplateID      uint16
-	FieldCount      uint16
-	FieldSpecifiers []TemplateFieldSpecifier
+	TemplateID           uint16
+	FieldCount           uint16
+	FieldSpecifiers      []TemplateFieldSpecifier
+	ScopeFieldCount      uint16
+	ScopeFieldSpecifiers []TemplateFieldSpecifier
 }
 
 type TemplateFieldSpecifier struct {
 	ElementID    uint16
 	Length       uint16
 	EnterpriseNo uint32
-}
-
-type OptsTemplateHeader struct {
-	TemplateID      uint16
-	FieldCount      uint16
-	ScopeFieldCount uint16
-}
-
-type OptsTemplateRecords struct {
-	TemplateID           uint16
-	FieldCount           uint16
-	ScopeFieldCount      uint16
-	ScopeFieldSpecifiers []TemplateFieldSpecifier
-	FieldSpecifiers      []TemplateFieldSpecifier
 }
 
 type Message struct {
@@ -90,7 +79,8 @@ type SetHeader struct {
 }
 
 var (
-	errInvalidVersion = errors.New("invalid ipfix version")
+	errInvalidVersion    = errors.New("invalid ipfix version")
+	errUnknownTemplateID = errors.New("unknown template id")
 )
 
 func NewDecoder(raddr net.IP, b []byte) *IPFIXDecoder {
@@ -112,7 +102,8 @@ func (d *IPFIXDecoder) Decode(mem MemCache) (*Message, error) {
 		return nil, err
 	}
 
-	for d.reader.Len() > 0 {
+LOOP:
+	for d.reader.Len() > 4 {
 
 		setHeader := new(SetHeader)
 		setHeader.unmarshal(d.reader)
@@ -129,18 +120,20 @@ func (d *IPFIXDecoder) Decode(mem MemCache) (*Message, error) {
 			mem.insert(tr.TemplateID, d.raddr, tr)
 		case setHeader.SetID == 3:
 			// Option set
-			tr := OptsTemplateRecords{}
-			tr.unmarshal(d.reader)
+			tr := TemplateRecords{}
+			tr.unmarshalOpts(d.reader)
 			mem.insert(tr.TemplateID, d.raddr, tr)
 		case setHeader.SetID >= 4 && setHeader.SetID <= 255:
 			// Reserved
 		default:
 			// data
-			mem.retrieve(setHeader.SetID, d.raddr)
+			tr, ok := mem.retrieve(setHeader.SetID, d.raddr)
+			if !ok {
+				return msg, errUnknownTemplateID
+			}
+			decodeData(d.reader, tr)
+			break LOOP
 		}
-
-		break
-
 	}
 
 	return msg, nil
@@ -251,7 +244,7 @@ func (t *TemplateHeader) unmarshal(r *Reader) error {
 // |     Scope Field Count = N     |0|  Scope 1 Infor. Element id. |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (t *OptsTemplateHeader) unmarshal(r *Reader) error {
+func (t *TemplateHeader) unmarshalOpts(r *Reader) error {
 	var err error
 
 	if t.TemplateID, err = r.Uint16(); err != nil {
@@ -359,13 +352,13 @@ func (tr *TemplateRecords) unmarshal(r *Reader) {
 //  |     Option M Field Length     |      Padding (optional)       |
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (tr *OptsTemplateRecords) unmarshal(r *Reader) {
+func (tr *TemplateRecords) unmarshalOpts(r *Reader) {
 	var (
-		th = OptsTemplateHeader{}
+		th = TemplateHeader{}
 		tf = TemplateFieldSpecifier{}
 	)
 
-	th.unmarshal(r)
+	th.unmarshalOpts(r)
 	tr.TemplateID = th.TemplateID
 	tr.FieldCount = th.FieldCount
 	tr.ScopeFieldCount = th.ScopeFieldCount
@@ -379,4 +372,14 @@ func (tr *OptsTemplateRecords) unmarshal(r *Reader) {
 		tf.unmarshal(r)
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
+}
+
+func decodeData(r *Reader, tr TemplateRecords) {
+	b := make([]byte, 1000)
+	println("Scope", tr.ScopeFieldCount, tr.FieldCount)
+	for i := 0; i < len(tr.FieldSpecifiers); i++ {
+		b, _ = r.Read(int(tr.FieldSpecifiers[i].Length))
+		println(tr.FieldSpecifiers[i].ElementID, b)
+	}
+
 }
