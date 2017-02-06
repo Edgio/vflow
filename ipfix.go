@@ -131,7 +131,10 @@ func ipfixWorker() {
 		}
 
 		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
-		d.Decode(mCache)
+		if _, err := d.Decode(mCache); err != nil {
+			logger.Println(err)
+		}
+
 	}
 }
 
