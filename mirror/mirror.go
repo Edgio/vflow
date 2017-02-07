@@ -41,6 +41,12 @@ type Conn struct {
 	raddr  syscall.Sockaddr
 }
 
+type IP interface {
+	Marshal() []byte
+	SetLen([]byte, int)
+	SetAddrs([]byte, net.IP, net.IP)
+}
+
 func NewRawConn(raddr net.IP) (Conn, error) {
 	var err error
 	conn := Conn{
