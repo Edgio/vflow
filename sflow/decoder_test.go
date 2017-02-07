@@ -54,6 +54,6 @@ func TestSFHeader(t *testing.T) {
 
 	if datagram.IPAddress.String() != "192.229.214.0" {
 		t.Error("expected agent ip address: 192.229.214.0, got",
-			datagram.IPAddress)
+			datagram.IPAddress.String())
 	}
 }
