@@ -173,7 +173,6 @@ func mirrorIPFIXv4(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 			return err
 		}
 	}
-	return nil
 }
 
 func mirrorIPFIX(ch chan IPFIXUDPMsg) {
