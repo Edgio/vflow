@@ -63,7 +63,12 @@ type TemplateFieldSpecifier struct {
 
 type Message struct {
 	Header   MessageHeader
-	DataSets []DataSet
+	DataSets [][]DecodedField
+}
+
+type DecodedField struct {
+	ID    uint16
+	Value interface{}
 }
 
 type DataSet struct {
@@ -102,7 +107,6 @@ func (d *IPFIXDecoder) Decode(mem MemCache) (*Message, error) {
 		return nil, err
 	}
 
-LOOP:
 	for d.reader.Len() > 4 {
 
 		setHeader := new(SetHeader)
@@ -127,12 +131,14 @@ LOOP:
 			// Reserved
 		default:
 			// data
-			tr, ok := mem.retrieve(setHeader.SetID, d.raddr)
-			if !ok {
-				return msg, errUnknownTemplateID
+			for d.reader.Len() > 0 {
+				tr, ok := mem.retrieve(setHeader.SetID, d.raddr)
+				if !ok {
+					return msg, errUnknownTemplateID
+				}
+				data := decodeData(d.reader, tr)
+				msg.DataSets = append(msg.DataSets, data)
 			}
-			decodeData(d.reader, tr)
-			break LOOP
 		}
 	}
 
@@ -374,12 +380,23 @@ func (tr *TemplateRecords) unmarshalOpts(r *Reader) {
 	}
 }
 
-func decodeData(r *Reader, tr TemplateRecords) {
-	b := make([]byte, 1000)
-	println("Scope", tr.ScopeFieldCount, tr.FieldCount)
+func decodeData(r *Reader, tr TemplateRecords) []DecodedField {
+	var (
+		fields []DecodedField
+		b      = make([]byte, 1500)
+	)
+
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		b, _ = r.Read(int(tr.FieldSpecifiers[i].Length))
-		println(tr.FieldSpecifiers[i].ElementID, b)
+		m := ipfixInfoModel[elementKey{
+			tr.FieldSpecifiers[i].EnterpriseNo,
+			tr.FieldSpecifiers[i].ElementID,
+		}]
+		fields = append(fields, DecodedField{
+			ID:    m.FieldID,
+			Value: interpret(b, m.Type),
+		})
 	}
 
+	return fields
 }
