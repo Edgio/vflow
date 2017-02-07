@@ -45,7 +45,7 @@ func NewIPv6HeaderTpl(proto int) IPv6 {
 	}
 }
 
-func (ip *IPv6) Marshal() []byte {
+func (ip IPv6) Marshal() []byte {
 	b := make([]byte, IPv6HLen)
 	b[0] = byte((ip.Version << 4) | (ip.TrafficClass >> 4))
 	b[1] = byte((ip.TrafficClass << 4) | uint8(ip.FlowLabel>>16))
@@ -56,11 +56,11 @@ func (ip *IPv6) Marshal() []byte {
 	return b
 }
 
-func (ip *IPv6) SetLen(b []byte, n int) {
+func (ip IPv6) SetLen(b []byte, n int) {
 	binary.BigEndian.PutUint16(b[4:], IPv6HLen+uint16(n))
 }
 
-func (ip *IPv6) SetAddrs(b []byte, src, dst net.IP) {
+func (ip IPv6) SetAddrs(b []byte, src, dst net.IP) {
 	copy(b[8:], src)
 	copy(b[24:], dst)
 }
