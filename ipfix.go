@@ -86,7 +86,7 @@ func (i *IPFIX) run() {
 	mCache = ipfix.NewCache()
 
 	go func() {
-		mirrorIPFIX(ipfixMCh)
+		mirrorIPFIXDispatcher(ipfixMCh)
 	}()
 
 	for !i.stop {
@@ -138,12 +138,16 @@ func ipfixWorker() {
 	}
 }
 
-func mirrorIPFIXv4(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
+func mirrorIPFIX(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 	var (
 		packet = make([]byte, 1500)
 		msg    IPFIXUDPMsg
 		pLen   int
 		err    error
+		ipHdr  []byte
+		ipHLen int
+		ipv4   bool
+		ip     mirror.IP
 	)
 
 	conn, err := mirror.NewRawConn(dst)
@@ -154,8 +158,19 @@ func mirrorIPFIXv4(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 	udp := mirror.UDP{55117, port, 0, 0}
 	udpHdr := udp.Marshal()
 
-	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
-	ipHdr := ip.Marshal()
+	if dst.To4() != nil {
+		ipv4 = true
+	}
+
+	if ipv4 {
+		ip = mirror.NewIPv4HeaderTpl(mirror.UDPProto)
+		ipHdr = ip.Marshal()
+		ipHLen = mirror.IPv4HLen
+	} else {
+		ip = mirror.NewIPv6HeaderTpl(mirror.UDPProto)
+		ipHdr = ip.Marshal()
+		ipHLen = mirror.IPv6HLen
+	}
 
 	for {
 		msg = <-ch
@@ -163,21 +178,27 @@ func mirrorIPFIXv4(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 
 		ip.SetAddrs(ipHdr, msg.raddr.IP, dst)
 		ip.SetLen(ipHdr, pLen+mirror.UDPHLen)
+
 		udp.SetLen(udpHdr, pLen)
+		// IPv6 checksum mandatory
+		if !ipv4 {
+			udp.SetChecksum()
+		}
 
-		copy(packet[0:20], ipHdr)
-		copy(packet[20:28], udpHdr)
-		copy(packet[28:], msg.body)
+		copy(packet[0:ipHLen], ipHdr)
+		copy(packet[ipHLen:ipHLen+8], udpHdr)
+		copy(packet[ipHLen+8:], msg.body)
 
-		if err = conn.Send(packet[0 : 28+pLen]); err != nil {
+		if err = conn.Send(packet[0 : ipHLen+8+pLen]); err != nil {
 			return err
 		}
 	}
 }
 
-func mirrorIPFIX(ch chan IPFIXUDPMsg) {
+func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 	var (
 		ch4 = make(chan IPFIXUDPMsg, 1000)
+		ch6 = make(chan IPFIXUDPMsg, 1000)
 		msg IPFIXUDPMsg
 	)
 
@@ -194,7 +215,7 @@ func mirrorIPFIX(ch chan IPFIXUDPMsg) {
 	dst := net.ParseIP(host)
 
 	if dst.To4() != nil {
-		go mirrorIPFIXv4(dst, portNo, ch4)
+		go mirrorIPFIX(dst, portNo, ch4)
 	}
 
 	ipfixMirrorEnabled = true
@@ -204,6 +225,8 @@ func mirrorIPFIX(ch chan IPFIXUDPMsg) {
 		msg = <-ch
 		if msg.raddr.IP.To4() != nil {
 			ch4 <- msg
+		} else {
+			ch6 <- msg
 		}
 	}
 }
