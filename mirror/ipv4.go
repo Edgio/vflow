@@ -47,7 +47,7 @@ func NewIPv4HeaderTpl(proto int) IPv4 {
 	}
 }
 
-func (ip *IPv4) Marshal() []byte {
+func (ip IPv4) Marshal() []byte {
 	b := make([]byte, IPv4HLen)
 	b[0] = byte((ip.Version << 4) | ip.IHL)
 	b[1] = byte(ip.TOS)
@@ -60,11 +60,11 @@ func (ip *IPv4) Marshal() []byte {
 	return b
 }
 
-func (ip *IPv4) SetLen(b []byte, n int) {
+func (ip IPv4) SetLen(b []byte, n int) {
 	binary.BigEndian.PutUint16(b[2:], IPv4HLen+uint16(n))
 }
 
-func (ip *IPv4) SetAddrs(b []byte, src, dst net.IP) {
+func (ip IPv4) SetAddrs(b []byte, src, dst net.IP) {
 	copy(b[12:16], src[12:16])
 	copy(b[16:20], dst[12:16])
 }
