@@ -33,6 +33,8 @@ func interpret(b []byte, t FieldType) interface{} {
 	}
 
 	switch t {
+	case Boolean:
+		return b[0] == 1
 	case Uint8:
 		return b[0]
 	case Uint16:
@@ -53,19 +55,20 @@ func interpret(b []byte, t FieldType) interface{} {
 		return math.Float32frombits(binary.BigEndian.Uint32(b))
 	case Float64:
 		return math.Float64frombits(binary.BigEndian.Uint64(b))
-	case Boolean:
-		return b[0] == 1
 	case MacAddress:
 		return net.HardwareAddr(b)
-	case Unknown, OctetArray:
-		return b
 	case String:
 		return string(b)
 	case Ipv4Address, Ipv6Address:
 		return net.IP(b)
-		// TODO
+	case DateTimeSeconds:
+		return binary.BigEndian.Uint32(b)
+	case DateTimeMilliseconds, DateTimeMicroseconds, DateTimeNanoseconds:
+		return binary.BigEndian.Uint64(b)
+	case Unknown, OctetArray:
+		return b
 	}
-	return 0
+	return b
 }
 
 func (t FieldType) minLen() int {
