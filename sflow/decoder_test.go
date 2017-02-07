@@ -40,10 +40,11 @@ var TestsFlowRawPacket = []byte{
 	0x0, 0x0, 0x0, 0x0, 0x45, 0x0, 0x0, 0x40, 0x65, 0x2d, 0x0, 0x0, 0x1,
 	0x1, 0xfc, 0x4d, 0xc0, 0xe5, 0xd6, 0x17, 0xc0, 0x10, 0x1, 0x35, 0x8,
 	0x0, 0x9f, 0x7a, 0x34, 0x2, 0x24, 0x83, 0x0, 0x0, 0x0, 0x0, 0x3,
-	0xe9, 0x0, 0x0, 0x0, 0x10, 0x0, 0x0,
+	0xe9, 0x0, 0x0, 0x0, 0x10, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
+	0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0,
 }
 
-func TestSFHeader(t *testing.T) {
+func TestSFHeaderDecode(t *testing.T) {
 	filter := []uint32{DataCounterSample}
 	reader := bytes.NewReader(TestsFlowRawPacket)
 	d := NewSFDecoder(reader, filter)
@@ -55,5 +56,44 @@ func TestSFHeader(t *testing.T) {
 	if datagram.IPAddress.String() != "192.229.214.0" {
 		t.Error("expected agent ip address: 192.229.214.0, got",
 			datagram.IPAddress.String())
+	}
+}
+
+func TestGetSampleInfo(t *testing.T) {
+	filter := []uint32{DataCounterSample}
+	reader := bytes.NewReader(TestsFlowRawPacket)
+	// skip sflow header
+	skip := make([]byte, 4*7)
+	reader.Read(skip)
+
+	d := NewSFDecoder(reader, filter)
+	sfTypeFormat, sfDataLength, err := d.getSampleInfo()
+	if err != nil {
+		t.Error("")
+	}
+	if sfTypeFormat != 1 {
+		t.Error("expected type format# 1, got", sfTypeFormat)
+	}
+	if sfDataLength != 156 {
+		t.Error("expected data length: 156, got", sfDataLength)
+	}
+}
+
+func TestSFDecode(t *testing.T) {
+	filter := []uint32{DataCounterSample}
+	reader := bytes.NewReader(TestsFlowRawPacket)
+	d := NewSFDecoder(reader, filter)
+	_, err := d.SFDecode()
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+}
+
+func BenchmarkSFDecode(b *testing.B) {
+	filter := []uint32{DataCounterSample}
+	for i := 0; i < b.N; i++ {
+		reader := bytes.NewReader(TestsFlowRawPacket)
+		d := NewSFDecoder(reader, filter)
+		d.SFDecode()
 	}
 }
