@@ -45,3 +45,7 @@ func (u *UDP) Marshal() []byte {
 func (u *UDP) SetLen(b []byte, n int) {
 	binary.BigEndian.PutUint16(b[4:], uint16(UDPHLen+n))
 }
+
+func (u *UDP) SetChecksum() {
+	// TODO
+}
