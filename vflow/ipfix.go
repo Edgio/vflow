@@ -206,16 +206,20 @@ func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 		return
 	}
 
-	host, port, err := net.SplitHostPort(opts.IPFIXMirror)
-	if err != nil {
-		logger.Fatalf("wrong ipfix mirror address%s", opts.IPFIXMirror)
-	}
+	for _, mirrorHostPort := range strings.Split(opts.IPFIXMirror, ";") {
+		host, port, err := net.SplitHostPort(mirrorHostPort)
+		if err != nil {
+			logger.Fatalf("wrong ipfix mirror address %s", opts.IPFIXMirror)
+		}
 
-	portNo, _ := strconv.Atoi(port)
-	dst := net.ParseIP(host)
+		portNo, _ := strconv.Atoi(port)
+		dst := net.ParseIP(host)
 
-	if dst.To4() != nil {
-		go mirrorIPFIX(dst, portNo, ch4)
+		if dst.To4() != nil {
+			go mirrorIPFIX(dst, portNo, ch4)
+		} else {
+			go mirrorIPFIX(dst, portNo, ch6)
+		}
 	}
 
 	ipfixMirrorEnabled = true
