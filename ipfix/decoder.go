@@ -62,6 +62,7 @@ type TemplateFieldSpecifier struct {
 }
 
 type Message struct {
+	AgentID  string
 	Header   MessageHeader
 	DataSets [][]DecodedField
 }
@@ -69,9 +70,6 @@ type Message struct {
 type DecodedField struct {
 	ID    uint16
 	Value interface{}
-}
-
-type DataSet struct {
 }
 
 type Session struct {
@@ -106,6 +104,9 @@ func (d *IPFIXDecoder) Decode(mem MemCache) (*Message, error) {
 	if err = msg.Header.validate(); err != nil {
 		return nil, err
 	}
+
+	// Add source IP address as Agent ID
+	msg.AgentID = d.raddr.String()
 
 	for d.reader.Len() > 4 {
 
