@@ -49,13 +49,13 @@ type MemCacheDisk struct {
 	ShardNo int
 }
 
-func GetCache() MemCache {
+func GetCache(cacheFile string) MemCache {
 	var (
 		mem MemCacheDisk
 		err error
 	)
 
-	b, err := ioutil.ReadFile("/tmp/vflow.templates")
+	b, err := ioutil.ReadFile(cacheFile)
 	if err == nil {
 		err = json.Unmarshal(b, &mem)
 		if err == nil && mem.ShardNo == ShardNo {
@@ -99,8 +99,7 @@ func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecords, bool) {
 	return v.Template, ok
 }
 
-func (m MemCache) Dump() error {
-	// TODO
+func (m MemCache) Dump(cacheFile string) error {
 	b, err := json.Marshal(
 		MemCacheDisk{
 			m,
@@ -111,31 +110,10 @@ func (m MemCache) Dump() error {
 		return err
 	}
 
-	err = ioutil.WriteFile("/tmp/vflow.templates", b, 0644)
+	err = ioutil.WriteFile(cacheFile, b, 0644)
 	if err != nil {
 		return err
 	}
 
 	return nil
 }
-
-/*
-func memKey(ip []byte, id uint16) string {
-	hash := fnv.New32()
-	hash.Write(ip)
-	//fmt.Printf("HASH:%#v\n", hash.Sum32())
-	return fmt.Sprintf("%d:%d", hash.Sum32(), id)
-}
-
-func memKey1(ip []byte, id uint16) uint32 {
-	b := make([]byte, 2)
-	b[0] = byte(id >> 8)
-	b[1] = byte(id)
-
-	ip = append(ip, b...)
-	hash := fnv.New32()
-	hash.Write(ip)
-
-	return hash.Sum32()
-}
-*/

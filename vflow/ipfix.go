@@ -84,7 +84,7 @@ func (i *IPFIX) run() {
 
 	logger.Printf("ipfix is running (workers#: %d)", i.workers)
 
-	mCache = ipfix.GetCache()
+	mCache = ipfix.GetCache(opts.IPFIXTemplateCacheFile)
 
 	go func() {
 		mirrorIPFIXDispatcher(ipfixMCh)
@@ -108,7 +108,7 @@ func (i *IPFIX) shutdown() {
 	logger.Println("stopped ipfix service gracefully ...")
 	time.Sleep(1 * time.Second)
 
-	if err := mCache.Dump(); err != nil {
+	if err := mCache.Dump(opts.IPFIXTemplateCacheFile); err != nil {
 		logger.Println("couldn't not dump template", err)
 	}
 
@@ -143,8 +143,9 @@ func ipfixWorker() {
 			logger.Println(err)
 			continue
 		}
-		//_ = dMsg
-		logger.Printf("%#v\n", dMsg)
+		// TODO
+		_ = dMsg
+		//logger.Printf("%#v\n", dMsg)
 	}
 }
 

@@ -44,11 +44,12 @@ type Options struct {
 	SFlowWorkers int
 
 	// IPFIX options
-	IPFIXEnabled bool
-	IPFIXPort    int
-	IPFIXUDPSize int
-	IPFIXWorkers int
-	IPFIXMirror  string
+	IPFIXEnabled           bool
+	IPFIXPort              int
+	IPFIXUDPSize           int
+	IPFIXWorkers           int
+	IPFIXMirror            string
+	IPFIXTemplateCacheFile string
 }
 
 func NewOptions() *Options {
@@ -65,11 +66,12 @@ func NewOptions() *Options {
 		SFlowUDPSize: 1500,
 		SFlowWorkers: 10,
 
-		IPFIXEnabled: true,
-		IPFIXPort:    4739,
-		IPFIXUDPSize: 1500,
-		IPFIXWorkers: 10,
-		IPFIXMirror:  "139.49.193.73:4172",
+		IPFIXEnabled:           true,
+		IPFIXPort:              4739,
+		IPFIXUDPSize:           1500,
+		IPFIXWorkers:           10,
+		IPFIXMirror:            "139.49.193.73:4172",
+		IPFIXTemplateCacheFile: "/tmp/vflow.templates",
 	}
 }
 
@@ -109,6 +111,7 @@ func vFlowFlagSet(opts *Options) {
 	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers / concurrency number")
+	flag.StringVar(&opts.IPFIXTemplateCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTemplateCacheFile, "IPFIX template cache file")
 
 	flag.Parse()
 }
