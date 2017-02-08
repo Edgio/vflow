@@ -51,7 +51,6 @@ type SFlow struct {
 
 func NewSFlow() *SFlow {
 	logger = opts.Logger
-	verbose = opts.Verbose
 
 	return &SFlow{
 		port:    opts.SFlowPort,
@@ -116,7 +115,7 @@ func sFlowWorker() {
 			break
 		}
 
-		if verbose {
+		if opts.Verbose {
 			logger.Printf("rcvd sflow data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
@@ -130,15 +129,15 @@ func sFlowWorker() {
 		for _, data := range records {
 			switch data.(type) {
 			case *packet.Packet:
-				if verbose {
+				if opts.Verbose {
 					logger.Printf("%#v\n", data)
 				}
 			case *sflow.ExtSwitchData:
-				if verbose {
+				if opts.Verbose {
 					logger.Printf("%#v\n", data)
 				}
 			case *sflow.FlowSample:
-				if verbose {
+				if opts.Verbose {
 					logger.Printf("%#v\n", data)
 				}
 			}

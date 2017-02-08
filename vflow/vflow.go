@@ -30,9 +30,8 @@ import (
 )
 
 var (
-	opts    *Options
-	logger  *log.Logger
-	verbose bool
+	opts   *Options
+	logger *log.Logger
 )
 
 func main() {

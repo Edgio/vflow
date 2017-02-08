@@ -118,10 +118,10 @@ func (i *IPFIX) shutdown() {
 
 func ipfixWorker() {
 	var (
-		msg  IPFIXUDPMsg
-		dMsg *ipfix.Message
-		err  error
-		ok   bool
+		decodedMsg *ipfix.Message
+		msg        IPFIXUDPMsg
+		err        error
+		ok         bool
 	)
 
 	for {
@@ -129,7 +129,7 @@ func ipfixWorker() {
 			break
 		}
 
-		if verbose {
+		if opts.Verbose {
 			logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
@@ -139,13 +139,14 @@ func ipfixWorker() {
 		}
 
 		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
-		if dMsg, err = d.Decode(mCache); err != nil {
+		if decodedMsg, err = d.Decode(mCache); err != nil {
 			logger.Println(err)
 			continue
 		}
-		// TODO
-		_ = dMsg
-		//logger.Printf("%#v\n", dMsg)
+
+		if opts.Verbose {
+			logger.Printf("%#v\n", decodedMsg)
+		}
 	}
 }
 
