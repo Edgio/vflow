@@ -61,10 +61,8 @@ func interpret(b []byte, t FieldType) interface{} {
 		return string(b)
 	case Ipv4Address, Ipv6Address:
 		return net.IP(b)
-	case DateTimeSeconds:
-		return binary.BigEndian.Uint32(b)
-	case DateTimeMilliseconds, DateTimeMicroseconds, DateTimeNanoseconds:
-		return binary.BigEndian.Uint64(b)
+	case DateTimeSeconds, DateTimeMilliseconds, DateTimeMicroseconds, DateTimeNanoseconds:
+		return int64(binary.BigEndian.Uint64(b))
 	case Unknown, OctetArray:
 		return b
 	}
