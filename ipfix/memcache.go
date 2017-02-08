@@ -23,7 +23,10 @@ package ipfix
 
 import (
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 	"hash/fnv"
+	"io/ioutil"
 	"net"
 	"sync"
 	"time"
@@ -34,56 +37,92 @@ var ShardNo = 32
 type MemCache []*TemplatesShard
 
 type Data struct {
-	TemplateRecords TemplateRecords
-	timestamp       int64
+	Template  TemplateRecords
+	Timestamp int64
 }
 
 type TemplatesShard struct {
-	template map[string]Data
+	Templates map[string]Data
 	sync.RWMutex
 }
+type MemCacheDisk struct {
+	Cache   MemCache
+	ShardNo int
+}
 
-func NewCache() MemCache {
+func GetCache() MemCache {
+	var (
+		mem MemCacheDisk
+		err error
+	)
+
+	b, err := ioutil.ReadFile("/tmp/vflow.templates")
+	if err == nil {
+		err = json.Unmarshal(b, &mem)
+		if err == nil && mem.ShardNo == ShardNo {
+			return mem.Cache
+		}
+	}
+
 	m := make(MemCache, ShardNo)
 	for i := 0; i < ShardNo; i++ {
-		m[i] = &TemplatesShard{template: make(map[string]Data)}
+		m[i] = &TemplatesShard{Templates: make(map[string]Data)}
 	}
+
 	return m
 }
 
-func (m MemCache) getShard(id uint16, addr net.IP) (*TemplatesShard, []byte) {
+func (m MemCache) getShard(id uint16, addr net.IP) *TemplatesShard {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, id)
 	key := append(addr, b...)
 
 	hash := fnv.New32()
 	hash.Write(key)
-	return m[uint(hash.Sum32())%uint(ShardNo)], key
+
+	return m[uint(hash.Sum32())%uint(ShardNo)]
 }
 
 func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecords) {
-	shard, key := m.getShard(id, addr)
+	shard := m.getShard(id, addr)
 	shard.Lock()
 	defer shard.Unlock()
-	shard.template[string(key)] = Data{tr, time.Now().Unix()}
+	shard.Templates[mKey(addr, id)] = Data{tr, time.Now().Unix()}
 }
 
 func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecords, bool) {
-	shard, key := m.getShard(id, addr)
+	shard := m.getShard(id, addr)
 	shard.RLock()
 	defer shard.RUnlock()
-	v, ok := shard.template[string(key)]
-	return v.TemplateRecords, ok
+	v, ok := shard.Templates[mKey(addr, id)]
+
+	return v.Template, ok
 }
 
-func (m *MemCache) remove(id int, addr string) {
+func (m MemCache) Dump() error {
 	// TODO
+	b, err := json.Marshal(
+		MemCacheDisk{
+			m,
+			ShardNo,
+		},
+	)
+	if err != nil {
+		return err
+	}
+
+	err = ioutil.WriteFile("/tmp/vflow.templates", b, 0644)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (m *MemCache) cleanup(id int, addr string) {
-	// TODO
-}
-
-func (m *MemCache) dump(id int, addr string) {
-	// TODO
+func mKey(ip []byte, id uint16) string {
+	var r string
+	for k := range ip {
+		r += string(uint(ip[k]))
+	}
+	return fmt.Sprintf("%s:%d", r, id)
 }
