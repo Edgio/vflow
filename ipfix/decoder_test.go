@@ -56,7 +56,7 @@ func init() {
 
 func TestDecodeNoData(t *testing.T) {
 	ip := net.ParseIP("127.0.0.1")
-	mCache := GetCache()
+	mCache := GetCache("cache.file")
 	body := []byte{}
 	d := NewDecoder(ip, body)
 	if _, err := d.Decode(mCache); err == nil {
@@ -66,7 +66,7 @@ func TestDecodeNoData(t *testing.T) {
 
 func TestDecodeTemplate(t *testing.T) {
 	ip := net.ParseIP("127.0.0.1")
-	mCache := GetCache()
+	mCache := GetCache("cache.file")
 	d := NewDecoder(ip, tpl)
 	_, err := d.Decode(mCache)
 	if err != nil {
@@ -76,7 +76,7 @@ func TestDecodeTemplate(t *testing.T) {
 
 func TestDecodeOptsTemplate(t *testing.T) {
 	ip := net.ParseIP("127.0.0.1")
-	mCache := GetCache()
+	mCache := GetCache("cache.file")
 	d := NewDecoder(ip, optsTpl)
 	_, err := d.Decode(mCache)
 	if err != nil {
@@ -86,7 +86,7 @@ func TestDecodeOptsTemplate(t *testing.T) {
 
 func BenchmarkDecodeTemplate(b *testing.B) {
 	ip := net.ParseIP("127.0.0.1")
-	mCache := GetCache()
+	mCache := GetCache("cache.file")
 	for i := 0; i < b.N; i++ {
 		d := NewDecoder(ip, tpl)
 		d.Decode(mCache)
@@ -95,7 +95,7 @@ func BenchmarkDecodeTemplate(b *testing.B) {
 
 func BenchmarkDecodeOptsTemplate(b *testing.B) {
 	ip := net.ParseIP("127.0.0.1")
-	mCache := GetCache()
+	mCache := GetCache("cache.file")
 	for i := 0; i < b.N; i++ {
 		d := NewDecoder(ip, optsTpl)
 		d.Decode(mCache)
