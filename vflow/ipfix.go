@@ -84,7 +84,7 @@ func (i *IPFIX) run() {
 
 	logger.Printf("ipfix is running (workers#: %d)", i.workers)
 
-	mCache = ipfix.NewCache()
+	mCache = ipfix.GetCache()
 
 	go func() {
 		mirrorIPFIXDispatcher(ipfixMCh)
@@ -107,14 +107,21 @@ func (i *IPFIX) shutdown() {
 	i.stop = true
 	logger.Println("stopped ipfix service gracefully ...")
 	time.Sleep(1 * time.Second)
+
+	if err := mCache.Dump(); err != nil {
+		logger.Println("couldn't not dump template", err)
+	}
+
 	logger.Println("ipfix has been shutdown")
 	close(ipfixUdpCh)
 }
 
 func ipfixWorker() {
 	var (
-		msg IPFIXUDPMsg
-		ok  bool
+		msg  IPFIXUDPMsg
+		dMsg *ipfix.Message
+		err  error
+		ok   bool
 	)
 
 	for {
@@ -132,10 +139,12 @@ func ipfixWorker() {
 		}
 
 		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
-		if _, err := d.Decode(mCache); err != nil {
+		if dMsg, err = d.Decode(mCache); err != nil {
 			logger.Println(err)
+			continue
 		}
-
+		//_ = dMsg
+		logger.Printf("%#v\n", dMsg)
 	}
 }
 
