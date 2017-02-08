@@ -24,7 +24,6 @@ package ipfix
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"hash/fnv"
 	"io/ioutil"
 	"net"
@@ -42,7 +41,7 @@ type Data struct {
 }
 
 type TemplatesShard struct {
-	Templates map[string]Data
+	Templates map[uint32]Data
 	sync.RWMutex
 }
 type MemCacheDisk struct {
@@ -66,35 +65,36 @@ func GetCache() MemCache {
 
 	m := make(MemCache, ShardNo)
 	for i := 0; i < ShardNo; i++ {
-		m[i] = &TemplatesShard{Templates: make(map[string]Data)}
+		m[i] = &TemplatesShard{Templates: make(map[uint32]Data)}
 	}
 
 	return m
 }
 
-func (m MemCache) getShard(id uint16, addr net.IP) *TemplatesShard {
+func (m MemCache) getShard(id uint16, addr net.IP) (*TemplatesShard, uint32) {
 	b := make([]byte, 2)
 	binary.BigEndian.PutUint16(b, id)
 	key := append(addr, b...)
 
 	hash := fnv.New32()
 	hash.Write(key)
+	hSum32 := hash.Sum32()
 
-	return m[uint(hash.Sum32())%uint(ShardNo)]
+	return m[uint(hSum32)%uint(ShardNo)], hSum32
 }
 
 func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecords) {
-	shard := m.getShard(id, addr)
+	shard, key := m.getShard(id, addr)
 	shard.Lock()
 	defer shard.Unlock()
-	shard.Templates[mKey(addr, id)] = Data{tr, time.Now().Unix()}
+	shard.Templates[key] = Data{tr, time.Now().Unix()}
 }
 
 func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecords, bool) {
-	shard := m.getShard(id, addr)
+	shard, key := m.getShard(id, addr)
 	shard.RLock()
 	defer shard.RUnlock()
-	v, ok := shard.Templates[mKey(addr, id)]
+	v, ok := shard.Templates[key]
 
 	return v.Template, ok
 }
@@ -119,10 +119,23 @@ func (m MemCache) Dump() error {
 	return nil
 }
 
-func mKey(ip []byte, id uint16) string {
-	var r string
-	for k := range ip {
-		r += string(uint(ip[k]))
-	}
-	return fmt.Sprintf("%s:%d", r, id)
+/*
+func memKey(ip []byte, id uint16) string {
+	hash := fnv.New32()
+	hash.Write(ip)
+	//fmt.Printf("HASH:%#v\n", hash.Sum32())
+	return fmt.Sprintf("%d:%d", hash.Sum32(), id)
 }
+
+func memKey1(ip []byte, id uint16) uint32 {
+	b := make([]byte, 2)
+	b[0] = byte(id >> 8)
+	b[1] = byte(id)
+
+	ip = append(ip, b...)
+	hash := fnv.New32()
+	hash.Write(ip)
+
+	return hash.Sum32()
+}
+*/
