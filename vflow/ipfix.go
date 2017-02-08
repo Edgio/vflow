@@ -22,6 +22,7 @@
 package main
 
 import (
+	"encoding/json"
 	"net"
 	"strconv"
 	"strings"
@@ -144,8 +145,14 @@ func ipfixWorker() {
 			continue
 		}
 
+		b, err := json.Marshal(decodedMsg)
+		if err != nil {
+			logger.Println(err)
+			continue
+		}
+
 		if opts.Verbose {
-			logger.Printf("%#v\n", decodedMsg)
+			logger.Println(string(b))
 		}
 	}
 }
