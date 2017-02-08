@@ -123,6 +123,7 @@ func ipfixWorker() {
 		msg        IPFIXUDPMsg
 		err        error
 		ok         bool
+		b          []byte
 	)
 
 	for {
@@ -145,7 +146,7 @@ func ipfixWorker() {
 			continue
 		}
 
-		b, err := json.Marshal(decodedMsg)
+		b, err = json.Marshal(decodedMsg)
 		if err != nil {
 			logger.Println(err)
 			continue

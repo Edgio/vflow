@@ -384,7 +384,7 @@ func (tr *TemplateRecords) unmarshalOpts(r *Reader) {
 func decodeData(r *Reader, tr TemplateRecords) []DecodedField {
 	var (
 		fields []DecodedField
-		b      = make([]byte, 1500)
+		b      []byte
 	)
 
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
