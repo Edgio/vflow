@@ -53,8 +53,8 @@ var (
 	// templates memory cache
 	mCache ipfix.MemCache
 
-	// udp payload pool
-	buffer = sync.Pool{
+	// ipfix udp payload pool
+	ipfixBuffer = &sync.Pool{
 		New: func() interface{} {
 			return make([]byte, opts.IPFIXUDPSize)
 		},
@@ -97,7 +97,7 @@ func (i *IPFIX) run() {
 	}()
 
 	for !i.stop {
-		b := buffer.Get().([]byte)
+		b := ipfixBuffer.Get().([]byte)
 		conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
@@ -161,7 +161,7 @@ func ipfixWorker() {
 			logger.Println(string(b))
 		}
 
-		buffer.Put(msg.body)
+		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 	}
 }
 
