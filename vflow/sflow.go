@@ -23,6 +23,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"net"
 	"strconv"
 	"sync"
@@ -104,7 +105,7 @@ func (s *SFlow) run() {
 
 func (s *SFlow) shutdown() {
 	s.stop = true
-	logger.Println("stopped sflow service gracefully ...")
+	logger.Println("stopping sflow service gracefully ...")
 	time.Sleep(1 * time.Second)
 	logger.Println("vFlow has been shutdown")
 	close(sFlowUDPCh)
@@ -112,10 +113,11 @@ func (s *SFlow) shutdown() {
 
 func sFlowWorker() {
 	var (
+		filter = []uint32{sflow.DataCounterSample}
+		reader *bytes.Reader
 		msg    SFUDPMsg
 		ok     bool
-		reader *bytes.Reader
-		filter = []uint32{sflow.DataCounterSample}
+		b      []byte
 	)
 
 	for {
@@ -131,26 +133,38 @@ func sFlowWorker() {
 		reader = bytes.NewReader(msg.body)
 		d := sflow.NewSFDecoder(reader, filter)
 		records, err := d.SFDecode()
-		if err != nil {
-			logger.Println(err)
+		if err != nil || len(records) < 1 {
+			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
+			continue
 		}
+
+		decodedMsg := sflow.Message{}
 
 		for _, data := range records {
 			switch data.(type) {
 			case *packet.Packet:
-				if opts.Verbose {
-					logger.Printf("%#v\n", data)
-				}
+				decodedMsg.Packet = data.(*packet.Packet)
 			case *sflow.ExtSwitchData:
-				if opts.Verbose {
-					logger.Printf("%#v\n", data)
-				}
+				decodedMsg.ExtSWData = data.(*sflow.ExtSwitchData)
 			case *sflow.FlowSample:
-				if opts.Verbose {
-					logger.Printf("%#v\n", data)
-				}
+				decodedMsg.Sample = data.(*sflow.FlowSample)
+			case *sflow.SFDatagram:
+				decodedMsg.Header = data.(*sflow.SFDatagram)
 			}
 		}
+
+		b, err = json.Marshal(decodedMsg)
+		if err != nil {
+			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
+			logger.Println(err)
+			continue
+		}
+
+		if opts.Verbose {
+			logger.Println(string(b))
+		}
+
+		// TODO: producer
 
 		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 	}
