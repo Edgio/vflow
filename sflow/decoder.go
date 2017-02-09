@@ -1,3 +1,4 @@
+// Package sflow decodes sFlow packets
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -29,19 +30,24 @@ import (
 )
 
 const (
-	DataFlowSample    = 1 // Packet Flow Sampling
-	DataCounterSample = 2 // Counter Sampling
+	// DataFlowSample defines packet flow sampling
+	DataFlowSample = 1
+
+	// DataCounterSample defines counter sampling
+	DataCounterSample = 2
 )
 
+// SFDecoder represents sFlow decoder
 type SFDecoder struct {
 	reader io.ReadSeeker
 	filter []uint32 // Filter data format(s)
 }
 
+// SFDatagram represents sFlow datagram
 type SFDatagram struct {
 	Version    uint32 // Datagram version
 	IPVersion  uint32 // Data gram sFlow version
-	AgentSubId uint32 // Identifies a source of sFlow data
+	AgentSubID uint32 // Identifies a source of sFlow data
 	SequenceNo uint32 // Sequence of sFlow Datagrams
 	SysUpTime  uint32 // Current time (in milliseconds since device last booted
 	SamplesNo  uint32 // Number of samples
@@ -49,6 +55,7 @@ type SFDatagram struct {
 	IPAddress net.IP // Agent IP address
 }
 
+// SFSampledHeader represents sFlow sample header
 type SFSampledHeader struct {
 	HeaderProtocol uint32 // (enum SFHeaderProtocol)
 	FrameLength    uint32 // Original length of packet before sampling
@@ -57,14 +64,13 @@ type SFSampledHeader struct {
 	HeaderBytes    []byte // Header bytes
 }
 
-type SFSample interface{}
-
 var (
-	nonEnterpriseStandard = errors.New("the enterprise is not standard sflow data")
-	dataLengthUnknown     = errors.New("the sflow data length is unknown")
-	sfVersionNotSupport   = errors.New("the sflow version doesn't support")
+	errNoneEnterpriseStandard = errors.New("the enterprise is not standard sflow data")
+	errDataLengthUnknown      = errors.New("the sflow data length is unknown")
+	errSFVersionNotSupport    = errors.New("the sflow version doesn't support")
 )
 
+// NewSFDecoder constructs new sflow decoder
 func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 	return SFDecoder{
 		reader: r,
@@ -72,6 +78,7 @@ func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 	}
 }
 
+// SFDecode decodes sFlow data
 func (d *SFDecoder) SFDecode() ([]interface{}, error) {
 	datagram, err := d.sfHeaderDecode()
 	if err != nil {
@@ -107,8 +114,8 @@ func (d *SFDecoder) SFDecode() ([]interface{}, error) {
 
 func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
 	var (
-		datagram     = &SFDatagram{}
-		ipLen    int = 4
+		datagram = &SFDatagram{}
+		ipLen    = 4
 		err      error
 	)
 
@@ -117,7 +124,7 @@ func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
 	}
 
 	if datagram.Version != 5 {
-		return nil, sfVersionNotSupport
+		return nil, errSFVersionNotSupport
 	}
 
 	if err = read(d.reader, &datagram.IPVersion); err != nil {
@@ -134,7 +141,7 @@ func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
 	}
 	datagram.IPAddress = buff
 
-	if err = read(d.reader, &datagram.AgentSubId); err != nil {
+	if err = read(d.reader, &datagram.AgentSubID); err != nil {
 		return nil, err
 	}
 	if err = read(d.reader, &datagram.SequenceNo); err != nil {
@@ -170,11 +177,11 @@ func (d *SFDecoder) getSampleInfo() (uint32, uint32, error) {
 	// supports standard sflow data
 	if sfTypeEnterprise != 0 {
 		d.reader.Seek(int64(sfDataLength), 1)
-		return 0, 0, nonEnterpriseStandard
+		return 0, 0, errNoneEnterpriseStandard
 	}
 
 	if err = read(d.reader, &sfDataLength); err != nil {
-		return 0, 0, dataLengthUnknown
+		return 0, 0, errDataLengthUnknown
 	}
 
 	return sfTypeFormat, sfDataLength, nil
