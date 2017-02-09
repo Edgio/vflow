@@ -20,7 +20,6 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
-// Package ipfix decode IPFIX packets
 package ipfix
 
 import (
