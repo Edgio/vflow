@@ -32,23 +32,24 @@ import (
 	"git.edgecastcdn.net/vflow/sflow"
 )
 
+// SFUDPMsg represents sFlow UDP message
 type SFUDPMsg struct {
 	raddr *net.UDPAddr
 	body  []byte
 }
 
-var sFlowUdpCh = make(chan SFUDPMsg, 1000)
+var sFlowUDPCh = make(chan SFUDPMsg, 1000)
 
+// SFlow represents sFlow collector
 type SFlow struct {
-	port        int
-	addr        string
-	laddr       *net.UDPAddr
-	readTimeout time.Duration
-	udpSize     int
-	workers     int
-	stop        bool
+	port    int
+	addr    string
+	udpSize int
+	workers int
+	stop    bool
 }
 
+// NewSFlow constructs sFlow collector
 func NewSFlow() *SFlow {
 	logger = opts.Logger
 
@@ -88,7 +89,7 @@ func (s *SFlow) run() {
 		if err != nil {
 			continue
 		}
-		sFlowUdpCh <- SFUDPMsg{raddr, b[:n]}
+		sFlowUDPCh <- SFUDPMsg{raddr, b[:n]}
 	}
 
 	wg.Wait()
@@ -99,7 +100,7 @@ func (s *SFlow) shutdown() {
 	logger.Println("stopped sflow service gracefully ...")
 	time.Sleep(1 * time.Second)
 	logger.Println("vFlow has been shutdown")
-	close(sFlowUdpCh)
+	close(sFlowUDPCh)
 }
 
 func sFlowWorker() {
@@ -111,7 +112,7 @@ func sFlowWorker() {
 	)
 
 	for {
-		if msg, ok = <-sFlowUdpCh; !ok {
+		if msg, ok = <-sFlowUDPCh; !ok {
 			break
 		}
 
