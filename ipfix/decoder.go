@@ -1,3 +1,4 @@
+// Package ipfix decode IPFIX packets
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -19,6 +20,7 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
+// Package ipfix decode IPFIX packets
 package ipfix
 
 import (
@@ -28,11 +30,13 @@ import (
 	"sync"
 )
 
-type IPFIXDecoder struct {
+// Decoder represents IPFIX payload and remote address
+type Decoder struct {
 	raddr  net.IP
 	reader *Reader
 }
 
+// MessageHeader represents IPFIX message header
 type MessageHeader struct {
 	Version    uint16 // Version of IPFIX to which this Message conforms
 	Length     uint16 // Total length of the IPFIX Message, measured in octets
@@ -41,12 +45,14 @@ type MessageHeader struct {
 	DomainID   uint32 // A 32-bit id that is locally unique to the Exporting Process
 }
 
+// TemplateHeader represents template fields
 type TemplateHeader struct {
 	TemplateID      uint16
 	FieldCount      uint16
 	ScopeFieldCount uint16
 }
 
+// TemplateRecords represents template records
 type TemplateRecords struct {
 	TemplateID           uint16
 	FieldCount           uint16
@@ -55,27 +61,27 @@ type TemplateRecords struct {
 	ScopeFieldSpecifiers []TemplateFieldSpecifier
 }
 
+// TemplateFieldSpecifier represents field properties
 type TemplateFieldSpecifier struct {
 	ElementID    uint16
 	Length       uint16
 	EnterpriseNo uint32
 }
 
+// Message represents IPFIX decoded data
 type Message struct {
 	AgentID  string
 	Header   MessageHeader
 	DataSets [][]DecodedField
 }
 
+// DecodedField represents a decoded field
 type DecodedField struct {
 	ID    uint16
 	Value interface{}
 }
 
-type Session struct {
-	buff *sync.Pool
-}
-
+// SetHeader represents set header fields
 type SetHeader struct {
 	SetID  uint16
 	Length uint16
@@ -86,11 +92,13 @@ var (
 	errUnknownTemplateID = errors.New("unknown template id")
 )
 
-func NewDecoder(raddr net.IP, b []byte) *IPFIXDecoder {
-	return &IPFIXDecoder{raddr, NewReader(b)}
+// NewDecoder constructs a decoder
+func NewDecoder(raddr net.IP, b []byte) *Decoder {
+	return &Decoder{raddr, NewReader(b)}
 }
 
-func (d *IPFIXDecoder) Decode(mem MemCache) (*Message, error) {
+// Decode decodes the IPFIX raw data
+func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 	var (
 		msg = new(Message)
 		err error
