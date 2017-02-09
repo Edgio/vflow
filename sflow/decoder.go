@@ -27,6 +27,8 @@ import (
 	"errors"
 	"io"
 	"net"
+
+	"git.edgecastcdn.net/vflow/packet"
 )
 
 const (
@@ -64,6 +66,13 @@ type SFSampledHeader struct {
 	HeaderBytes    []byte // Header bytes
 }
 
+type Message struct {
+	Header    *SFDatagram
+	ExtSWData *ExtSwitchData
+	Sample    *FlowSample
+	Packet    *packet.Packet
+}
+
 var (
 	errNoneEnterpriseStandard = errors.New("the enterprise is not standard sflow data")
 	errDataLengthUnknown      = errors.New("the sflow data length is unknown")
@@ -99,6 +108,7 @@ func (d *SFDecoder) SFDecode() ([]interface{}, error) {
 		switch sfTypeFormat {
 		case DataFlowSample:
 			h, err := decodeFlowSample(d.reader)
+			h = append(h, datagram)
 			return h, err
 		case DataCounterSample:
 			d.reader.Seek(int64(sfDataLength), 1)
