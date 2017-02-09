@@ -71,6 +71,12 @@ func NewIPFIX() *IPFIX {
 func (i *IPFIX) run() {
 	var wg sync.WaitGroup
 
+	// exist if the ipfix is disabled
+	if !opts.IPFIXEnabled {
+		logger.Println("ipfix disabled")
+		return
+	}
+
 	hostPort := net.JoinHostPort(i.addr, strconv.Itoa(i.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
 
@@ -110,14 +116,23 @@ func (i *IPFIX) run() {
 }
 
 func (i *IPFIX) shutdown() {
+	// exist if the ipfix is disabled
+	if !opts.IPFIXEnabled {
+		logger.Println("ipfix disabled")
+		return
+	}
+
+	// stop reading from UDP listener
 	i.stop = true
-	logger.Println("stopped ipfix service gracefully ...")
+	logger.Println("stopping ipfix service gracefully ...")
 	time.Sleep(1 * time.Second)
 
+	// dump the templates to storage
 	if err := mCache.Dump(opts.IPFIXTemplateCacheFile); err != nil {
 		logger.Println("couldn't not dump template", err)
 	}
 
+	// logging and close UDP channel
 	logger.Println("ipfix has been shutdown")
 	close(ipfixUdpCh)
 }
