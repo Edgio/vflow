@@ -71,7 +71,7 @@ func NewIPFIX() *IPFIX {
 func (i *IPFIX) run() {
 	var wg sync.WaitGroup
 
-	// exist if the ipfix is disabled
+	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
 		logger.Println("ipfix disabled")
 		return
@@ -116,7 +116,7 @@ func (i *IPFIX) run() {
 }
 
 func (i *IPFIX) shutdown() {
-	// exist if the ipfix is disabled
+	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
 		logger.Println("ipfix disabled")
 		return
