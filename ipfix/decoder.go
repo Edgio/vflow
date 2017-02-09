@@ -27,7 +27,6 @@ import (
 	"errors"
 	"io"
 	"net"
-	"sync"
 )
 
 // Decoder represents IPFIX payload and remote address
