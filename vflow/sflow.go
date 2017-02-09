@@ -38,16 +38,24 @@ type SFUDPMsg struct {
 	body  []byte
 }
 
-var sFlowUDPCh = make(chan SFUDPMsg, 1000)
-
 // SFlow represents sFlow collector
 type SFlow struct {
 	port    int
 	addr    string
-	udpSize int
 	workers int
 	stop    bool
 }
+
+var (
+	sFlowUDPCh = make(chan SFUDPMsg, 1000)
+
+	// sflow udp payload pool
+	sFlowBuffer = &sync.Pool{
+		New: func() interface{} {
+			return make([]byte, opts.SFlowUDPSize)
+		},
+	}
+)
 
 // NewSFlow constructs sFlow collector
 func NewSFlow() *SFlow {
@@ -55,7 +63,6 @@ func NewSFlow() *SFlow {
 
 	return &SFlow{
 		port:    opts.SFlowPort,
-		udpSize: opts.SFlowUDPSize,
 		workers: opts.SFlowWorkers,
 	}
 }
@@ -83,7 +90,7 @@ func (s *SFlow) run() {
 	logger.Printf("sFlow is running (workers#: %d)", s.workers)
 
 	for !s.stop {
-		b := make([]byte, s.udpSize)
+		b := sFlowBuffer.Get().([]byte)
 		conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
@@ -127,6 +134,7 @@ func sFlowWorker() {
 		if err != nil {
 			logger.Println(err)
 		}
+
 		for _, data := range records {
 			switch data.(type) {
 			case *packet.Packet:
@@ -143,5 +151,7 @@ func sFlowWorker() {
 				}
 			}
 		}
+
+		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 	}
 }
