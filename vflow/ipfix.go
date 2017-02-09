@@ -36,7 +36,6 @@ import (
 type IPFIX struct {
 	port    int
 	addr    string
-	udpSize int
 	workers int
 	stop    bool
 }
@@ -53,12 +52,18 @@ var (
 
 	// templates memory cache
 	mCache ipfix.MemCache
+
+	// udp payload pool
+	buffer = sync.Pool{
+		New: func() interface{} {
+			return make([]byte, opts.IPFIXUDPSize)
+		},
+	}
 )
 
 func NewIPFIX() *IPFIX {
 	return &IPFIX{
 		port:    opts.IPFIXPort,
-		udpSize: opts.IPFIXUDPSize,
 		workers: opts.IPFIXWorkers,
 	}
 }
@@ -92,7 +97,7 @@ func (i *IPFIX) run() {
 	}()
 
 	for !i.stop {
-		b := make([]byte, i.udpSize)
+		b := buffer.Get().([]byte)
 		conn.SetReadDeadline(time.Now().Add(1e9))
 		n, raddr, err := conn.ReadFromUDP(b)
 		if err != nil {
@@ -155,6 +160,8 @@ func ipfixWorker() {
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
+
+		buffer.Put(msg.body)
 	}
 }
 
