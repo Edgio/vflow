@@ -1,3 +1,4 @@
+// Package mirror clones IPFIX data to another collector
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -26,17 +27,18 @@ import (
 	"net"
 )
 
+// IPv4 represents the minimum IPV4 fields
+// which they need to setup.
 type IPv4 struct {
 	Version  uint8
 	IHL      uint8
 	TOS      uint8
 	Length   uint16
-	Id       uint16
 	TTL      uint8
 	Protocol uint8
-	Checksum uint16
 }
 
+// NewIPv4HeaderTpl constructs IPv4 header template
 func NewIPv4HeaderTpl(proto int) IPv4 {
 	return IPv4{
 		Version:  4,
@@ -47,6 +49,7 @@ func NewIPv4HeaderTpl(proto int) IPv4 {
 	}
 }
 
+// Marshal encodes the IPv4 packet
 func (ip IPv4) Marshal() []byte {
 	b := make([]byte, IPv4HLen)
 	b[0] = byte((ip.Version << 4) | ip.IHL)
@@ -60,10 +63,12 @@ func (ip IPv4) Marshal() []byte {
 	return b
 }
 
+// SetLen sets the IPv4 header length
 func (ip IPv4) SetLen(b []byte, n int) {
 	binary.BigEndian.PutUint16(b[2:], IPv4HLen+uint16(n))
 }
 
+// SetAddrs sets the source and destination address
 func (ip IPv4) SetAddrs(b []byte, src, dst net.IP) {
 	copy(b[12:16], src[12:16])
 	copy(b[16:20], dst[12:16])
