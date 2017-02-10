@@ -1,3 +1,4 @@
+// Package mirror clones the IPFIX packets w/ spoofing feature
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -23,6 +24,7 @@ package mirror
 
 import "encoding/binary"
 
+// UDP represents UDP header
 type UDP struct {
 	SrcPort  int
 	DstPort  int
@@ -30,6 +32,7 @@ type UDP struct {
 	Checksum int
 }
 
+// Marshal returns decoded UDP
 func (u *UDP) Marshal() []byte {
 	b := make([]byte, UDPHLen)
 
@@ -46,6 +49,7 @@ func (u *UDP) SetLen(b []byte, n int) {
 	binary.BigEndian.PutUint16(b[4:], uint16(UDPHLen+n))
 }
 
+// SetChecksum calculates and sets IPv6 checksum
 func (u *UDP) SetChecksum() {
 	// TODO
 }

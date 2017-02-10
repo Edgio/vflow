@@ -1,3 +1,4 @@
+// Package mirror clones the IPFIX packets w/ spoofing feature
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -27,12 +28,20 @@ import (
 )
 
 const (
+	// IPv4HLen is IP version 4 header length
 	IPv4HLen = 20
+
+	// IPv6HLen is IP version 6 header length
 	IPv6HLen = 40
-	UDPHLen  = 8
+
+	// UDPHLen is UDP header length
+	UDPHLen = 8
+
+	// UDPProto is UDP protocol IANA number
 	UDPProto = 17
 )
 
+// Conn represents socket connection properties
 type Conn struct {
 	family int
 	sotype int
@@ -41,12 +50,14 @@ type Conn struct {
 	raddr  syscall.Sockaddr
 }
 
+// IP is network layer corresponding to IPv4/IPv6
 type IP interface {
 	Marshal() []byte
 	SetLen([]byte, int)
 	SetAddrs([]byte, net.IP, net.IP)
 }
 
+// NewRawConn constructs new raw socket
 func NewRawConn(raddr net.IP) (Conn, error) {
 	var err error
 	conn := Conn{
@@ -79,10 +90,12 @@ func NewRawConn(raddr net.IP) (Conn, error) {
 	return conn, err
 }
 
+// Send tries to put the bytes to wire
 func (c *Conn) Send(b []byte) error {
 	return syscall.Sendto(c.fd, b, 0, c.raddr)
 }
 
+// Close releases file descriptor
 func (c *Conn) Close(b []byte) error {
 	return syscall.Close(c.fd)
 }

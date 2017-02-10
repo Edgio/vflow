@@ -1,3 +1,4 @@
+// Package mirror clones the IPFIX packets w/ spoofing feature
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -26,6 +27,7 @@ import (
 	"net"
 )
 
+// IPv6 represents IP version 6 header
 type IPv6 struct {
 	Version       uint8
 	TrafficClass  uint8
@@ -35,6 +37,7 @@ type IPv6 struct {
 	HopLimit      uint8
 }
 
+// NewIPv6HeaderTpl returns a new IPv6 as template
 func NewIPv6HeaderTpl(proto int) IPv6 {
 	return IPv6{
 		Version:      6,
@@ -45,6 +48,7 @@ func NewIPv6HeaderTpl(proto int) IPv6 {
 	}
 }
 
+// Marshal returns encoded IPv6
 func (ip IPv6) Marshal() []byte {
 	b := make([]byte, IPv6HLen)
 	b[0] = byte((ip.Version << 4) | (ip.TrafficClass >> 4))
@@ -56,10 +60,12 @@ func (ip IPv6) Marshal() []byte {
 	return b
 }
 
+// SetLen sets IPv6 length
 func (ip IPv6) SetLen(b []byte, n int) {
 	binary.BigEndian.PutUint16(b[4:], IPv6HLen+uint16(n))
 }
 
+// SetAddrs sets IPv6 src and dst addresses
 func (ip IPv6) SetAddrs(b []byte, src, dst net.IP) {
 	copy(b[8:], src)
 	copy(b[24:], dst)
