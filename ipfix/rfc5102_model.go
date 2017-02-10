@@ -1,3 +1,4 @@
+// Package ipfix decodes IPFIX packets
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -29,38 +30,98 @@ type elementKey struct {
 	ElementID    uint16
 }
 
+// InfoElementEntry represents standard name and
+// type for a field - RFC5102
 type InfoElementEntry struct {
 	FieldID uint16
 	Name    string
 	Type    FieldType
 }
 
-type IPFIXInfoModel map[elementKey]InfoElementEntry
+// InfoModel represents IPFIX field's name, identification and type
+type InfoModel map[elementKey]InfoElementEntry
 
 const (
+	// Unknown data type
 	Unknown FieldType = iota
+
+	// Uint8 represents a non-negative integer value in the
+	// range of 0 to 255.
 	Uint8
+
+	// Uint16 represents a non-negative integer value in the
+	// range of 0 to 65535.
 	Uint16
+
+	// Uint32 represents a non-negative integer value in the
+	// range of 0 to 4294967295.
 	Uint32
+
+	// Uint64 represents a non-negative integer value in the
+	// range of 0 to 18446744073709551615.
 	Uint64
+
+	// Int8 represents an integer value in the range of -128
+	// to 127.
 	Int8
+
+	// Int16 represents an integer value in the range of
+	// -32768 to 32767.
 	Int16
+
+	// Int32 represents an integer value in the range of
+	// -2147483648 to 2147483647.
 	Int32
+
+	// Int64 represents an integer value in the range of
+	// -9223372036854775808 to 9223372036854775807.
 	Int64
+
+	// Float32 corresponds to an IEEE single-precision 32-bit
+	// floating point type as defined in [IEEE.754.1985].
 	Float32
+
+	// Float64 corresponds to an IEEE double-precision 64-bit
+	// floating point type as defined in [IEEE.754.1985].
 	Float64
+
+	// Boolean represents a binary value.  The only allowed
+	// values are "true" and "false".
 	Boolean
+
+	// MacAddress represents a string of 6 octets.
 	MacAddress
+
+	// OctetArray represents a finite-length string of octets.
 	OctetArray
+
+	// String represents a finite-length string of valid
 	String
+
+	// DateTimeSeconds represents a time value in units of
+	// seconds based on coordinated universal time (UTC).
 	DateTimeSeconds
+
+	// DateTimeMilliseconds represents a time value in units of
+	// milliseconds based on coordinated universal time (UTC).
 	DateTimeMilliseconds
+
+	// DateTimeMicroseconds represents a time value in units of
+	// microseconds based on coordinated universal time (UTC).
 	DateTimeMicroseconds
+
+	// DateTimeNanoseconds represents a time value in units of
+	// nanoseconds based on coordinated universal time (UTC).
 	DateTimeNanoseconds
+
+	// Ipv4Address represents a value of an IPv4 address.
 	Ipv4Address
+
+	// Ipv6Address represents a value of an IPv6 address.
 	Ipv6Address
 )
 
+// FieldTypes represents data types
 var FieldTypes = map[string]FieldType{
 	"unsigned8":            Uint8,
 	"unsigned16":           Uint16,
@@ -84,7 +145,7 @@ var FieldTypes = map[string]FieldType{
 	"ipv6Address":          Ipv6Address,
 }
 
-var ipfixInfoModel = IPFIXInfoModel{
+var ipfixInfoModel = InfoModel{
 	elementKey{0, 1}:   InfoElementEntry{FieldID: 1, Name: "octetDeltaCount", Type: FieldTypes["unsigned64"]},
 	elementKey{0, 2}:   InfoElementEntry{FieldID: 2, Name: "packetDeltaCount", Type: FieldTypes["unsigned64"]},
 	elementKey{0, 3}:   InfoElementEntry{FieldID: 3, Name: "deltaFlowCount", Type: FieldTypes["unsigned64"]},
