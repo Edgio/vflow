@@ -22,16 +22,22 @@
 //: ----------------------------------------------------------------------------
 package producer
 
-import "github.com/Shopify/sarama"
+import (
+	"log"
+
+	"github.com/Shopify/sarama"
+)
 
 type Kafka struct {
 	producer sarama.AsyncProducer
+	logger   *log.Logger
 }
 
-func (k *Kafka) setup(configFile string) error {
+func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	var err error
 
 	k.producer, err = sarama.NewAsyncProducer([]string{"localhost:9092"}, nil)
+	k.logger = logger
 	if err != nil {
 		return err
 	}
@@ -49,7 +55,7 @@ func (k *Kafka) inputMsg(topic string, mCh chan string) {
 			Value: sarama.StringEncoder(msg),
 		}:
 		case err := <-k.producer.Errors():
-			println(err.Error())
+			k.logger.Println(err)
 		}
 	}
 }

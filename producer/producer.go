@@ -23,27 +23,32 @@
 package producer
 
 import (
+	"log"
 	"sync"
 )
 
 type Producer struct {
 	mq           MQueue
 	mqConfigFile string
-	iChan        chan string
-	sChan        chan string
+
+	iChan chan string
+	sChan chan string
+
+	logger *log.Logger
 }
 
 type MQueue interface {
-	setup(string) error
+	setup(string, *log.Logger) error
 	inputMsg(string, chan string)
 }
 
 var mqRegistered = map[string]MQueue{"kafka": new(Kafka)}
 
-func NewProducer(mqName, mqConfigFile string) *Producer {
+func NewProducer(mqName, mqConfigFile string, logger *log.Logger) *Producer {
 	return &Producer{
 		mq:           mqRegistered[mqName],
 		mqConfigFile: mqConfigFile,
+		logger:       logger,
 	}
 }
 
@@ -61,7 +66,7 @@ func (p *Producer) Run() error {
 		err error
 	)
 
-	err = p.mq.setup(p.mqConfigFile)
+	err = p.mq.setup(p.mqConfigFile, p.logger)
 	if err != nil {
 		return err
 	}
