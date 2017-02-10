@@ -93,9 +93,11 @@ func (s *SFlow) run() {
 	logger.Printf("sFlow is running (workers#: %d)", s.workers)
 
 	go func() {
-		p := producer.NewProducer("kafka")
+		p := producer.NewProducer(opts.MQName, opts.MQConfigFile)
 		p.RegSFlowChan(sFlowMQCh)
-		p.Run()
+		if err := p.Run(); err != nil {
+			logger.Fatal(err)
+		}
 	}()
 
 	for !s.stop {

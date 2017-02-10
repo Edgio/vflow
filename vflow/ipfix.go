@@ -105,9 +105,11 @@ func (i *IPFIX) run() {
 	}()
 
 	go func() {
-		p := producer.NewProducer("kafka")
+		p := producer.NewProducer(opts.MQName, opts.MQConfigFile)
 		p.RegIPFIXChan(ipfixMQCh)
-		p.Run()
+		if err := p.Run(); err != nil {
+			logger.Fatal(err)
+		}
 	}()
 
 	for !i.stop {

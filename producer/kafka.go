@@ -26,23 +26,22 @@ import "github.com/Shopify/sarama"
 
 type Kafka struct {
 	producer sarama.AsyncProducer
-	stop     *bool
 }
 
-func (k *Kafka) setup(stop *bool) error {
+func (k *Kafka) setup(configFile string) error {
 	var err error
+
 	k.producer, err = sarama.NewAsyncProducer([]string{"localhost:9092"}, nil)
 	if err != nil {
 		return err
 	}
 
-	k.stop = stop
 	return nil
 }
 
 func (k *Kafka) inputMsg(topic string, mCh chan string) {
 	var msg string
-	for !*k.stop {
+	for {
 		msg = <-mCh
 		select {
 		case k.producer.Input() <- &sarama.ProducerMessage{

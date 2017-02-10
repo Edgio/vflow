@@ -27,22 +27,23 @@ import (
 )
 
 type Producer struct {
-	mq    MQueue
-	iChan chan string
-	sChan chan string
-	stop  bool
+	mq           MQueue
+	mqConfigFile string
+	iChan        chan string
+	sChan        chan string
 }
 
 type MQueue interface {
-	setup(*bool) error
+	setup(string) error
 	inputMsg(string, chan string)
 }
 
 var mqRegistered = map[string]MQueue{"kafka": new(Kafka)}
 
-func NewProducer(mqName string) *Producer {
+func NewProducer(mqName, mqConfigFile string) *Producer {
 	return &Producer{
-		mq: mqRegistered[mqName],
+		mq:           mqRegistered[mqName],
+		mqConfigFile: mqConfigFile,
 	}
 }
 
@@ -54,26 +55,30 @@ func (p *Producer) RegIPFIXChan(iCh chan string) {
 	p.iChan = iCh
 }
 
-func (p *Producer) Run() {
-	var wg sync.WaitGroup
+func (p *Producer) Run() error {
+	var (
+		wg  sync.WaitGroup
+		err error
+	)
 
-	p.mq.setup(&p.stop)
+	err = p.mq.setup(p.mqConfigFile)
+	if err != nil {
+		return err
+	}
 
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
-		p.mq.inputMsg("vflow.ipfix.topic", p.iChan)
+		p.mq.inputMsg("vflow.ipfix", p.iChan)
 	}()
 
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
-		p.mq.inputMsg("vflow.sflow.topic", p.sChan)
+		p.mq.inputMsg("vflow.sflow", p.sChan)
 	}()
 
 	wg.Wait()
-}
 
-func (p *Producer) Shutdown() {
-	p.stop = true
+	return nil
 }
