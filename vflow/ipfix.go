@@ -31,6 +31,7 @@ import (
 
 	"git.edgecastcdn.net/vflow/ipfix"
 	"git.edgecastcdn.net/vflow/mirror"
+	"git.edgecastcdn.net/vflow/producer"
 )
 
 type IPFIX struct {
@@ -48,6 +49,7 @@ type IPFIXUDPMsg struct {
 var (
 	ipfixUdpCh         = make(chan IPFIXUDPMsg, 1000)
 	ipfixMCh           = make(chan IPFIXUDPMsg, 1000)
+	ipfixMQCh          = make(chan string, 1000)
 	ipfixMirrorEnabled bool
 
 	// templates memory cache
@@ -100,6 +102,12 @@ func (i *IPFIX) run() {
 
 	go func() {
 		mirrorIPFIXDispatcher(ipfixMCh)
+	}()
+
+	go func() {
+		p := producer.NewProducer("kafka")
+		p.RegIPFIXChan(ipfixMQCh)
+		p.Run()
 	}()
 
 	for !i.stop {
@@ -175,6 +183,8 @@ func ipfixWorker() {
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
+
+		ipfixMQCh <- string(b)
 
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 	}
