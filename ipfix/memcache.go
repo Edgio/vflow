@@ -1,3 +1,4 @@
+// Package ipfix decodes IPFIX packets
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -31,40 +32,46 @@ import (
 	"time"
 )
 
-var ShardNo = 32
+var shardNo = 32
 
+// MemCache represents templates shards
 type MemCache []*TemplatesShard
 
+// Data represents template records and
+// updated timestamp
 type Data struct {
 	Template  TemplateRecords
 	Timestamp int64
 }
 
+// TemplatesShard represents a shard
 type TemplatesShard struct {
 	Templates map[uint32]Data
 	sync.RWMutex
 }
-type MemCacheDisk struct {
+type memCacheDisk struct {
 	Cache   MemCache
 	ShardNo int
 }
 
+// GetCache tries to load saved templates
+// otherwise it constructs new empty shards
 func GetCache(cacheFile string) MemCache {
 	var (
-		mem MemCacheDisk
+		mem memCacheDisk
 		err error
 	)
 
 	b, err := ioutil.ReadFile(cacheFile)
 	if err == nil {
 		err = json.Unmarshal(b, &mem)
-		if err == nil && mem.ShardNo == ShardNo {
+		if err == nil && mem.ShardNo == shardNo {
 			return mem.Cache
 		}
 	}
 
-	m := make(MemCache, ShardNo)
-	for i := 0; i < ShardNo; i++ {
+	m := make(MemCache, shardNo)
+	for i := 0; i < shardNo; i++ {
 		m[i] = &TemplatesShard{Templates: make(map[uint32]Data)}
 	}
 
@@ -80,7 +87,7 @@ func (m MemCache) getShard(id uint16, addr net.IP) (*TemplatesShard, uint32) {
 	hash.Write(key)
 	hSum32 := hash.Sum32()
 
-	return m[uint(hSum32)%uint(ShardNo)], hSum32
+	return m[uint(hSum32)%uint(shardNo)], hSum32
 }
 
 func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecords) {
@@ -99,11 +106,12 @@ func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecords, bool) {
 	return v.Template, ok
 }
 
+// Dump saves the current templates to hard disk
 func (m MemCache) Dump(cacheFile string) error {
 	b, err := json.Marshal(
-		MemCacheDisk{
+		memCacheDisk{
 			m,
-			ShardNo,
+			shardNo,
 		},
 	)
 	if err != nil {
