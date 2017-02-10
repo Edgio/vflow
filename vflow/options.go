@@ -52,7 +52,8 @@ type Options struct {
 	IPFIXTemplateCacheFile string
 
 	// producer
-	ProducerMQName string
+	MQName       string
+	MQConfigFile string
 }
 
 func NewOptions() *Options {
@@ -76,7 +77,8 @@ func NewOptions() *Options {
 		IPFIXMirror:            "139.49.193.73:4172",
 		IPFIXTemplateCacheFile: "/tmp/vflow.templates",
 
-		ProducerMQName: "kafka",
+		MQName:       "kafka",
+		MQConfigFile: "/usr/local/vflow/etc/kafka",
 	}
 }
 
@@ -119,7 +121,8 @@ func vFlowFlagSet(opts *Options) {
 	flag.StringVar(&opts.IPFIXTemplateCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTemplateCacheFile, "IPFIX template cache file")
 
 	// producer
-	flag.StringVar(&opts.ProducerMQName, "producer-mq", opts.ProducerMQName, "producer application name")
+	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
+	flag.StringVar(&opts.MQConfigFile, "mqueue-conf", opts.MQConfigFile, "producer message queue configuration file")
 
 	flag.Parse()
 }
