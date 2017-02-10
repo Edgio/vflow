@@ -50,6 +50,9 @@ type Options struct {
 	IPFIXWorkers           int
 	IPFIXMirror            string
 	IPFIXTemplateCacheFile string
+
+	// producer
+	ProducerMQName string
 }
 
 func NewOptions() *Options {
@@ -72,6 +75,8 @@ func NewOptions() *Options {
 		IPFIXWorkers:           10,
 		IPFIXMirror:            "139.49.193.73:4172",
 		IPFIXTemplateCacheFile: "/tmp/vflow.templates",
+
+		ProducerMQName: "kafka",
 	}
 }
 
@@ -112,6 +117,9 @@ func vFlowFlagSet(opts *Options) {
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers / concurrency number")
 	flag.StringVar(&opts.IPFIXTemplateCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTemplateCacheFile, "IPFIX template cache file")
+
+	// producer
+	flag.StringVar(&opts.ProducerMQName, "producer-mq", opts.ProducerMQName, "producer application name")
 
 	flag.Parse()
 }
