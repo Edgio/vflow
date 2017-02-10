@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"git.edgecastcdn.net/vflow/packet"
+	"git.edgecastcdn.net/vflow/producer"
 	"git.edgecastcdn.net/vflow/sflow"
 )
 
@@ -49,6 +50,7 @@ type SFlow struct {
 
 var (
 	sFlowUDPCh = make(chan SFUDPMsg, 1000)
+	sFlowMQCh  = make(chan string, 1000)
 
 	// sflow udp payload pool
 	sFlowBuffer = &sync.Pool{
@@ -89,6 +91,12 @@ func (s *SFlow) run() {
 	}
 
 	logger.Printf("sFlow is running (workers#: %d)", s.workers)
+
+	go func() {
+		p := producer.NewProducer("kafka")
+		p.RegSFlowChan(sFlowMQCh)
+		p.Run()
+	}()
 
 	for !s.stop {
 		b := sFlowBuffer.Get().([]byte)
@@ -164,7 +172,7 @@ func sFlowWorker() {
 			logger.Println(string(b))
 		}
 
-		// TODO: producer
+		sFlowMQCh <- string(b)
 
 		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 	}

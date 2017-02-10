@@ -46,7 +46,7 @@ func NewProducer(mqName string) *Producer {
 	}
 }
 
-func (p *Producer) RegVFlowChan(sCh chan string) {
+func (p *Producer) RegSFlowChan(sCh chan string) {
 	p.sChan = sCh
 }
 
