@@ -1,3 +1,4 @@
+// Package packet decodes layer two, three and four OSI model layers
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -54,7 +55,10 @@ type IPv6Header struct {
 }
 
 const (
+	// IPv4HLen is IPv4 header length size
 	IPv4HLen = 20
+
+	// IPv6HLen is IPv6 header length size
 	IPv6HLen = 40
 )
 

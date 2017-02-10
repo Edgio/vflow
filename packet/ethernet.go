@@ -1,3 +1,4 @@
+// Package packet decodes layer two, three and four OSI model layers
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -26,18 +27,35 @@ import (
 	"fmt"
 )
 
+// Datalink represents layer two IEEE 802.11
 type Datalink struct {
-	SrcMAC    string
-	DstMAC    string
-	Vlan      int
+	// SrcMAC represents source MAC address
+	SrcMAC string
+
+	// DstMAC represents destination MAC address
+	DstMAC string
+
+	// Vlan represents VLAN value
+	Vlan int
+
+	// EtherType represents upper layer type value
 	EtherType uint16
 }
 
 const (
-	EtherTypeARP       = 0x0806
-	EtherTypeIPv4      = 0x0800
-	EtherTypeIPv6      = 0x86DD
-	EtherTypeLACP      = 0x8809
+	// EtherTypeARP is Address Resolution Protocol EtherType value
+	EtherTypeARP = 0x0806
+
+	// EtherTypeIPv4 is Internet Protocol version 4 EtherType value
+	EtherTypeIPv4 = 0x0800
+
+	// EtherTypeIPv6 is Internet Protocol Version 6 EtherType value
+	EtherTypeIPv6 = 0x86DD
+
+	// EtherTypeLACP is Link Aggregation Control Protocol EtherType value
+	EtherTypeLACP = 0x8809
+
+	// EtherTypeIEEE8021Q is VLAN-tagged frame (IEEE 802.1Q) EtherType value
 	EtherTypeIEEE8021Q = 0x8100
 )
 

@@ -1,3 +1,4 @@
+// Package packet decodes layer two, three and four OSI model layers
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -23,8 +24,12 @@ package packet
 
 import "errors"
 
+// ICMP represents ICMP header
 type ICMP struct {
+	// Type is ICMP type
 	Type int
+
+	// Code is ICMP subtype
 	Code int
 }
 

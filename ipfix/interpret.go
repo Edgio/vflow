@@ -1,3 +1,4 @@
+// Package packet decodes layer two, three and four OSI model layers
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
