@@ -93,8 +93,13 @@ func (s *SFlow) run() {
 	logger.Printf("sFlow is running (workers#: %d)", s.workers)
 
 	go func() {
-		p := producer.NewProducer(opts.MQName, opts.MQConfigFile, logger)
-		p.RegSFlowChan(sFlowMQCh)
+		p := producer.NewProducer(opts.MQName)
+
+		p.MQConfigFile = opts.MQConfigFile
+		p.Logger = logger
+		p.Chan = sFlowMQCh
+		p.Topic = "sflow"
+
 		if err := p.Run(); err != nil {
 			logger.Fatal(err)
 		}

@@ -105,8 +105,13 @@ func (i *IPFIX) run() {
 	}()
 
 	go func() {
-		p := producer.NewProducer(opts.MQName, opts.MQConfigFile, logger)
-		p.RegIPFIXChan(ipfixMQCh)
+		p := producer.NewProducer(opts.MQName)
+
+		p.MQConfigFile = opts.MQConfigFile
+		p.Logger = logger
+		p.Chan = ipfixMQCh
+		p.Topic = "ipfix"
+
 		if err := p.Run(); err != nil {
 			logger.Fatal(err)
 		}

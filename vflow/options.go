@@ -78,7 +78,7 @@ func NewOptions() *Options {
 		IPFIXTemplateCacheFile: "/tmp/vflow.templates",
 
 		MQName:       "kafka",
-		MQConfigFile: "/usr/local/vflow/etc/kafka",
+		MQConfigFile: "/usr/local/vflow/etc/kafka.conf",
 	}
 }
 

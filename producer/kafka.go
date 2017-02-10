@@ -23,6 +23,8 @@
 package producer
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"log"
 
 	"github.com/Shopify/sarama"
@@ -30,13 +32,28 @@ import (
 
 type Kafka struct {
 	producer sarama.AsyncProducer
+	config   Config
 	logger   *log.Logger
+}
+
+type Config struct {
+	Brokers []string `json:"brokers"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	var err error
 
-	k.producer, err = sarama.NewAsyncProducer([]string{"localhost:9092"}, nil)
+	// set default values
+	k.config = Config{
+		Brokers: []string{"localhost:9092"},
+	}
+
+	// load configuration if available
+	if err = k.load(configFile); err != nil {
+		logger.Println(err)
+	}
+
+	k.producer, err = sarama.NewAsyncProducer(k.config.Brokers, nil)
 	k.logger = logger
 	if err != nil {
 		return err
@@ -46,9 +63,20 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 }
 
 func (k *Kafka) inputMsg(topic string, mCh chan string) {
-	var msg string
+	var (
+		msg string
+		ok  bool
+	)
+
+	k.logger.Printf("start producer: Kafka, brokers: %+v, topic: %s\n",
+		k.config.Brokers, topic)
+
 	for {
-		msg = <-mCh
+		msg, ok = <-mCh
+		if !ok {
+			break
+		}
+
 		select {
 		case k.producer.Input() <- &sarama.ProducerMessage{
 			Topic: topic,
@@ -58,4 +86,20 @@ func (k *Kafka) inputMsg(topic string, mCh chan string) {
 			k.logger.Println(err)
 		}
 	}
+
+	k.producer.Close()
+}
+
+func (k *Kafka) load(f string) error {
+	b, err := ioutil.ReadFile(f)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(b, &k.config)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
