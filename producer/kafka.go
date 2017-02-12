@@ -32,11 +32,11 @@ import (
 
 type Kafka struct {
 	producer sarama.AsyncProducer
-	config   Config
+	config   KafkaConfig
 	logger   *log.Logger
 }
 
-type Config struct {
+type KafkaConfig struct {
 	Brokers []string `json:"brokers"`
 }
 
@@ -44,7 +44,7 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	var err error
 
 	// set default values
-	k.config = Config{
+	k.config = KafkaConfig{
 		Brokers: []string{"localhost:9092"},
 	}
 
