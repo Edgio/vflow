@@ -32,14 +32,14 @@ type Producer struct {
 	MQConfigFile string
 
 	Topic string
-	Chan  chan string
+	Chan  chan []byte
 
 	Logger *log.Logger
 }
 
 type MQueue interface {
 	setup(string, *log.Logger) error
-	inputMsg(string, chan string)
+	inputMsg(string, chan []byte)
 }
 
 var mqRegistered = map[string]MQueue{"kafka": new(Kafka)}

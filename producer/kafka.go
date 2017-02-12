@@ -62,9 +62,9 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (k *Kafka) inputMsg(topic string, mCh chan string) {
+func (k *Kafka) inputMsg(topic string, mCh chan []byte) {
 	var (
-		msg string
+		msg []byte
 		ok  bool
 	)
 
@@ -80,7 +80,7 @@ func (k *Kafka) inputMsg(topic string, mCh chan string) {
 		select {
 		case k.producer.Input() <- &sarama.ProducerMessage{
 			Topic: topic,
-			Value: sarama.StringEncoder(msg),
+			Value: sarama.ByteEncoder(msg),
 		}:
 		case err := <-k.producer.Errors():
 			k.logger.Println(err)

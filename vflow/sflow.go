@@ -50,7 +50,7 @@ type SFlow struct {
 
 var (
 	sFlowUDPCh = make(chan SFUDPMsg, 1000)
-	sFlowMQCh  = make(chan string, 1000)
+	sFlowMQCh  = make(chan []byte, 1000)
 
 	// sflow udp payload pool
 	sFlowBuffer = &sync.Pool{
@@ -179,7 +179,10 @@ func sFlowWorker() {
 			logger.Println(string(b))
 		}
 
-		sFlowMQCh <- string(b)
+		select {
+		case sFlowMQCh <- b:
+		default:
+		}
 
 		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 	}

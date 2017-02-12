@@ -49,7 +49,7 @@ type IPFIXUDPMsg struct {
 var (
 	ipfixUdpCh         = make(chan IPFIXUDPMsg, 1000)
 	ipfixMCh           = make(chan IPFIXUDPMsg, 1000)
-	ipfixMQCh          = make(chan string, 1000)
+	ipfixMQCh          = make(chan []byte, 1000)
 	ipfixMirrorEnabled bool
 
 	// templates memory cache
@@ -191,7 +191,10 @@ func ipfixWorker() {
 			logger.Println(string(b))
 		}
 
-		ipfixMQCh <- string(b)
+		select {
+		case ipfixMQCh <- b:
+		default:
+		}
 
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 	}

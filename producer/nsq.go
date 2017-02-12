@@ -48,7 +48,7 @@ func (n *NSQ) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (n *NSQ) inputMsg(topic string, mCh chan string) {
+func (n *NSQ) inputMsg(topic string, mCh chan []byte) {
 	// TODO
 }
 
