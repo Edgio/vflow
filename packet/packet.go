@@ -1,3 +1,4 @@
+// Package packet decodes layer two, three and four OSI model layers
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -23,6 +24,7 @@ package packet
 
 import "errors"
 
+// Packet represents layer 2,3,4 available info
 type Packet struct {
 	L2   Datalink
 	L3   interface{}
@@ -34,10 +36,12 @@ var (
 	errUnknownEtherType = errors.New("unknown ether type")
 )
 
+// NewPacket constructs a packet object
 func NewPacket() Packet {
 	return Packet{}
 }
 
+// Decoder decodes packet's layers
 func (p *Packet) Decoder(data []byte) (*Packet, error) {
 	var (
 		err error

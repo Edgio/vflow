@@ -66,6 +66,7 @@ type SFSampledHeader struct {
 	HeaderBytes    []byte // Header bytes
 }
 
+// Message represents flow sample decoded packet
 type Message struct {
 	Header    *SFDatagram
 	ExtSWData *ExtSwitchData

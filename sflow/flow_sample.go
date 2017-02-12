@@ -1,3 +1,4 @@
+// Package sflow decodes sFlow packets
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -29,29 +30,18 @@ import (
 )
 
 const (
-	SFDataRawHeader      = 1
-	SFDataEthernetHeader = 2
-	SFDataIPV4Header     = 3
-	SFDataIPV6Header     = 4
+	// SFDataRawHeader is sFlow Raw Packet Header number
+	SFDataRawHeader = 1
 
-	SFDataExtSwitch     = 1001
-	SFDataExtRouter     = 1002
-	SFDataExtGateway    = 1003
-	SFDataExtUser       = 1004
-	SFDataExtURL        = 1005
-	SFDataExtMPLS       = 1006
-	SFDataExtNAT        = 1007
-	SFDataExtMPLSTunnel = 1008
-	SFDataExtMPLSVC     = 1009
-	SFDataExtMPLSFEC    = 1010
-	SFDataExtMPLSLVPFEC = 1011
-	SFDataExtVLANTunnel = 1012
+	// SFDataExtSwitch is sFlow Extended Switch Data number
+	SFDataExtSwitch = 1001
 )
 
+// FlowSample represents single flow sample
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
-	SourceId     byte   // fsSourceId
-	SamplingRate uint32 // fsPacketSamplingRate
+	SourceID     byte   // sfSourceID
+	SamplingRate uint32 // sfPacketSamplingRate
 	SamplePool   uint32 // Total number of packets that could have been sampled
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
 	Input        uint32 // SNMP ifIndex of input interface
@@ -59,6 +49,7 @@ type FlowSample struct {
 	RecordsNo    uint32 // Number of records to follow
 }
 
+// SampledHeader represents sampled header
 type SampledHeader struct {
 	Protocol     uint32 // (enum SFLHeader_protocol)
 	FrameLength  uint32 // Original length of packet before sampling
@@ -67,6 +58,7 @@ type SampledHeader struct {
 	Header       []byte // Header bytes
 }
 
+// ExtSwitchData represents Extended Switch Data
 type ExtSwitchData struct {
 	SrcVlan     uint32 // The 802.1Q VLAN id of incoming frame
 	SrcPriority uint32 // The 802.1p priority of incoming frame
@@ -85,7 +77,7 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	if err = read(r, &fs.SourceId); err != nil {
+	if err = read(r, &fs.SourceID); err != nil {
 		return err
 	}
 
