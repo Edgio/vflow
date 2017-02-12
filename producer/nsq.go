@@ -3,7 +3,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    kafka.go
+//: file:    nsq.go
 //: details: TODO
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
@@ -42,14 +42,40 @@ type NSQConfig struct {
 }
 
 func (n *NSQ) setup(configFile string, logger *log.Logger) error {
-	n.producer, _ = nsq.NewProducer("127.0.0.1:4150", nil)
-	// TODO
+	var err error
+	// set default values
+	n.config = NSQConfig{
+		Broker: "localhost:4150",
+	}
+
+	// load configuration if available
+	if err = n.load(configFile); err != nil {
+		logger.Println(err)
+	}
+
+	n.producer, _ = nsq.NewProducer(n.config.Broker, nil)
 
 	return nil
 }
 
 func (n *NSQ) inputMsg(topic string, mCh chan []byte) {
-	// TODO
+	var (
+		msg []byte
+		err error
+		ok  bool
+	)
+
+	for {
+		msg, ok = <-mCh
+		if !ok {
+			break
+		}
+
+		err = n.producer.Publish(topic, msg)
+		if err != nil {
+			n.logger.Println(err)
+		}
+	}
 }
 
 func (n *NSQ) load(f string) error {
