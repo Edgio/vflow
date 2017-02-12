@@ -42,7 +42,11 @@ type MQueue interface {
 	inputMsg(string, chan []byte)
 }
 
-var mqRegistered = map[string]MQueue{"kafka": new(Kafka)}
+// register messaging queues
+var mqRegistered = map[string]MQueue{
+	"kafka": new(Kafka),
+	"nsq":   new(NSQ),
+}
 
 func NewProducer(mqName string) *Producer {
 	return &Producer{
