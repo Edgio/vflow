@@ -22,7 +22,9 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
+	"io/ioutil"
 	"log"
 	"os"
 )
@@ -93,11 +95,9 @@ func vFlowFlagSet(opts *Options) {
 
 	var config string
 
-	flag.StringVar(&config, "config", "", "path to config file")
+	flag.StringVar(&config, "config", "/usr/local/vflow/etc/vflow.conf", "path to config file")
 
-	if config != "" {
-		vFlowLoadCfg(config, opts)
-	}
+	vFlowLoadCfg(config, opts)
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
@@ -127,6 +127,14 @@ func vFlowFlagSet(opts *Options) {
 	flag.Parse()
 }
 
-func vFlowLoadCfg(file string, opts *Options) {
-	// TODO
+func vFlowLoadCfg(f string, opts *Options) {
+	b, err := ioutil.ReadFile(f)
+	if err != nil {
+		opts.Logger.Println(err)
+		return
+	}
+	err = json.Unmarshal(b, opts)
+	if err != nil {
+		opts.Logger.Println(err)
+	}
 }
