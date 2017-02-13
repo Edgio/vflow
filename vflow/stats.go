@@ -66,13 +66,29 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write(j)
 }
 
-func statsHTTPServer() {
+func StatsFlowHandler(i *IPFIX, s *SFlow) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		var data = &struct {
+			IPFIX *IPFIXStats
+			SFlow *SFlowStats
+		}{
+			i.status(),
+			s.status(),
+		}
+		j, _ := json.Marshal(data)
+
+		w.Write(j)
+	}
+}
+
+func statsHTTPServer(ipfix *IPFIX, sflow *SFlow) {
 	if !opts.StatsEnabled {
 		return
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sys", StatsSysHandler)
+	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow))
 
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
 

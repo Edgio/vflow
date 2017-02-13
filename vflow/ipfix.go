@@ -27,6 +27,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"git.edgecastcdn.net/vflow/ipfix"
@@ -39,11 +40,17 @@ type IPFIX struct {
 	addr    string
 	workers int
 	stop    bool
+	stats   IPFIXStats
 }
 
 type IPFIXUDPMsg struct {
 	raddr *net.UDPAddr
 	body  []byte
+}
+
+type IPFIXStats struct {
+	UDPCount     uint64
+	DecodedCount uint64
 }
 
 var (
@@ -91,7 +98,7 @@ func (i *IPFIX) run() {
 		go func() {
 			wg.Add(1)
 			defer wg.Done()
-			ipfixWorker()
+			i.ipfixWorker()
 
 		}()
 	}
@@ -124,6 +131,7 @@ func (i *IPFIX) run() {
 		if err != nil {
 			continue
 		}
+		atomic.AddUint64(&i.stats.UDPCount, 1)
 		ipfixUdpCh <- IPFIXUDPMsg{raddr, b[:n]}
 	}
 
@@ -152,7 +160,7 @@ func (i *IPFIX) shutdown() {
 	close(ipfixUdpCh)
 }
 
-func ipfixWorker() {
+func (i *IPFIX) ipfixWorker() {
 	var (
 		decodedMsg *ipfix.Message
 		msg        IPFIXUDPMsg
@@ -187,6 +195,8 @@ func ipfixWorker() {
 			continue
 		}
 
+		atomic.AddUint64(&i.stats.DecodedCount, 1)
+
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
@@ -197,6 +207,13 @@ func ipfixWorker() {
 		}
 
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
+	}
+}
+
+func (i *IPFIX) status() *IPFIXStats {
+	return &IPFIXStats{
+		UDPCount:     atomic.LoadUint64(&i.stats.UDPCount),
+		DecodedCount: atomic.LoadUint64(&i.stats.DecodedCount),
 	}
 }
 

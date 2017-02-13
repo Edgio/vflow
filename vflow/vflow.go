@@ -59,7 +59,7 @@ func main() {
 		ipfix.run()
 	}()
 
-	go statsHTTPServer()
+	go statsHTTPServer(ipfix, sFlow)
 
 	<-signalCh
 	go sFlow.shutdown()

@@ -27,6 +27,7 @@ import (
 	"net"
 	"strconv"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"git.edgecastcdn.net/vflow/packet"
@@ -46,6 +47,12 @@ type SFlow struct {
 	addr    string
 	workers int
 	stop    bool
+	stats   SFlowStats
+}
+
+type SFlowStats struct {
+	UDPCount     uint64
+	DecodedCount uint64
 }
 
 var (
@@ -85,7 +92,7 @@ func (s *SFlow) run() {
 		go func() {
 			wg.Add(1)
 			defer wg.Done()
-			sFlowWorker()
+			s.sFlowWorker()
 
 		}()
 	}
@@ -112,6 +119,7 @@ func (s *SFlow) run() {
 		if err != nil {
 			continue
 		}
+		atomic.AddUint64(&s.stats.UDPCount, 1)
 		sFlowUDPCh <- SFUDPMsg{raddr, b[:n]}
 	}
 
@@ -126,7 +134,7 @@ func (s *SFlow) shutdown() {
 	close(sFlowUDPCh)
 }
 
-func sFlowWorker() {
+func (s *SFlow) sFlowWorker() {
 	var (
 		filter = []uint32{sflow.DataCounterSample}
 		reader *bytes.Reader
@@ -175,6 +183,8 @@ func sFlowWorker() {
 			continue
 		}
 
+		atomic.AddUint64(&s.stats.DecodedCount, 1)
+
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
@@ -185,5 +195,12 @@ func sFlowWorker() {
 		}
 
 		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
+	}
+}
+
+func (s *SFlow) status() *SFlowStats {
+	return &SFlowStats{
+		UDPCount:     atomic.LoadUint64(&s.stats.UDPCount),
+		DecodedCount: atomic.LoadUint64(&s.stats.DecodedCount),
 	}
 }
