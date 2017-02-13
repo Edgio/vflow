@@ -1,0 +1,8 @@
+language: go
+go:
+  - 1.7
+  - tip
+
+script:
+  - test -z "$(gofmt -s -l . | tee /dev/stderr)"
+  - go test -v ./...
