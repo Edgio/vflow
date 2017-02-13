@@ -67,7 +67,7 @@ type ExtSwitchData struct {
 }
 
 var (
-	maxOutEthernetLength = errors.New("the ethernet lenght is greater than 1500")
+	errMaxOutEthernetLength = errors.New("the ethernet lenght is greater than 1500")
 )
 
 func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
@@ -130,7 +130,7 @@ func (sh *SampledHeader) unmarshal(r io.Reader) error {
 	}
 
 	if sh.HeaderLength > 1500 {
-		return maxOutEthernetLength
+		return errMaxOutEthernetLength
 	}
 
 	// cut off a header length mod 4 == 0 number of bytes

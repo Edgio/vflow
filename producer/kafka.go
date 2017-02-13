@@ -30,12 +30,14 @@ import (
 	"github.com/Shopify/sarama"
 )
 
+// Kafka represents kafka producer
 type Kafka struct {
 	producer sarama.AsyncProducer
 	config   KafkaConfig
 	logger   *log.Logger
 }
 
+// KafkaConfig represents kafka configuration
 type KafkaConfig struct {
 	Brokers []string `json:"brokers"`
 }

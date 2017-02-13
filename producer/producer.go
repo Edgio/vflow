@@ -27,6 +27,7 @@ import (
 	"sync"
 )
 
+// Producer represents messaging queue
 type Producer struct {
 	MQ           MQueue
 	MQConfigFile string
@@ -37,6 +38,7 @@ type Producer struct {
 	Logger *log.Logger
 }
 
+// MQueue represents messaging queue methods
 type MQueue interface {
 	setup(string, *log.Logger) error
 	inputMsg(string, chan []byte)
@@ -48,12 +50,14 @@ var mqRegistered = map[string]MQueue{
 	"nsq":   new(NSQ),
 }
 
+// NewProducer constructs new Messaging Queue
 func NewProducer(mqName string) *Producer {
 	return &Producer{
 		MQ: mqRegistered[mqName],
 	}
 }
 
+// Run configs and tries to be ready to produce
 func (p *Producer) Run() error {
 	var (
 		wg  sync.WaitGroup
@@ -76,6 +80,7 @@ func (p *Producer) Run() error {
 	return nil
 }
 
+// Shutdown stops the producer
 func (p *Producer) Shutdown() {
 	close(p.Chan)
 }

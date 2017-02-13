@@ -37,6 +37,7 @@ type NSQ struct {
 	logger   *log.Logger
 }
 
+// NSQConfig represents NSQ configuration
 type NSQConfig struct {
 	Broker string `json:"broker"`
 }
