@@ -49,8 +49,11 @@ type IPFIXUDPMsg struct {
 }
 
 type IPFIXStats struct {
-	UDPCount     uint64
-	DecodedCount uint64
+	UDPQueue       int
+	UDPMirrorQueue int
+	MessageQueue   int
+	UDPCount       uint64
+	DecodedCount   uint64
 }
 
 var (
@@ -212,8 +215,11 @@ func (i *IPFIX) ipfixWorker() {
 
 func (i *IPFIX) status() *IPFIXStats {
 	return &IPFIXStats{
-		UDPCount:     atomic.LoadUint64(&i.stats.UDPCount),
-		DecodedCount: atomic.LoadUint64(&i.stats.DecodedCount),
+		UDPQueue:       len(ipfixUdpCh),
+		UDPMirrorQueue: len(ipfixMCh),
+		MessageQueue:   len(ipfixMQCh),
+		UDPCount:       atomic.LoadUint64(&i.stats.UDPCount),
+		DecodedCount:   atomic.LoadUint64(&i.stats.DecodedCount),
 	}
 }
 

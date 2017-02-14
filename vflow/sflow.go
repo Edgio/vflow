@@ -51,6 +51,8 @@ type SFlow struct {
 }
 
 type SFlowStats struct {
+	UDPQueue     int
+	MessageQueue int
 	UDPCount     uint64
 	DecodedCount uint64
 }
@@ -200,6 +202,8 @@ func (s *SFlow) sFlowWorker() {
 
 func (s *SFlow) status() *SFlowStats {
 	return &SFlowStats{
+		UDPQueue:     len(sFlowUDPCh),
+		MessageQueue: len(sFlowMQCh),
 		UDPCount:     atomic.LoadUint64(&s.stats.UDPCount),
 		DecodedCount: atomic.LoadUint64(&s.stats.DecodedCount),
 	}
