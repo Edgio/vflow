@@ -22,7 +22,6 @@
 package main
 
 import (
-	"encoding/json"
 	"net"
 	"strconv"
 	"sync"
@@ -191,21 +190,23 @@ func (i *IPFIX) ipfixWorker() {
 			continue
 		}
 
-		b, err = json.Marshal(decodedMsg)
-		if err != nil {
-			logger.Println(err)
-			continue
-		}
-
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
+
+		if decodedMsg.DataSets != nil {
+			b, err = decodedMsg.JSONMarshal()
+			if err != nil {
+				logger.Println(err)
+				continue
+			}
+
+			select {
+			case ipfixMQCh <- b:
+			default:
+			}
+		}
 
 		if opts.Verbose {
 			logger.Println(string(b))
-		}
-
-		select {
-		case ipfixMQCh <- b:
-		default:
 		}
 
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
