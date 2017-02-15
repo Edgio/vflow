@@ -25,7 +25,6 @@ import (
 	"encoding/json"
 	"net"
 	"strconv"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -287,24 +286,16 @@ func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 		msg IPFIXUDPMsg
 	)
 
-	if opts.IPFIXMirror == "" {
+	if opts.IPFIXMirrorAddr == "" {
 		return
 	}
 
-	for _, mirrorHostPort := range strings.Split(opts.IPFIXMirror, ";") {
-		host, port, err := net.SplitHostPort(mirrorHostPort)
-		if err != nil {
-			logger.Fatalf("wrong ipfix mirror address %s", opts.IPFIXMirror)
-		}
+	dst := net.ParseIP(opts.IPFIXMirrorAddr)
 
-		portNo, _ := strconv.Atoi(port)
-		dst := net.ParseIP(host)
-
-		if dst.To4() != nil {
-			go mirrorIPFIX(dst, portNo, ch4)
-		} else {
-			go mirrorIPFIX(dst, portNo, ch6)
-		}
+	if dst.To4() != nil {
+		go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch4)
+	} else {
+		go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch6)
 	}
 
 	ipfixMirrorEnabled = true

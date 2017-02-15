@@ -50,7 +50,8 @@ type Options struct {
 	IPFIXPort              int
 	IPFIXUDPSize           int
 	IPFIXWorkers           int
-	IPFIXMirror            string
+	IPFIXMirrorAddr        string
+	IPFIXMirrorPort        int
 	IPFIXTemplateCacheFile string
 
 	// producer
@@ -76,7 +77,8 @@ func NewOptions() *Options {
 		IPFIXPort:              4739,
 		IPFIXUDPSize:           1500,
 		IPFIXWorkers:           10,
-		IPFIXMirror:            "139.49.193.73:4172",
+		IPFIXMirrorAddr:        "",
+		IPFIXMirrorPort:        4172,
 		IPFIXTemplateCacheFile: "/tmp/vflow.templates",
 
 		MQName:       "kafka",
@@ -119,8 +121,10 @@ func vFlowFlagSet(opts *Options) {
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers / concurrency number")
 	flag.StringVar(&opts.IPFIXTemplateCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTemplateCacheFile, "IPFIX template cache file")
+	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
+	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
 
-	// producer
+	// producer options
 	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
 	flag.StringVar(&opts.MQConfigFile, "mqueue-conf", opts.MQConfigFile, "producer message queue configuration file")
 
