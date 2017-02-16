@@ -33,8 +33,8 @@ import (
 var errUknownMarshalDataType = errors.New("unknown data type to marshal")
 
 // JSONMarshal encodes IPFIX message
-func (m *Message) JSONMarshal() ([]byte, error) {
-	e := bytes.NewBufferString("{")
+func (m *Message) JSONMarshal(e *bytes.Buffer) ([]byte, error) {
+	e.WriteString("{")
 
 	// encode agent id
 	m.encodeAgent(e)
