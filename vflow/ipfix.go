@@ -22,6 +22,7 @@
 package main
 
 import (
+	"bytes"
 	"net"
 	"strconv"
 	"sync"
@@ -164,13 +165,17 @@ func (i *IPFIX) shutdown() {
 func (i *IPFIX) ipfixWorker() {
 	var (
 		decodedMsg *ipfix.Message
-		msg        IPFIXUDPMsg
+		msg        = IPFIXUDPMsg{body: ipfixBuffer.Get().([]byte)}
+		buf        = bytes.NewBufferString("")
 		err        error
 		ok         bool
 		b          []byte
 	)
 
 	for {
+		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
+		buf.Reset()
+
 		if msg, ok = <-ipfixUdpCh; !ok {
 			break
 		}
@@ -193,7 +198,7 @@ func (i *IPFIX) ipfixWorker() {
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
 		if decodedMsg.DataSets != nil {
-			b, err = decodedMsg.JSONMarshal()
+			b, err = decodedMsg.JSONMarshal(buf)
 			if err != nil {
 				logger.Println(err)
 				continue
@@ -208,8 +213,6 @@ func (i *IPFIX) ipfixWorker() {
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
-
-		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 	}
 }
 
