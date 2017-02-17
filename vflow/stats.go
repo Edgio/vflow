@@ -29,6 +29,8 @@ import (
 	"time"
 )
 
+var startTime = time.Now().Unix()
+
 func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 	var mem runtime.MemStats
 
@@ -46,6 +48,7 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 		NumLogicalCPU   int
 		NumGoroutine    int
 		GoVersion       string
+		StartTime       int64
 	}{
 		mem.Alloc,
 		mem.TotalAlloc,
@@ -59,6 +62,7 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 		runtime.NumCPU(),
 		runtime.NumGoroutine(),
 		runtime.Version(),
+		startTime,
 	}
 
 	j, _ := json.Marshal(data)
