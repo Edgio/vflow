@@ -186,7 +186,10 @@ func (i *IPFIX) ipfixWorker() {
 		}
 
 		if ipfixMirrorEnabled {
-			ipfixMCh <- IPFIXUDPMsg{msg.raddr, append([]byte{}, msg.body...)}
+			select {
+			case ipfixMCh <- IPFIXUDPMsg{msg.raddr, append([]byte{}, msg.body...)}:
+			default:
+			}
 		}
 
 		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
