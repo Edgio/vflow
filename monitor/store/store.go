@@ -22,6 +22,14 @@
 //: ----------------------------------------------------------------------------
 package store
 
+import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"time"
+)
+
 type Monitor interface {
 	System() error
 	Netflow() error
@@ -61,4 +69,86 @@ type Sys struct {
 	NumGoroutine    int64
 	NumLogicalCPU   int64
 	MemHeapReleased int64
+}
+
+type Client struct {
+	client *http.Client
+}
+
+func NewHTTP() *Client {
+	return &Client{
+		client: new(http.Client),
+	}
+}
+
+func (c *Client) Get(url string, s interface{}) error {
+
+	resp, err := c.client.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(body, &s)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (c *Client) Post(url string, cType, query string) (error, []byte) {
+	resp, err := c.client.Post(url, cType, bytes.NewBufferString(query))
+	if err != nil {
+		return err, nil
+	}
+
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err, nil
+	}
+
+	return nil, body
+}
+
+func getFlow(host string) (error, *Flow, *Flow) {
+	lastFlowFile := "/tmp/vflow.mon.lastflow"
+
+	flow := new(Flow)
+	lastFlow := new(Flow)
+
+	client := NewHTTP()
+	err := client.Get(host+"/flow", flow)
+	if err != nil {
+		return err, nil, nil
+	}
+
+	flow.Timestamp = time.Now().Unix()
+
+	b, err := ioutil.ReadFile(lastFlowFile)
+	if err != nil {
+		b, _ = json.Marshal(flow)
+		ioutil.WriteFile(lastFlowFile, b, 0644)
+		return err, nil, nil
+	}
+
+	err = json.Unmarshal(b, &lastFlow)
+	if err != nil {
+		return err, nil, nil
+	}
+
+	b, err = json.Marshal(flow)
+	if err != nil {
+		return err, nil, nil
+	}
+
+	ioutil.WriteFile(lastFlowFile, b, 0644)
+	return nil, flow, lastFlow
 }

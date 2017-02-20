@@ -23,15 +23,9 @@
 package store
 
 import (
-	"bytes"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"io/ioutil"
-	"net/http"
 	"os"
-	"time"
 )
 
 type InfluxDB struct {
@@ -40,55 +34,11 @@ type InfluxDB struct {
 	VHost string
 }
 
-const (
-	iFlowFile = "/tmp/vflow.mon.flow"
-)
-
 func (i InfluxDB) Netflow() error {
-	var (
-		flow     = new(Flow)
-		lastFlow = new(Flow)
-		client   = new(http.Client)
-		err      error
-		b        []byte
-	)
-
-	resp, err := client.Get(i.VHost + "/flow")
+	err, flow, lastFlow := getFlow(i.VHost)
 	if err != nil {
 		return err
 	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(body, &flow)
-	if err != nil {
-		return err
-	}
-
-	flow.Timestamp = time.Now().Unix()
-
-	b, err = ioutil.ReadFile(iFlowFile)
-	if err != nil {
-		b, _ = json.Marshal(flow)
-		ioutil.WriteFile(iFlowFile, b, 0644)
-		return err
-	}
-
-	err = json.Unmarshal(b, &lastFlow)
-	if err != nil {
-		return err
-	}
-
-	b, err = json.Marshal(flow)
-	if err != nil {
-		return err
-	}
-
-	ioutil.WriteFile(iFlowFile, b, 0644)
 
 	delta := flow.Timestamp - lastFlow.Timestamp
 	hostname, err := os.Hostname()
@@ -116,37 +66,22 @@ func (i InfluxDB) Netflow() error {
 	query += fmt.Sprintf("udp.mirror.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.UDPMirrorQueue)
 
 	api := fmt.Sprintf("%s/write?db=%s", i.API, i.DB)
-	resp, err = client.Post(api, "text/plain", bytes.NewBufferString(query))
+	client := NewHTTP()
+	err, b := client.Post(api, "text/plain", query)
 	if err != nil {
 		return err
 	}
 
-	if err = chkInfluxDBResp(resp.Body); err != nil {
-		return err
+	if len(b) > 0 {
+		return errors.New("influxdb error: " + string(b))
 	}
 
 	return nil
 }
 func (i InfluxDB) System() error {
-	var (
-		sys    = new(Sys)
-		client = new(http.Client)
-		err    error
-	)
-
-	resp, err := client.Get(i.VHost + "/sys")
-	if err != nil {
-		return err
-	}
-
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-
-	err = json.Unmarshal(body, &sys)
+	sys := new(Sys)
+	client := NewHTTP()
+	err := client.Get(i.VHost+"/sys", sys)
 	if err != nil {
 		return err
 	}
@@ -164,34 +99,21 @@ func (i InfluxDB) System() error {
 	query += fmt.Sprintf("num.goroutine,host=%s value=%d\n", hostname, sys.NumGoroutine)
 
 	api := fmt.Sprintf("%s/write?db=%s", i.API, i.DB)
-	resp, err = client.Post(api, "text/plain", bytes.NewBufferString(query))
+	err, b := client.Post(api, "text/plain", query)
 	if err != nil {
 		return err
 	}
 
-	if err = chkInfluxDBResp(resp.Body); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func chkInfluxDBResp(r io.Reader) error {
-	body, err := ioutil.ReadAll(r)
-	if err != nil {
-		return err
-	}
-	if len(body) != 0 {
-		return errors.New("influxdb error: " + string(body))
+	if len(b) > 0 {
+		return errors.New("influxdb error: " + string(b))
 	}
 
 	return nil
 }
 
 func abs(a int64) int64 {
-	// TODO
 	if a < 0 {
-		return a * -1
+		os.Exit(1)
 	}
 
 	return a

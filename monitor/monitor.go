@@ -28,17 +28,19 @@ import (
 	"git.edgecastcdn.net/vflow/monitor/store"
 )
 
-type Options struct {
+type options struct {
 	DBType       string
 	VFlowHost    string
 	InfluxDBAPI  string
 	InfluxDBName string
+	TSDBAPI      string
 }
 
-var opts = Options{
+var opts = options{
 	DBType:       "influxdb",
 	VFlowHost:    "http://localhost:8080",
 	InfluxDBAPI:  "http://localhost:8086",
+	TSDBAPI:      "http://localhost:4242",
 	InfluxDBName: "vflow",
 }
 
@@ -48,6 +50,7 @@ func init() {
 	flag.StringVar(&opts.VFlowHost, "vflow-host", opts.VFlowHost, "vflow host address and port")
 	flag.StringVar(&opts.InfluxDBAPI, "influxdb-api-addr", opts.InfluxDBAPI, "influxdb api address")
 	flag.StringVar(&opts.InfluxDBName, "influxdb-db-name", opts.InfluxDBName, "influxdb database name")
+	flag.StringVar(&opts.TSDBAPI, "tsdb-api-addr", opts.TSDBAPI, "tsdb api address")
 
 	flag.Parse()
 }
@@ -58,6 +61,11 @@ func main() {
 	m["influxdb"] = store.InfluxDB{
 		API:   opts.InfluxDBAPI,
 		DB:    opts.InfluxDBName,
+		VHost: opts.VFlowHost,
+	}
+
+	m["tsdb"] = store.TSDB{
+		API:   opts.TSDBAPI,
 		VHost: opts.VFlowHost,
 	}
 
