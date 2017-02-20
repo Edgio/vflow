@@ -64,7 +64,7 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (k *Kafka) inputMsg(topic string, mCh chan []byte) {
+func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 	var (
 		msg []byte
 		ok  bool
@@ -86,6 +86,7 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte) {
 		}:
 		case err := <-k.producer.Errors():
 			k.logger.Println(err)
+			*ec++
 		}
 	}
 

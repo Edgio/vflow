@@ -53,6 +53,7 @@ type IPFIXStats struct {
 	MessageQueue   int
 	UDPCount       uint64
 	DecodedCount   uint64
+	MQErrorCount   uint64
 }
 
 var (
@@ -117,6 +118,7 @@ func (i *IPFIX) run() {
 		p := producer.NewProducer(opts.MQName)
 
 		p.MQConfigFile = opts.MQConfigFile
+		p.MQErrorCount = &i.stats.MQErrorCount
 		p.Logger = logger
 		p.Chan = ipfixMQCh
 		p.Topic = "ipfix"
@@ -226,6 +228,7 @@ func (i *IPFIX) status() *IPFIXStats {
 		MessageQueue:   len(ipfixMQCh),
 		UDPCount:       atomic.LoadUint64(&i.stats.UDPCount),
 		DecodedCount:   atomic.LoadUint64(&i.stats.DecodedCount),
+		MQErrorCount:   atomic.LoadUint64(&i.stats.MQErrorCount),
 	}
 }
 

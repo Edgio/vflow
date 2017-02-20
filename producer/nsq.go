@@ -59,7 +59,7 @@ func (n *NSQ) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (n *NSQ) inputMsg(topic string, mCh chan []byte) {
+func (n *NSQ) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 	var (
 		msg []byte
 		err error
@@ -75,6 +75,7 @@ func (n *NSQ) inputMsg(topic string, mCh chan []byte) {
 		err = n.producer.Publish(topic, msg)
 		if err != nil {
 			n.logger.Println(err)
+			*ec++
 		}
 	}
 }

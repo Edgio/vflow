@@ -55,6 +55,7 @@ type SFlowStats struct {
 	MessageQueue int
 	UDPCount     uint64
 	DecodedCount uint64
+	MQErrorCount uint64
 }
 
 var (
@@ -105,6 +106,7 @@ func (s *SFlow) run() {
 		p := producer.NewProducer(opts.MQName)
 
 		p.MQConfigFile = opts.MQConfigFile
+		p.MQErrorCount = &s.stats.MQErrorCount
 		p.Logger = logger
 		p.Chan = sFlowMQCh
 		p.Topic = "sflow"
@@ -206,5 +208,6 @@ func (s *SFlow) status() *SFlowStats {
 		MessageQueue: len(sFlowMQCh),
 		UDPCount:     atomic.LoadUint64(&s.stats.UDPCount),
 		DecodedCount: atomic.LoadUint64(&s.stats.DecodedCount),
+		MQErrorCount: atomic.LoadUint64(&s.stats.MQErrorCount),
 	}
 }

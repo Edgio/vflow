@@ -31,6 +31,7 @@ import (
 type Producer struct {
 	MQ           MQueue
 	MQConfigFile string
+	MQErrorCount *uint64
 
 	Topic string
 	Chan  chan []byte
@@ -41,7 +42,7 @@ type Producer struct {
 // MQueue represents messaging queue methods
 type MQueue interface {
 	setup(string, *log.Logger) error
-	inputMsg(string, chan []byte)
+	inputMsg(string, chan []byte, *uint64)
 }
 
 // register messaging queues
@@ -72,7 +73,8 @@ func (p *Producer) Run() error {
 	go func() {
 		wg.Add(1)
 		defer wg.Done()
-		p.MQ.inputMsg("vflow."+p.Topic, p.Chan)
+		topic := "vflow." + p.Topic
+		p.MQ.inputMsg(topic, p.Chan, p.MQErrorCount)
 	}()
 
 	wg.Wait()
