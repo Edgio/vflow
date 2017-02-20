@@ -49,9 +49,7 @@ func TestProducerChan(t *testing.T) {
 		wg sync.WaitGroup
 	)
 
-	mqRegistered["mock"] = new(MQMock)
-
-	p := NewProducer("mock")
+	p := Producer{MQ: new(MQMock)}
 	p.Chan = ch
 
 	wg.Add(1)
