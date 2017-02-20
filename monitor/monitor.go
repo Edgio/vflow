@@ -24,45 +24,9 @@ package main
 import (
 	"flag"
 	"log"
+
+	"git.edgecastcdn.net/vflow/monitor/store"
 )
-
-type Monitor interface {
-	System() error
-	Netflow() error
-}
-
-type IPFIX struct {
-	UDPQueue       int64
-	UDPMirrorQueue int64
-	MessageQueue   int64
-	UDPCount       int64
-	DecodedCount   int64
-}
-
-type SFlow struct {
-	UDPQueue     int64
-	MessageQueue int64
-	UDPCount     int64
-	DecodedCount int64
-}
-
-type Flow struct {
-	Timestamp int64
-	IPFIX     IPFIX
-	SFlow     SFlow
-}
-type Sys struct {
-	MemHeapAlloc    int64
-	MemAlloc        int64
-	MCacheInuse     int64
-	GCNext          int64
-	MemTotalAlloc   int64
-	GCSys           int64
-	MemHeapSys      int64
-	NumGoroutine    int64
-	NumLogicalCPU   int64
-	MemHeapReleased int64
-}
 
 type Options struct {
 	DBType       string
@@ -89,21 +53,22 @@ func init() {
 }
 
 func main() {
-	var m = make(map[string]Monitor)
+	var m = make(map[string]store.Monitor)
 
-	m["influxdb"] = InfluxDB{
+	m["influxdb"] = store.InfluxDB{
 		API:   opts.InfluxDBAPI,
 		DB:    opts.InfluxDBName,
 		VHost: opts.VFlowHost,
 	}
 
-	switch opts.DBType {
-	case "influxdb":
-		if err := m["influxdb"].Netflow(); err != nil {
-			log.Println(err)
-		}
-		if err := m["influxdb"].System(); err != nil {
-			log.Println(err)
-		}
+	if _, ok := m[opts.DBType]; !ok {
+		log.Fatalf("the storage: %s is not available", opts.DBType)
+	}
+
+	if err := m[opts.DBType].Netflow(); err != nil {
+		log.Println(err)
+	}
+	if err := m[opts.DBType].System(); err != nil {
+		log.Println(err)
 	}
 }
