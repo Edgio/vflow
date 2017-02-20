@@ -33,6 +33,7 @@ type IPFIX struct {
 	MessageQueue   int64
 	UDPCount       int64
 	DecodedCount   int64
+	MQErrorCount   int64
 }
 
 type SFlow struct {
@@ -40,6 +41,7 @@ type SFlow struct {
 	MessageQueue int64
 	UDPCount     int64
 	DecodedCount int64
+	MQErrorCount int64
 }
 
 type Flow struct {

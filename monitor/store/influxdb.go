@@ -96,10 +96,24 @@ func (i InfluxDB) Netflow() error {
 		return err
 	}
 
-	query := fmt.Sprintf("udp.rate,type=ipfix,host=%s value=%d\n", hostname, (flow.IPFIX.UDPCount-lastFlow.IPFIX.UDPCount)/delta)
-	query += fmt.Sprintf("udp.rate,type=sflow,host=%s value=%d\n", hostname, (flow.SFlow.UDPCount-lastFlow.SFlow.UDPCount)/delta)
-	query += fmt.Sprintf("decode.rate,type=ipfix,host=%s value=%d\n", hostname, (flow.IPFIX.DecodedCount-lastFlow.IPFIX.DecodedCount)/delta)
-	query += fmt.Sprintf("decode.rate,type=sflow,host=%s value=%d\n", hostname, (flow.SFlow.DecodedCount-lastFlow.SFlow.DecodedCount)/delta)
+	value := abs((flow.IPFIX.UDPCount - lastFlow.IPFIX.UDPCount) / delta)
+	query := fmt.Sprintf("udp.rate,type=ipfix,host=%s value=%d\n", hostname, value)
+	value = abs((flow.SFlow.UDPCount - lastFlow.SFlow.UDPCount) / delta)
+	query += fmt.Sprintf("udp.rate,type=sflow,host=%s value=%d\n", hostname, value)
+	value = abs((flow.IPFIX.DecodedCount - lastFlow.IPFIX.DecodedCount) / delta)
+	query += fmt.Sprintf("decode.rate,type=ipfix,host=%s value=%d\n", hostname, value)
+	value = abs((flow.SFlow.DecodedCount - lastFlow.SFlow.DecodedCount) / delta)
+	query += fmt.Sprintf("decode.rate,type=sflow,host=%s value=%d\n", hostname, value)
+	value = abs((flow.IPFIX.MQErrorCount - lastFlow.IPFIX.MQErrorCount) / delta)
+	query += fmt.Sprintf("mq.error.rate,type=ipfix,host=%s value=%d\n", hostname, value)
+	value = abs((flow.SFlow.MQErrorCount - lastFlow.SFlow.MQErrorCount) / delta)
+	query += fmt.Sprintf("mq.error.rate,type=sflow,host=%s value=%d\n", hostname, value)
+
+	query += fmt.Sprintf("udp.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.UDPQueue)
+	query += fmt.Sprintf("udp.queue,type=sflow,host=%s value=%d\n", hostname, flow.SFlow.UDPQueue)
+	query += fmt.Sprintf("mq.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.MessageQueue)
+	query += fmt.Sprintf("mq.queue,type=sflow,host=%s value=%d\n", hostname, flow.SFlow.MessageQueue)
+	query += fmt.Sprintf("udp.mirror.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.UDPMirrorQueue)
 
 	api := fmt.Sprintf("%s/write?db=%s", i.API, i.DB)
 	resp, err = client.Post(api, "text/plain", bytes.NewBufferString(query))
@@ -172,4 +186,13 @@ func chkInfluxDBResp(r io.Reader) error {
 	}
 
 	return nil
+}
+
+func abs(a int64) int64 {
+	// TODO
+	if a < 0 {
+		return a * -1
+	}
+
+	return a
 }
