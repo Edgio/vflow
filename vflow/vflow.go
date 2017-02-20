@@ -54,14 +54,14 @@ func main() {
 	sFlow := NewSFlow()
 	ipfix := NewIPFIX()
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		sFlow.run()
 	}()
 
+	wg.Add(1)
 	go func() {
-		wg.Add(1)
 		defer wg.Done()
 		ipfix.run()
 	}()

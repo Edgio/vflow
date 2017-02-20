@@ -91,9 +91,9 @@ func (s *SFlow) run() {
 		logger.Fatal(err)
 	}
 
+	wg.Add(s.workers)
 	for i := 0; i < s.workers; i++ {
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			s.sFlowWorker()
 

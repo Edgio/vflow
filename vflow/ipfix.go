@@ -97,9 +97,9 @@ func (i *IPFIX) run() {
 
 	}
 
+	wg.Add(i.workers)
 	for n := 0; n < i.workers; n++ {
 		go func() {
-			wg.Add(1)
 			defer wg.Done()
 			i.ipfixWorker()
 
