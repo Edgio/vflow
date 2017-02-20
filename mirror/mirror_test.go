@@ -62,3 +62,36 @@ func TestIPv4Header(t *testing.T) {
 		t.Error("expect Checksum: 0, got", h.Checksum)
 	}
 }
+
+func TestSetAddrs(t *testing.T) {
+	src := net.ParseIP("10.11.12.13")
+	dst := net.ParseIP("192.17.11.1")
+	ipv4RawHeader := NewIPv4HeaderTpl(17)
+	b := ipv4RawHeader.Marshal()
+	ipv4RawHeader.SetAddrs(b, src, dst)
+	h, err := ipv4.ParseHeader(b)
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+
+	if h.Src.String() != "10.11.12.13" {
+		t.Error("expect src 10.11.12.13, got", h.Src.String())
+	}
+	if h.Dst.String() != "192.17.11.1" {
+		t.Error("expect dst 192.17.11.1, got", h.Src.String())
+	}
+}
+
+func TestSetLen(t *testing.T) {
+	ipv4RawHeader := NewIPv4HeaderTpl(17)
+	b := ipv4RawHeader.Marshal()
+	ipv4RawHeader.SetLen(b, 15)
+	h, err := ipv4.ParseHeader(b)
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+
+	if h.TotalLen != 35 {
+		t.Error("expect total len 35, got", h.TotalLen)
+	}
+}
