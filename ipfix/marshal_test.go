@@ -88,7 +88,48 @@ func TestJSONMarshal(t *testing.T) {
 	if msg.Header.Version != 10 {
 		t.Error("expect Version 10, got", msg.Header.Version)
 	}
-
+	for _, ds := range msg.DataSets {
+		for _, f := range ds {
+			switch f.ID {
+			case 1:
+				if f.Value.(float64) != 40 {
+					t.Error("expect ID 1 value 40, got", f.Value)
+				}
+			case 2:
+				if f.Value.(float64) != 1 {
+					t.Error("expect ID 2 value 1, got", f.Value)
+				}
+			case 4:
+				if f.Value.(float64) != 6 {
+					t.Error("expect ID 4 value 6, got", f.Value)
+				}
+			case 5:
+				if f.Value.(float64) != 0 {
+					t.Error("expect ID 5 value 0, got", f.Value)
+				}
+			case 8:
+				if f.Value != "91.125.130.121" {
+					t.Error("expect ID 8 value 91.125.130.121, got", f.Value)
+				}
+			case 12:
+				if f.Value != "192.229.220.133" {
+					t.Error("expect ID 12 value 192.229.220.133, got", f.Value)
+				}
+			case 13:
+				if f.Value.(float64) != 24 {
+					t.Error("expect ID 13 value 24, got", f.Value)
+				}
+			case 14:
+				if f.Value.(float64) != 1270 {
+					t.Error("expect ID 14 value 1270, got", f.Value)
+				}
+			case 152:
+				if f.Value.(float64) != 1483484685331 {
+					t.Error("expect ID 152 value 1483484685331, got", f.Value)
+				}
+			}
+		}
+	}
 }
 
 func BenchmarkJSONMarshal(b *testing.B) {
