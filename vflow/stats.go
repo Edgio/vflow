@@ -65,9 +65,14 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 		startTime,
 	}
 
-	j, _ := json.Marshal(data)
+	j, err := json.Marshal(data)
+	if err != nil {
+		logger.Println(err)
+	}
 
-	w.Write(j)
+	if _, err = w.Write(j); err != nil {
+		logger.Println(err)
+	}
 }
 
 func StatsFlowHandler(i *IPFIX, s *SFlow) http.HandlerFunc {
@@ -81,9 +86,15 @@ func StatsFlowHandler(i *IPFIX, s *SFlow) http.HandlerFunc {
 			i.status(),
 			s.status(),
 		}
-		j, _ := json.Marshal(data)
 
-		w.Write(j)
+		j, err := json.Marshal(data)
+		if err != nil {
+			logger.Println(err)
+		}
+
+		if _, err = w.Write(j); err != nil {
+			logger.Println(err)
+		}
 	}
 }
 
