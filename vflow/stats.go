@@ -73,9 +73,11 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 func StatsFlowHandler(i *IPFIX, s *SFlow) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data = &struct {
-			IPFIX *IPFIXStats
-			SFlow *SFlowStats
+			StartTime int64
+			IPFIX     *IPFIXStats
+			SFlow     *SFlowStats
 		}{
+			startTime,
 			i.status(),
 			s.status(),
 		}
