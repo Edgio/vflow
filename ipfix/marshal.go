@@ -24,8 +24,8 @@ package ipfix
 
 import (
 	"bytes"
+	"encoding/hex"
 	"errors"
-	"fmt"
 	"net"
 	"strconv"
 )
@@ -58,11 +58,11 @@ func (m *Message) encodeDataSet(b *bytes.Buffer) error {
 	b.WriteString("\"DataSets\":")
 	dsLength = len(m.DataSets)
 
-	b.WriteString("[")
+	b.WriteByte('[')
 	for i := range m.DataSets {
 		length = len(m.DataSets[i])
 
-		b.WriteString("[")
+		b.WriteByte('[')
 		for j := range m.DataSets[i] {
 			b.WriteString("{\"ID\":")
 			b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].ID), 10))
@@ -94,37 +94,37 @@ func (m *Message) encodeDataSet(b *bytes.Buffer) error {
 			case float64:
 				b.WriteString(strconv.FormatFloat(m.DataSets[i][j].Value.(float64), 'E', -1, 64))
 			case string:
-				b.WriteString("\"")
+				b.WriteByte('"')
 				b.WriteString(m.DataSets[i][j].Value.(string))
-				b.WriteString("\"")
+				b.WriteByte('"')
 			case net.IP:
-				b.WriteString("\"")
+				b.WriteByte('"')
 				b.WriteString(m.DataSets[i][j].Value.(net.IP).String())
-				b.WriteString("\"")
+				b.WriteByte('"')
 			case net.HardwareAddr:
-				b.WriteString("\"")
+				b.WriteByte('"')
 				b.WriteString(m.DataSets[i][j].Value.(net.HardwareAddr).String())
-				b.WriteString("\"")
+				b.WriteByte('"')
 			case []uint8:
-				b.WriteString("\"")
-				b.WriteString(fmt.Sprintf("0x%x", m.DataSets[i][j].Value.([]uint8)))
-				b.WriteString("\"")
+				b.WriteByte('"')
+				b.WriteString("0x" + hex.EncodeToString(m.DataSets[i][j].Value.([]uint8)))
+				b.WriteByte('"')
 			default:
 				return errUknownMarshalDataType
 			}
 			if j < length-1 {
 				b.WriteString("},")
 			} else {
-				b.WriteString("}")
+				b.WriteByte('}')
 			}
 		}
 		if i < dsLength-1 {
 			b.WriteString("],")
 		} else {
-			b.WriteString("]")
+			b.WriteByte(']')
 		}
 	}
-	b.WriteString("]")
+	b.WriteByte(']')
 
 	return nil
 }
