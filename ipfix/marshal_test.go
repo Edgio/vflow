@@ -107,6 +107,10 @@ func TestJSONMarshal(t *testing.T) {
 				if f.Value.(float64) != 0 {
 					t.Error("expect ID 5 value 0, got", f.Value)
 				}
+			case 6:
+				if f.Value.(string) != "0x10" {
+					t.Error("expect ID 6 value 0x10, got", f.Value)
+				}
 			case 8:
 				if f.Value != "91.125.130.121" {
 					t.Error("expect ID 8 value 91.125.130.121, got", f.Value)
