@@ -27,6 +27,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -53,6 +54,7 @@ type SFlow struct {
 }
 
 type Flow struct {
+	StartTime int64
 	Timestamp int64
 	IPFIX     IPFIX
 	SFlow     SFlow
@@ -150,5 +152,11 @@ func getFlow(host string) (error, *Flow, *Flow) {
 	}
 
 	ioutil.WriteFile(lastFlowFile, b, 0644)
+
+	// once the vFlow restarted
+	if flow.StartTime != lastFlow.StartTime {
+		os.Exit(1)
+	}
+
 	return nil, flow, lastFlow
 }
