@@ -3,7 +3,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    hammer.go
+//: file:    ipfix_samples.go
 //: details: TODO
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
