@@ -1,4 +1,4 @@
-# Stress
+# Stress (Load Test)
 
 ## Stress tries to check correct behavior and robustness of vFlow
 
