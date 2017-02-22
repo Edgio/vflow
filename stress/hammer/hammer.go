@@ -31,6 +31,12 @@ import (
 	"git.edgecastcdn.net/vflow/mirror"
 )
 
+const (
+	dataType = iota
+	templateType
+	templateOptType
+)
+
 type Packet struct {
 	payload []byte
 	length  int
@@ -38,7 +44,6 @@ type Packet struct {
 
 type IPFIX struct {
 	conn mirror.Conn
-	pool *sync.Pool
 	ch   chan Packet
 	srcs []net.IP
 
@@ -58,13 +63,8 @@ func NewIPFIX() (*IPFIX, error) {
 	}
 
 	return &IPFIX{
-		conn: conn,
-		pool: &sync.Pool{
-			New: func() interface{} {
-				return make([]byte, 1500)
-			},
-		},
-		ch:          make(chan Packet, 1000),
+		conn:        conn,
+		ch:          make(chan Packet, 10000),
 		MaxRouter:   10,
 		TplInterval: 10 * time.Second,
 	}, nil
@@ -83,15 +83,8 @@ func (i *IPFIX) Run() {
 		defer wg.Done()
 		for {
 			p = <-i.ch
-			i.conn.Send(p.payload)
-			i.pool.Put(p.payload)
+			i.conn.Send(p.payload[:p.length])
 		}
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		i.sendData()
 	}()
 
 	wg.Add(1)
@@ -106,106 +99,99 @@ func (i *IPFIX) Run() {
 		i.sendTemplateOpt()
 	}()
 
+	time.Sleep(1 * time.Second)
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		i.sendData()
+	}()
+
 	wg.Wait()
 }
 
 func (i *IPFIX) sendData() {
-	var data, payload []byte
-	ipHLen := mirror.IPv4HLen
-
-	udp := mirror.UDP{55117, 4739, 0, 0}
-	udpHdr := udp.Marshal()
-
-	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
-	ipHdr := ip.Marshal()
+	packets := i.genPackets(dataType)
 
 	for {
-		for j := 0; j < len(ipfixDataSamples); j++ {
-			for _, src := range i.srcs {
-				data = ipfixDataSamples[j]
-				payload = i.pool.Get().([]byte)
-
-				udp.SetLen(udpHdr, len(data))
-
-				ip.SetAddrs(ipHdr, src, net.ParseIP("127.0.0.1"))
-
-				copy(payload[0:ipHLen], ipHdr)
-				copy(payload[ipHLen:ipHLen+8], udpHdr)
-				copy(payload[ipHLen+8:], data)
-
-				i.ch <- Packet{
-					payload: payload,
-					length:  ipHLen + 8 + len(data),
-				}
-			}
+		for j, _ := range packets {
+			i.ch <- packets[j]
 		}
 	}
 }
 
 func (i *IPFIX) sendTemplate() {
-	var data, payload []byte
 	c := time.Tick(i.TplInterval)
-	ipHLen := mirror.IPv4HLen
+	packets := i.genPackets(templateType)
 
-	udp := mirror.UDP{55117, 4739, 0, 0}
-	udpHdr := udp.Marshal()
-
-	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
-	ipHdr := ip.Marshal()
+	for j, _ := range packets {
+		i.ch <- packets[j]
+	}
 
 	for range c {
-		for j := 0; j < len(ipfixTemplates); j++ {
-			for _, src := range i.srcs {
-				data = ipfixTemplates[j]
-				payload = i.pool.Get().([]byte)
-
-				udp.SetLen(udpHdr, len(data))
-
-				ip.SetAddrs(ipHdr, src, net.ParseIP("127.0.0.1"))
-
-				copy(payload[0:ipHLen], ipHdr)
-				copy(payload[ipHLen:ipHLen+8], udpHdr)
-				copy(payload[ipHLen+8:], data)
-
-				i.ch <- Packet{
-					payload: payload,
-					length:  ipHLen + 8 + len(data),
-				}
-			}
+		for j, _ := range packets {
+			i.ch <- packets[j]
 		}
 	}
 }
 
 func (i *IPFIX) sendTemplateOpt() {
-	var data, payload []byte
 	c := time.Tick(i.TplInterval)
-	ipHLen := mirror.IPv4HLen
+	packets := i.genPackets(templateOptType)
 
+	for j, _ := range packets {
+		i.ch <- packets[j]
+	}
+
+	for range c {
+		for j, _ := range packets {
+			i.ch <- packets[j]
+		}
+	}
+}
+
+func (i *IPFIX) genPackets(typ int) []Packet {
+	var (
+		packets []Packet
+		samples [][]byte
+	)
+
+	ipHLen := mirror.IPv4HLen
 	udp := mirror.UDP{55117, 4739, 0, 0}
 	udpHdr := udp.Marshal()
 
 	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
 	ipHdr := ip.Marshal()
 
-	for range c {
-		for j := 0; j < len(ipfixTemplatesOpt); j++ {
-			for _, src := range i.srcs {
-				data = ipfixTemplates[j]
-				payload = i.pool.Get().([]byte)
+	switch typ {
+	case dataType:
+		samples = ipfixDataSamples
+	case templateType:
+		samples = ipfixTemplates
+	case templateOptType:
+		samples = ipfixTemplatesOpt
+	}
 
-				udp.SetLen(udpHdr, len(data))
+	for j := 0; j < len(samples); j++ {
+		for _, src := range i.srcs {
+			data := samples[j]
+			payload := make([]byte, 1500)
 
-				ip.SetAddrs(ipHdr, src, net.ParseIP("127.0.0.1"))
+			udp.SetLen(udpHdr, len(data))
 
-				copy(payload[0:ipHLen], ipHdr)
-				copy(payload[ipHLen:ipHLen+8], udpHdr)
-				copy(payload[ipHLen+8:], data)
+			ip.SetAddrs(ipHdr, src, net.ParseIP("127.0.0.1"))
 
-				i.ch <- Packet{
-					payload: payload,
-					length:  ipHLen + 8 + len(data),
-				}
-			}
+			copy(payload[0:ipHLen], ipHdr)
+			copy(payload[ipHLen:ipHLen+8], udpHdr)
+			copy(payload[ipHLen+8:], data)
+
+			packets = append(packets, Packet{
+				payload: payload,
+				length:  ipHLen + 8 + len(data),
+			})
+
 		}
 	}
+
+	return packets
 }
