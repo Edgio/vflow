@@ -22,27 +22,64 @@
 package main
 
 import (
+	"flag"
+	"log"
+	"net"
 	"sync"
+	"time"
 
 	"git.edgecastcdn.net/vflow/stress/hammer"
 )
 
+var opts = struct {
+	vflowAddr string
+	ipfixPort int
+	sflowPort int
+	ipfixTick string
+}{
+	"127.0.0.1",
+	4739,
+	6343,
+	"10s",
+}
+
+func init() {
+	flag.IntVar(&opts.ipfixPort, "ipfix-port", opts.ipfixPort, "ipfix port number")
+	flag.IntVar(&opts.sflowPort, "sflow-port", opts.sflowPort, "sflow port number")
+	flag.StringVar(&opts.ipfixTick, "ipfix-interval", opts.ipfixTick, "ipfix template interval in seconds")
+	flag.StringVar(&opts.vflowAddr, "vflow-addr", opts.vflowAddr, "vflow ip address")
+
+	flag.Parse()
+}
+
 func main() {
-	var wg sync.WaitGroup
+	var (
+		wg    sync.WaitGroup
+		vflow = net.ParseIP(opts.vflowAddr)
+	)
 
 	wg.Add(1)
 	go func() {
+		var err error
 		defer wg.Done()
-		ipfix, _ := hammer.NewIPFIX()
+		ipfix, _ := hammer.NewIPFIX(vflow)
+		ipfix.Port = opts.ipfixPort
+		ipfix.Tick, err = time.ParseDuration(opts.ipfixTick)
+		if err != nil {
+			log.Fatal(err)
+		}
 		ipfix.Run()
 	}()
 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		sflow, _ := hammer.NewSFlow()
+		sflow, _ := hammer.NewSFlow(vflow)
+		sflow.Port = opts.sflowPort
 		sflow.Run()
 	}()
+
+	log.Printf("Stress is attacking %s target ...", opts.vflowAddr)
 
 	wg.Wait()
 }

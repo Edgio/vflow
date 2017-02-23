@@ -44,37 +44,39 @@ type Packet struct {
 }
 
 type IPFIX struct {
-	conn mirror.Conn
-	ch   chan Packet
-	srcs []net.IP
+	conn  mirror.Conn
+	ch    chan Packet
+	srcs  []net.IP
+	vflow net.IP
 
-	MaxRouter   int
-	TplInterval time.Duration
-	IPFIXAddr   net.IP
-	IPFIXPort   int
-	RateLimit   int
+	MaxRouter int
+	Tick      time.Duration
+	Port      int
+	RateLimit int
 }
 
 type SFlow struct {
-	conn      mirror.Conn
-	ch        chan Packet
-	srcs      []net.IP
+	conn  mirror.Conn
+	ch    chan Packet
+	srcs  []net.IP
+	vflow net.IP
+
 	MaxRouter int
+	Port      int
 }
 
-func NewIPFIX() (*IPFIX, error) {
+func NewIPFIX(raddr net.IP) (*IPFIX, error) {
 
-	raddr := net.ParseIP("127.0.0.1")
 	conn, err := mirror.NewRawConn(raddr)
 	if err != nil {
 		return nil, err
 	}
 
 	return &IPFIX{
-		conn:        conn,
-		ch:          make(chan Packet, 10000),
-		MaxRouter:   10,
-		TplInterval: 10 * time.Second,
+		conn:      conn,
+		ch:        make(chan Packet, 10000),
+		vflow:     raddr,
+		MaxRouter: 10,
 	}, nil
 }
 
@@ -129,7 +131,7 @@ func (i *IPFIX) sendData() {
 }
 
 func (i *IPFIX) sendTemplate() {
-	c := time.Tick(i.TplInterval)
+	c := time.Tick(i.Tick)
 	packets := i.genPackets(templateType)
 
 	for j, _ := range packets {
@@ -144,7 +146,7 @@ func (i *IPFIX) sendTemplate() {
 }
 
 func (i *IPFIX) sendTemplateOpt() {
-	c := time.Tick(i.TplInterval)
+	c := time.Tick(i.Tick)
 	packets := i.genPackets(templateOptType)
 
 	for j, _ := range packets {
@@ -165,7 +167,7 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 	)
 
 	ipHLen := mirror.IPv4HLen
-	udp := mirror.UDP{55117, 4739, 0, 0}
+	udp := mirror.UDP{55117, i.Port, 0, 0}
 	udpHdr := udp.Marshal()
 
 	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
@@ -189,7 +191,7 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 
 			udp.SetLen(udpHdr, len(data))
 
-			ip.SetAddrs(ipHdr, src, net.ParseIP("127.0.0.1"))
+			ip.SetAddrs(ipHdr, src, i.vflow)
 
 			copy(payload[0:ipHLen], ipHdr)
 			copy(payload[ipHLen:ipHLen+8], udpHdr)
@@ -206,9 +208,8 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 	return packets
 }
 
-func NewSFlow() (*SFlow, error) {
+func NewSFlow(raddr net.IP) (*SFlow, error) {
 
-	raddr := net.ParseIP("127.0.0.1")
 	conn, err := mirror.NewRawConn(raddr)
 	if err != nil {
 		return nil, err
@@ -217,6 +218,7 @@ func NewSFlow() (*SFlow, error) {
 	return &SFlow{
 		conn:      conn,
 		ch:        make(chan Packet, 10000),
+		vflow:     raddr,
 		MaxRouter: 10,
 	}, nil
 }
@@ -249,9 +251,8 @@ func (s *SFlow) Run() {
 
 func (s *SFlow) genPackets() []Packet {
 	var packets []Packet
-
 	ipHLen := mirror.IPv4HLen
-	udp := mirror.UDP{55117, 6343, 0, 0}
+	udp := mirror.UDP{55117, s.Port, 0, 0}
 	udpHdr := udp.Marshal()
 
 	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
@@ -264,7 +265,7 @@ func (s *SFlow) genPackets() []Packet {
 
 			udp.SetLen(udpHdr, len(data))
 
-			ip.SetAddrs(ipHdr, src, net.ParseIP("127.0.0.1"))
+			ip.SetAddrs(ipHdr, src, s.vflow)
 
 			copy(payload[0:ipHLen], ipHdr)
 			copy(payload[ipHLen:ipHLen+8], udpHdr)
