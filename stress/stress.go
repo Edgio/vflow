@@ -22,10 +22,27 @@
 package main
 
 import (
+	"sync"
+
 	"git.edgecastcdn.net/vflow/stress/hammer"
 )
 
 func main() {
-	ipfix, _ := hammer.NewIPFIX()
-	ipfix.Run()
+	var wg sync.WaitGroup
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ipfix, _ := hammer.NewIPFIX()
+		ipfix.Run()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sflow, _ := hammer.NewSFlow()
+		sflow.Run()
+	}()
+
+	wg.Wait()
 }

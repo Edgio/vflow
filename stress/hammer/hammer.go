@@ -35,6 +35,7 @@ const (
 	dataType = iota
 	templateType
 	templateOptType
+	sFlowDataType
 )
 
 type Packet struct {
@@ -52,6 +53,13 @@ type IPFIX struct {
 	IPFIXAddr   net.IP
 	IPFIXPort   int
 	RateLimit   int
+}
+
+type SFlow struct {
+	conn      mirror.Conn
+	ch        chan Packet
+	srcs      []net.IP
+	MaxRouter int
 }
 
 func NewIPFIX() (*IPFIX, error) {
@@ -170,6 +178,8 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 		samples = ipfixTemplates
 	case templateOptType:
 		samples = ipfixTemplatesOpt
+	case sFlowDataType:
+		samples = sFlowDataSamples
 	}
 
 	for j := 0; j < len(samples); j++ {
@@ -194,4 +204,89 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 	}
 
 	return packets
+}
+
+func NewSFlow() (*SFlow, error) {
+
+	raddr := net.ParseIP("127.0.0.1")
+	conn, err := mirror.NewRawConn(raddr)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SFlow{
+		conn:      conn,
+		ch:        make(chan Packet, 10000),
+		MaxRouter: 10,
+	}, nil
+}
+
+func (s *SFlow) Run() {
+	var wg sync.WaitGroup
+
+	for j := 1; j < s.MaxRouter; j++ {
+		s.srcs = append(s.srcs, net.ParseIP(fmt.Sprintf("192.168.1.%d", j)))
+	}
+
+	wg.Add(1)
+	go func() {
+		var p Packet
+		defer wg.Done()
+		for {
+			p = <-s.ch
+			s.conn.Send(p.payload[:p.length])
+		}
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.sendData()
+	}()
+
+	wg.Wait()
+}
+
+func (s *SFlow) genPackets() []Packet {
+	var packets []Packet
+
+	ipHLen := mirror.IPv4HLen
+	udp := mirror.UDP{55117, 6343, 0, 0}
+	udpHdr := udp.Marshal()
+
+	ip := mirror.NewIPv4HeaderTpl(mirror.UDPProto)
+	ipHdr := ip.Marshal()
+
+	for j := 0; j < len(sFlowDataSamples); j++ {
+		for _, src := range s.srcs {
+			data := sFlowDataSamples[j]
+			payload := make([]byte, 1500)
+
+			udp.SetLen(udpHdr, len(data))
+
+			ip.SetAddrs(ipHdr, src, net.ParseIP("127.0.0.1"))
+
+			copy(payload[0:ipHLen], ipHdr)
+			copy(payload[ipHLen:ipHLen+8], udpHdr)
+			copy(payload[ipHLen+8:], data)
+
+			packets = append(packets, Packet{
+				payload: payload,
+				length:  ipHLen + 8 + len(data),
+			})
+
+		}
+	}
+
+	return packets
+}
+
+func (s *SFlow) sendData() {
+	packets := s.genPackets()
+
+	for {
+		for j, _ := range packets {
+			s.ch <- packets[j]
+		}
+	}
 }
