@@ -3,7 +3,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    influxdb.go
+//: file:    tsdb.go
 //: details: TODO
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
@@ -101,6 +101,69 @@ func (t TSDB) Netflow() error {
 
 	}
 
+	if err = t.put(dps); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t TSDB) System() error {
+	var dps []TSDBDataPoint
+
+	sys := new(Sys)
+	client := NewHTTP()
+	err := client.Get(t.VHost+"/sys", sys)
+	if err != nil {
+		return err
+	}
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		return err
+	}
+
+	metrics := []string{
+		"mem.heap.alloc",
+		"mem.alloc",
+		"mcache.inuse",
+		"mem.total.alloc",
+		"mem.heap.sys",
+		"num.goroutine",
+	}
+
+	values := []int64{
+		sys.MemHeapAlloc,
+		sys.MemAlloc,
+		sys.MCacheInuse,
+		sys.MemTotalAlloc,
+		sys.MemHeapSys,
+		sys.NumGoroutine,
+	}
+
+	for i, m := range metrics {
+		dps = append(dps, TSDBDataPoint{
+			Metric:    m,
+			Timestamp: time.Now().Unix(),
+			Value:     values[i],
+			Tags: struct {
+				Host string `json:"host"`
+				Type string `json:"type"`
+			}{
+				Host: hostname,
+			},
+		})
+
+	}
+
+	if err = t.put(dps); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t TSDB) put(dps []TSDBDataPoint) error {
 	b, err := json.Marshal(dps)
 	if err != nil {
 		return err
@@ -108,7 +171,7 @@ func (t TSDB) Netflow() error {
 
 	api := fmt.Sprintf("%s/api/put", t.API)
 	client := NewHTTP()
-	err, b = client.Post(api, "text/plain", string(b))
+	err, b = client.Post(api, "application/json", string(b))
 	if err != nil {
 		return err
 	}
@@ -120,10 +183,5 @@ func (t TSDB) Netflow() error {
 		return errors.New("TSDB error")
 	}
 
-	return nil
-}
-
-func (t TSDB) System() error {
-	// TODO
 	return nil
 }
