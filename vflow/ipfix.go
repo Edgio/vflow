@@ -29,9 +29,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"git.edgecastcdn.net/vflow/ipfix"
-	"git.edgecastcdn.net/vflow/mirror"
-	"git.edgecastcdn.net/vflow/producer"
+	"github.com/VerizonDigital/vflow/ipfix"
+	"github.com/VerizonDigital/vflow/mirror"
+	"github.com/VerizonDigital/vflow/producer"
 )
 
 type IPFIX struct {

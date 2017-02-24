@@ -25,7 +25,7 @@ import (
 	"flag"
 	"log"
 
-	"git.edgecastcdn.net/vflow/monitor/store"
+	"github.com/VerizonDigital/vflow/monitor/store"
 )
 
 type options struct {

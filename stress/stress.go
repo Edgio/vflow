@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"git.edgecastcdn.net/vflow/stress/hammer"
+	"github.com/VerizonDigital/vflow/stress/hammer"
 )
 
 var opts = struct {

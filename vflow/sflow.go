@@ -30,9 +30,9 @@ import (
 	"sync/atomic"
 	"time"
 
-	"git.edgecastcdn.net/vflow/packet"
-	"git.edgecastcdn.net/vflow/producer"
-	"git.edgecastcdn.net/vflow/sflow"
+	"github.com/VerizonDigital/vflow/packet"
+	"github.com/VerizonDigital/vflow/producer"
+	"github.com/VerizonDigital/vflow/sflow"
 )
 
 // SFUDPMsg represents sFlow UDP message

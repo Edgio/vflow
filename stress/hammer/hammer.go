@@ -28,7 +28,7 @@ import (
 	"sync"
 	"time"
 
-	"git.edgecastcdn.net/vflow/mirror"
+	"github.com/VerizonDigital/vflow/mirror"
 )
 
 const (

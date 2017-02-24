@@ -26,7 +26,7 @@ import (
 	"errors"
 	"io"
 
-	"git.edgecastcdn.net/vflow/packet"
+	"github.com/VerizonDigital/vflow/packet"
 )
 
 const (

@@ -28,7 +28,7 @@ import (
 	"io"
 	"net"
 
-	"git.edgecastcdn.net/vflow/packet"
+	"github.com/VerizonDigital/vflow/packet"
 )
 
 const (
