@@ -300,16 +300,18 @@ func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 		return
 	}
 
-	dst := net.ParseIP(opts.IPFIXMirrorAddr)
+	for w := 0; w < opts.IPFIXMirrorWorkers; w++ {
+		dst := net.ParseIP(opts.IPFIXMirrorAddr)
 
-	if dst.To4() != nil {
-		go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch4)
-	} else {
-		go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch6)
+		if dst.To4() != nil {
+			go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch4)
+		} else {
+			go mirrorIPFIX(dst, opts.IPFIXMirrorPort, ch6)
+		}
 	}
 
 	ipfixMirrorEnabled = true
-	logger.Println("ipfix mirror service is running ...")
+	logger.Printf("ipfix mirror service is running (workers#: %d) ...", opts.IPFIXMirrorWorkers)
 
 	for {
 		msg = <-ch

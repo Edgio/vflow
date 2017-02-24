@@ -52,6 +52,7 @@ type Options struct {
 	IPFIXWorkers           int
 	IPFIXMirrorAddr        string
 	IPFIXMirrorPort        int
+	IPFIXMirrorWorkers     int
 	IPFIXTemplateCacheFile string
 
 	// producer
@@ -79,6 +80,7 @@ func NewOptions() *Options {
 		IPFIXWorkers:           10,
 		IPFIXMirrorAddr:        "",
 		IPFIXMirrorPort:        4172,
+		IPFIXMirrorWorkers:     5,
 		IPFIXTemplateCacheFile: "/tmp/vflow.templates",
 
 		MQName:       "kafka",
@@ -113,16 +115,17 @@ func vFlowFlagSet(opts *Options) {
 	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable sflow listener")
 	flag.IntVar(&opts.SFlowPort, "sflow-port", opts.SFlowPort, "sflow port number")
 	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
-	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers / concurrency number")
+	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers number")
 
 	// ipfix options
 	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable IPFIX listener")
 	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
-	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers / concurrency number")
+	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers number")
 	flag.StringVar(&opts.IPFIXTemplateCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTemplateCacheFile, "IPFIX template cache file")
 	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
 	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
+	flag.IntVar(&opts.IPFIXMirrorWorkers, "ipfix-mirror-workers", opts.IPFIXMirrorWorkers, "IPFIX mirror workers number")
 
 	// producer options
 	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
