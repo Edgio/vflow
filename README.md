@@ -7,3 +7,5 @@
 - Producer to Apache Kafka, NSQ
 - Cloning IPFIX stream to other source
 - Monitoring with InfluxDB and OpenTSDB backend
+
+![Alt text](/docs/imgs/vflow.gif?raw=true "vFlow")
