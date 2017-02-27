@@ -46,14 +46,14 @@ type Options struct {
 	SFlowWorkers int
 
 	// IPFIX options
-	IPFIXEnabled           bool
-	IPFIXPort              int
-	IPFIXUDPSize           int
-	IPFIXWorkers           int
-	IPFIXMirrorAddr        string
-	IPFIXMirrorPort        int
-	IPFIXMirrorWorkers     int
-	IPFIXTemplateCacheFile string
+	IPFIXEnabled       bool
+	IPFIXPort          int
+	IPFIXUDPSize       int
+	IPFIXWorkers       int
+	IPFIXMirrorAddr    string
+	IPFIXMirrorPort    int
+	IPFIXMirrorWorkers int
+	IPFIXTplCacheFile  string
 
 	// producer
 	MQName       string
@@ -74,14 +74,14 @@ func NewOptions() *Options {
 		SFlowUDPSize: 1500,
 		SFlowWorkers: 10,
 
-		IPFIXEnabled:           true,
-		IPFIXPort:              4739,
-		IPFIXUDPSize:           1500,
-		IPFIXWorkers:           10,
-		IPFIXMirrorAddr:        "",
-		IPFIXMirrorPort:        4172,
-		IPFIXMirrorWorkers:     5,
-		IPFIXTemplateCacheFile: "/tmp/vflow.templates",
+		IPFIXEnabled:       true,
+		IPFIXPort:          4739,
+		IPFIXUDPSize:       1500,
+		IPFIXWorkers:       10,
+		IPFIXMirrorAddr:    "",
+		IPFIXMirrorPort:    4172,
+		IPFIXMirrorWorkers: 5,
+		IPFIXTplCacheFile:  "/tmp/vflow.templates",
 
 		MQName:       "kafka",
 		MQConfigFile: "/usr/local/vflow/etc/kafka.conf",
@@ -122,7 +122,7 @@ func vFlowFlagSet(opts *Options) {
 	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers number")
-	flag.StringVar(&opts.IPFIXTemplateCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTemplateCacheFile, "IPFIX template cache file")
+	flag.StringVar(&opts.IPFIXTplCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTplCacheFile, "IPFIX template cache file")
 	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
 	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
 	flag.IntVar(&opts.IPFIXMirrorWorkers, "ipfix-mirror-workers", opts.IPFIXMirrorWorkers, "IPFIX mirror workers number")
