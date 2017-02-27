@@ -34,6 +34,7 @@ import (
 	"github.com/VerizonDigital/vflow/producer"
 )
 
+// IPFIX represents IPFIX collector
 type IPFIX struct {
 	port    int
 	addr    string
@@ -42,11 +43,13 @@ type IPFIX struct {
 	stats   IPFIXStats
 }
 
+// IPFIXUDPMsg represents IPFIX UDP data
 type IPFIXUDPMsg struct {
 	raddr *net.UDPAddr
 	body  []byte
 }
 
+// IPFIXStats represents IPFIX stats
 type IPFIXStats struct {
 	UDPQueue       int
 	UDPMirrorQueue int
@@ -73,6 +76,7 @@ var (
 	}
 )
 
+// NewIPFIX constructs IPFIX
 func NewIPFIX() *IPFIX {
 	return &IPFIX{
 		port:    opts.IPFIXPort,

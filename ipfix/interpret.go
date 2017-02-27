@@ -1,4 +1,4 @@
-// Package packet decodes layer two, three and four OSI model layers
+// Package ipfix decodes IPFIX packets
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved

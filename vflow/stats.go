@@ -31,6 +31,7 @@ import (
 
 var startTime = time.Now().Unix()
 
+// StatsSysHandler handles /sys endpoint
 func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 	var mem runtime.MemStats
 
@@ -75,6 +76,7 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// StatsFlowHandler handles /flow endpoint
 func StatsFlowHandler(i *IPFIX, s *SFlow) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data = &struct {

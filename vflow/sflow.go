@@ -50,6 +50,7 @@ type SFlow struct {
 	stats   SFlowStats
 }
 
+// SFlowStats represents sflow stats
 type SFlowStats struct {
 	UDPQueue     int
 	MessageQueue int

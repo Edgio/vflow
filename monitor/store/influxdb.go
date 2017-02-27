@@ -28,12 +28,14 @@ import (
 	"os"
 )
 
+// InfluxDB represents InfluxDB backend
 type InfluxDB struct {
 	API   string
 	DB    string
 	VHost string
 }
 
+// NetFlow ingests flow's stats to InfluxDB
 func (i InfluxDB) Netflow() error {
 	err, flow, lastFlow := getFlow(i.VHost)
 	if err != nil {
@@ -78,6 +80,8 @@ func (i InfluxDB) Netflow() error {
 
 	return nil
 }
+
+// System ingests system's stats to InfluxDB
 func (i InfluxDB) System() error {
 	sys := new(Sys)
 	client := NewHTTP()
