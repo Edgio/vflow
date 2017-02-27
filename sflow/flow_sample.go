@@ -67,7 +67,7 @@ type ExtSwitchData struct {
 }
 
 var (
-	errMaxOutEthernetLength = errors.New("the ethernet lenght is greater than 1500")
+	errMaxOutEthernetLength = errors.New("the ethernet length is greater than 1500")
 )
 
 func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
