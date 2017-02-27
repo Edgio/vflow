@@ -169,6 +169,7 @@ func (i *IPFIX) shutdown() {
 func (i *IPFIX) ipfixWorker() {
 	var (
 		decodedMsg *ipfix.Message
+		mirror     IPFIXUDPMsg
 		msg        = IPFIXUDPMsg{body: ipfixBuffer.Get().([]byte)}
 		buf        = bytes.NewBufferString("")
 		err        error
@@ -190,8 +191,12 @@ func (i *IPFIX) ipfixWorker() {
 		}
 
 		if ipfixMirrorEnabled {
+			mirror.body = ipfixBuffer.Get().([]byte)
+			mirror.raddr = msg.raddr
+			mirror.body = append(mirror.body[:0], msg.body...)
+
 			select {
-			case ipfixMCh <- IPFIXUDPMsg{msg.raddr, append([]byte{}, msg.body...)}:
+			case ipfixMCh <- mirror:
 			default:
 			}
 		}
@@ -284,6 +289,8 @@ func mirrorIPFIX(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 		copy(packet[0:ipHLen], ipHdr)
 		copy(packet[ipHLen:ipHLen+8], udpHdr)
 		copy(packet[ipHLen+8:], msg.body)
+
+		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 
 		if err = conn.Send(packet[0 : ipHLen+8+pLen]); err != nil {
 			return err
