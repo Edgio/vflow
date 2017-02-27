@@ -1,11 +1,11 @@
 PACKAGES=$(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --unique)
 default:
-	go test ./...
+	go test -v ./...
 test:
-	go test ./...
+	go test -v ./...
 
 bench:
-	go test ./... -bench=.
+	go test -v ./... -bench=.
 
 run:
 	cd vflow; go run *.go -sflow-workers 100 -ipfix-workers 100 -verbose=false
