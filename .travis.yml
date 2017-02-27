@@ -3,6 +3,9 @@ go:
   - 1.8
   - tip
 
+before_install:
+    - go get github.com/Shopify/sarama
+    - go get github.com/bitly/go-nsq
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
   - go test -v ./...
