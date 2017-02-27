@@ -1,3 +1,4 @@
+[![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow)
 ## vFlow
 
 ## Features
