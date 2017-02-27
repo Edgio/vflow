@@ -86,6 +86,8 @@ type SetHeader struct {
 }
 
 var (
+	rpcChan = make(chan RPCRequest, 1)
+
 	errInvalidVersion    = errors.New("invalid ipfix version")
 	errUnknownTemplateID = errors.New("unknown template id")
 )
@@ -141,8 +143,13 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 			for d.reader.Len() > 0 {
 				tr, ok := mem.retrieve(setHeader.SetID, d.raddr)
 				if !ok {
+					select {
+					case rpcChan <- RPCRequest{}:
+					default:
+					}
 					return msg, errUnknownTemplateID
 				}
+
 				data := decodeData(d.reader, tr)
 				msg.DataSets = append(msg.DataSets, data)
 			}

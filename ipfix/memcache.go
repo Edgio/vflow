@@ -75,6 +75,23 @@ func GetCache(cacheFile string) MemCache {
 		m[i] = &TemplatesShard{Templates: make(map[uint32]Data)}
 	}
 
+	go RPCServer(m, nil)
+	go func(m MemCache) {
+		for {
+			req := <-rpcChan
+
+			for _, rpcServer := range vFlowServers {
+				r := NewRPCClient(rpcServer)
+				tr, err := r.Get(req)
+				if err != nil {
+					continue
+				}
+				m.insert(req.ID, req.IP, *tr)
+				break
+			}
+		}
+	}(m)
+
 	return m
 }
 

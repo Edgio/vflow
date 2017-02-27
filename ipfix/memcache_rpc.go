@@ -3,7 +3,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    decoder.go
+//: file:    memcache_rpc.go
 //: details: TODO
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
@@ -29,22 +29,36 @@ import (
 	"time"
 )
 
+// RPC represents RPC
 type RPC struct {
 	reqCount uint64
 	mCache   MemCache
 }
 
+// RPCClient represents RPC client
 type RPCClient struct {
 	conn *rpc.Client
 }
 
-type Request struct {
+// RPCConfig represents RPC config
+type RPCConfig struct {
+	enabled bool
+	port    int
+	addr    net.IP
+}
+
+// RPCRequest represents RPC request
+type RPCRequest struct {
 	ID uint16
 	IP net.IP
 }
 
-var errNotAvail = errors.New("the template is not available")
+var (
+	vFlowServers []string
+	errNotAvail  = errors.New("the template is not available")
+)
 
+// NewRPC constructs RPC
 func NewRPC(mCache MemCache) *RPC {
 	return &RPC{
 		reqCount: 0,
@@ -52,7 +66,8 @@ func NewRPC(mCache MemCache) *RPC {
 	}
 }
 
-func (r *RPC) Get(req Request, resp *TemplateRecords) error {
+// Get retrieves a request from mCache
+func (r *RPC) Get(req RPCRequest, resp *TemplateRecords) error {
 	var ok bool
 
 	*resp, ok = r.mCache.retrieve(req.ID, req.IP)
@@ -63,7 +78,8 @@ func (r *RPC) Get(req Request, resp *TemplateRecords) error {
 	return nil
 }
 
-func RPCServer(mCache MemCache) error {
+// RPCServer runs the RPC server
+func RPCServer(mCache MemCache, config *RPCConfig) error {
 	rpc.Register(NewRPC(mCache))
 	l, err := net.Listen("tcp", ":8085")
 	if err != nil {
@@ -75,12 +91,14 @@ func RPCServer(mCache MemCache) error {
 	return nil
 }
 
+// NewRPCClient initializes a new client connection
 func NewRPCClient(rAddr string) *RPCClient {
 	conn, _ := net.DialTimeout("tcp", rAddr, 1*time.Second)
 	return &RPCClient{conn: rpc.NewClient(conn)}
 }
 
-func (c *RPCClient) Get(req Request) (*TemplateRecords, error) {
+// Get tries to get a request from remote server
+func (c *RPCClient) Get(req RPCRequest) (*TemplateRecords, error) {
 	var tr *TemplateRecords
 	err := c.conn.Call("RPC.Get", req, &tr)
 
