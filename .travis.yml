@@ -6,6 +6,7 @@ go:
 before_install:
     - go get github.com/Shopify/sarama
     - go get github.com/bitly/go-nsq
+    - go get golang.org/x/net/ipv4
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
   - go test -v ./...
