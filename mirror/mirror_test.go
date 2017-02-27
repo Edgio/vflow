@@ -23,6 +23,7 @@ package mirror
 
 import (
 	"net"
+	"strings"
 	"testing"
 
 	"golang.org/x/net/ipv4"
@@ -32,6 +33,10 @@ func TestNewRawConn(t *testing.T) {
 	ip := net.ParseIP("127.0.0.1")
 	c, err := NewRawConn(ip)
 	if err != nil {
+		if strings.Contains(err.Error(), "not permitted") {
+			t.Log(err)
+			return
+		}
 		t.Error("unexpected error", err)
 	}
 	if c.family != 2 {
