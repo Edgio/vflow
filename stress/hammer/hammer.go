@@ -124,7 +124,7 @@ func (i *IPFIX) sendData() {
 	packets := i.genPackets(dataType)
 
 	for {
-		for j, _ := range packets {
+		for j := range packets {
 			i.ch <- packets[j]
 		}
 	}
@@ -134,12 +134,12 @@ func (i *IPFIX) sendTemplate() {
 	c := time.Tick(i.Tick)
 	packets := i.genPackets(templateType)
 
-	for j, _ := range packets {
+	for j := range packets {
 		i.ch <- packets[j]
 	}
 
 	for range c {
-		for j, _ := range packets {
+		for j := range packets {
 			i.ch <- packets[j]
 		}
 	}
@@ -149,12 +149,12 @@ func (i *IPFIX) sendTemplateOpt() {
 	c := time.Tick(i.Tick)
 	packets := i.genPackets(templateOptType)
 
-	for j, _ := range packets {
+	for j := range packets {
 		i.ch <- packets[j]
 	}
 
 	for range c {
-		for j, _ := range packets {
+		for j := range packets {
 			i.ch <- packets[j]
 		}
 	}
@@ -286,7 +286,7 @@ func (s *SFlow) sendData() {
 	packets := s.genPackets()
 
 	for {
-		for j, _ := range packets {
+		for j := range packets {
 			s.ch <- packets[j]
 		}
 	}

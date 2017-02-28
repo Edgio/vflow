@@ -70,12 +70,12 @@ func (t TSDB) Netflow() error {
 	}
 
 	metrics := [][]string{
-		[]string{"ipfix", "udp.rate"},
-		[]string{"sflow", "udp.rate"},
-		[]string{"ipfix", "decode.rate"},
-		[]string{"sflow", "decode.rate"},
-		[]string{"ipfix", "mq.error.rate"},
-		[]string{"sflow", "mq.error.rate"},
+		{"ipfix", "udp.rate"},
+		{"sflow", "udp.rate"},
+		{"ipfix", "decode.rate"},
+		{"sflow", "decode.rate"},
+		{"ipfix", "mq.error.rate"},
+		{"sflow", "mq.error.rate"},
 	}
 
 	values = append(values, abs((flow.IPFIX.UDPCount-lastFlow.IPFIX.UDPCount)/delta))
