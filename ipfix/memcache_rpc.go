@@ -73,7 +73,10 @@ type Discovery struct {
 	mu           sync.RWMutex
 }
 
-var errNotAvail = errors.New("the template is not available")
+var (
+	errNotAvail            = errors.New("the template is not available")
+	errMCInterfaceNotAvail = errors.New("multicast interface not available")
+)
 
 // NewRPC constructs RPC
 func NewRPC(mCache MemCache) *IRPC {
@@ -177,10 +180,33 @@ func (d *Discovery) mConn() error {
 		return err
 	}
 
+	ifs, err := getMulticastIfs()
+	if err != nil {
+		return err
+	}
+
 	if d.group.To4() != nil {
 		d.conn = ipv4.NewPacketConn(c)
+		for _, i := range ifs {
+			err = d.conn.(*ipv4.PacketConn).JoinGroup(
+				&i,
+				&net.UDPAddr{IP: d.group},
+			)
+			if err != nil {
+				return err
+			}
+		}
 	} else {
 		d.conn = ipv6.NewPacketConn(c)
+		for _, i := range ifs {
+			err = d.conn.(*ipv6.PacketConn).JoinGroup(
+				&i,
+				&net.UDPAddr{IP: d.group},
+			)
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
@@ -274,4 +300,25 @@ func (d *Discovery) rpcServers() []string {
 		}
 	}
 	return servers
+}
+
+func getMulticastIfs() ([]net.Interface, error) {
+	var out []net.Interface
+
+	ifs, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, i := range ifs {
+		if i.Flags == 19 {
+			out = append(out, i)
+		}
+	}
+
+	if len(out) < 1 {
+		return nil, errMCInterfaceNotAvail
+	}
+
+	return out, nil
 }
