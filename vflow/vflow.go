@@ -23,13 +23,10 @@ package main
 
 import (
 	"log"
-	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
-
-	_ "net/http/pprof"
 )
 
 var (
@@ -42,10 +39,6 @@ func main() {
 		wg       sync.WaitGroup
 		signalCh = make(chan os.Signal, 1)
 	)
-
-	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
-	}()
 
 	opts = GetOptions()
 
