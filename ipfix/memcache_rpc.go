@@ -73,10 +73,7 @@ type Discovery struct {
 	mu           sync.RWMutex
 }
 
-var (
-	vFlowServers []string
-	errNotAvail  = errors.New("the template is not available")
-)
+var errNotAvail = errors.New("the template is not available")
 
 // NewRPC constructs RPC
 func NewRPC(mCache MemCache) *IRPC {
@@ -130,7 +127,10 @@ func RPC(m MemCache, config *RPCConfig) {
 		return
 	}
 
-	go vFlowDiscovery()
+	disc, err := vFlowDiscovery()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	go RPCServer(m, config)
 
@@ -139,7 +139,7 @@ func RPC(m MemCache, config *RPCConfig) {
 	for {
 		req := <-rpcChan
 
-		for _, rpcServer := range vFlowServers {
+		for _, rpcServer := range disc.rpcServers() {
 			r := NewRPCClient(rpcServer)
 			tr, err := r.Get(req)
 			if err != nil {
@@ -150,7 +150,7 @@ func RPC(m MemCache, config *RPCConfig) {
 		}
 	}
 }
-func vFlowDiscovery() {
+func vFlowDiscovery() (*Discovery, error) {
 	// TODO
 	disc := &Discovery{
 		group: net.ParseIP("224.0.0.55"),
@@ -158,14 +158,16 @@ func vFlowDiscovery() {
 	}
 
 	if err := disc.mConn(); err != nil {
-
+		return nil, err
 	}
 
 	if disc.group.To4() != nil {
-		disc.startV4()
+		go disc.startV4()
 	} else {
-		disc.startV6()
+		go disc.startV6()
 	}
+
+	return disc, nil
 }
 
 func (d *Discovery) mConn() error {
@@ -258,4 +260,18 @@ func (d *Discovery) startV6() {
 		<-tick.C
 		conn.WriteTo(b, nil, &net.UDPAddr{IP: d.group, Port: d.port})
 	}
+}
+
+func (d *Discovery) rpcServers() []string {
+	var servers []string
+
+	now := time.Now().Unix()
+	for ip, server := range d.vFlowServers {
+		if now-server.timestamp < 300 {
+			servers = append(servers, ip)
+		} else {
+			delete(d.vFlowServers, ip)
+		}
+	}
+	return servers
 }
