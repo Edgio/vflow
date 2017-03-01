@@ -24,13 +24,19 @@ package ipfix
 
 import (
 	"errors"
+	"log"
 	"net"
 	"net/rpc"
+	"strconv"
+	"sync"
 	"time"
+
+	"golang.org/x/net/ipv4"
+	"golang.org/x/net/ipv6"
 )
 
-// RPC represents RPC
-type RPC struct {
+// IRPC represents IPFIX RPC
+type IRPC struct {
 	reqCount uint64
 	mCache   MemCache
 }
@@ -42,9 +48,10 @@ type RPCClient struct {
 
 // RPCConfig represents RPC config
 type RPCConfig struct {
-	enabled bool
-	port    int
-	addr    net.IP
+	Enabled bool
+	Port    int
+	Addr    net.IP
+	Logger  *log.Logger
 }
 
 // RPCRequest represents RPC request
@@ -53,21 +60,34 @@ type RPCRequest struct {
 	IP net.IP
 }
 
+type vFlowServer struct {
+	timestamp int64
+}
+
+type Discovery struct {
+	conn         interface{}
+	group        net.IP
+	port         int
+	rcvdMsg      chan net.IP
+	vFlowServers map[string]vFlowServer
+	mu           sync.RWMutex
+}
+
 var (
 	vFlowServers []string
 	errNotAvail  = errors.New("the template is not available")
 )
 
 // NewRPC constructs RPC
-func NewRPC(mCache MemCache) *RPC {
-	return &RPC{
+func NewRPC(mCache MemCache) *IRPC {
+	return &IRPC{
 		reqCount: 0,
 		mCache:   mCache,
 	}
 }
 
 // Get retrieves a request from mCache
-func (r *RPC) Get(req RPCRequest, resp *TemplateRecords) error {
+func (r *IRPC) Get(req RPCRequest, resp *TemplateRecords) error {
 	var ok bool
 
 	*resp, ok = r.mCache.retrieve(req.ID, req.IP)
@@ -103,4 +123,139 @@ func (c *RPCClient) Get(req RPCRequest) (*TemplateRecords, error) {
 	err := c.conn.Call("RPC.Get", req, &tr)
 
 	return tr, err
+}
+
+func RPC(m MemCache, config *RPCConfig) {
+	if !config.Enabled {
+		return
+	}
+
+	go vFlowDiscovery()
+
+	go RPCServer(m, config)
+
+	config.Logger.Println("ipfix RPC enabled")
+
+	for {
+		req := <-rpcChan
+
+		for _, rpcServer := range vFlowServers {
+			r := NewRPCClient(rpcServer)
+			tr, err := r.Get(req)
+			if err != nil {
+				continue
+			}
+			m.insert(req.ID, req.IP, *tr)
+			break
+		}
+	}
+}
+func vFlowDiscovery() {
+	// TODO
+	disc := &Discovery{
+		group: net.ParseIP("224.0.0.55"),
+		port:  1024,
+	}
+
+	if err := disc.mConn(); err != nil {
+
+	}
+
+	if disc.group.To4() != nil {
+		disc.startV4()
+	} else {
+		disc.startV6()
+	}
+}
+
+func (d *Discovery) mConn() error {
+	addr := net.JoinHostPort("", strconv.Itoa(d.port))
+	c, err := net.ListenPacket("udp", addr)
+	if err != nil {
+		return err
+	}
+
+	if d.group.To4() != nil {
+		d.conn = ipv4.NewPacketConn(c)
+	} else {
+		d.conn = ipv6.NewPacketConn(c)
+	}
+
+	return nil
+}
+
+func (d *Discovery) receiverV4() {
+	var b = make([]byte, 1500)
+
+	d.vFlowServers = make(map[string]vFlowServer, 10)
+	conn := d.conn.(*ipv4.PacketConn)
+
+	for {
+		_, _, addr, err := conn.ReadFrom(b)
+		if err != nil {
+			continue
+		}
+
+		d.mu.Lock()
+		host, _, err := net.SplitHostPort(addr.String())
+		if err != nil {
+			continue
+		}
+
+		d.vFlowServers[host] = vFlowServer{time.Now().Unix()}
+		d.mu.Unlock()
+	}
+
+}
+
+func (d *Discovery) startV4() {
+	tick := time.NewTicker(1 * time.Second)
+
+	b := []byte("Hello vFlow")
+	conn := d.conn.(*ipv4.PacketConn)
+	conn.SetTTL(2)
+	go d.receiverV4()
+
+	for {
+		<-tick.C
+		conn.WriteTo(b, nil, &net.UDPAddr{IP: d.group, Port: d.port})
+	}
+}
+
+func (d *Discovery) receiverV6() {
+	var b = make([]byte, 1500)
+
+	d.vFlowServers = make(map[string]vFlowServer, 10)
+	conn := d.conn.(*ipv6.PacketConn)
+
+	for {
+		_, _, addr, err := conn.ReadFrom(b)
+		if err != nil {
+			continue
+		}
+
+		d.mu.Lock()
+		host, _, err := net.SplitHostPort(addr.String())
+		if err != nil {
+			continue
+		}
+
+		d.vFlowServers[host] = vFlowServer{time.Now().Unix()}
+		d.mu.Unlock()
+	}
+
+}
+
+func (d *Discovery) startV6() {
+	tick := time.NewTicker(1 * time.Second)
+
+	b := []byte("Hello vFlow")
+	conn := d.conn.(*ipv6.PacketConn)
+	conn.SetHopLimit(2)
+	go d.receiverV6()
+
+	for {
+		<-tick.C
+		conn.WriteTo(b, nil, &net.UDPAddr{IP: d.group, Port: d.port})
+	}
 }

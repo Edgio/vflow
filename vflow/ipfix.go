@@ -113,6 +113,10 @@ func (i *IPFIX) run() {
 	logger.Printf("ipfix is running (workers#: %d)", i.workers)
 
 	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
+	go ipfix.RPC(mCache, &ipfix.RPCConfig{
+		Enabled: true,
+		Logger:  logger,
+	})
 
 	go mirrorIPFIXDispatcher(ipfixMCh)
 
