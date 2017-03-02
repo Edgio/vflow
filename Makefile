@@ -2,12 +2,12 @@ PACKAGES=$(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --uni
 GOFILES= vflow.go ipfix.go sflow.go options.go stats.go 
 
 default:
-	go test -v ./...
+	go test -v ./... -timeout 1m
 test:
-	go test -v ./...
+	go test -v ./... -timeout 1m
 
 bench:
-	go test -v ./... -bench=.
+	go test -v ./... -bench=. -timeout 2m
 
 run:
 	cd vflow; go run $(GOFILES) -sflow-workers 100 -ipfix-workers 100 -verbose=false

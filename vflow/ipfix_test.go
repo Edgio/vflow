@@ -54,7 +54,7 @@ func TestMirrorIPFIX(t *testing.T) {
 
 		conn, err := net.ListenUDP("udp", laddr)
 		if err != nil {
-			t.Error("unexpected error", err)
+			t.Fatal("unexpected error", err)
 		}
 
 		close(ready)
