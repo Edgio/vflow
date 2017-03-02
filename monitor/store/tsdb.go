@@ -60,7 +60,7 @@ func (t TSDB) Netflow() error {
 		values []int64
 	)
 
-	err, flow, lastFlow := getFlow(t.VHost)
+	flow, lastFlow, err := getFlow(t.VHost)
 	if err != nil {
 		return err
 	}
@@ -174,7 +174,7 @@ func (t TSDB) put(dps []TSDBDataPoint) error {
 
 	api := fmt.Sprintf("%s/api/put", t.API)
 	client := NewHTTP()
-	err, b = client.Post(api, "application/json", string(b))
+	b, err = client.Post(api, "application/json", string(b))
 	if err != nil {
 		return err
 	}

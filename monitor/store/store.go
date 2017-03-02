@@ -114,23 +114,23 @@ func (c *Client) Get(url string, s interface{}) error {
 }
 
 // Post tries to digest metrics through HTTP w/ post method
-func (c *Client) Post(url string, cType, query string) (error, []byte) {
+func (c *Client) Post(url string, cType, query string) ([]byte, error) {
 	resp, err := c.client.Post(url, cType, bytes.NewBufferString(query))
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err, nil
+		return nil, err
 	}
 
-	return nil, body
+	return body, nil
 }
 
-func getFlow(host string) (error, *Flow, *Flow) {
+func getFlow(host string) (*Flow, *Flow, error) {
 	lastFlowFile := "/tmp/vflow.mon.lastflow"
 
 	flow := new(Flow)
@@ -139,7 +139,7 @@ func getFlow(host string) (error, *Flow, *Flow) {
 	client := NewHTTP()
 	err := client.Get(host+"/flow", flow)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	flow.Timestamp = time.Now().Unix()
@@ -148,17 +148,17 @@ func getFlow(host string) (error, *Flow, *Flow) {
 	if err != nil {
 		b, _ = json.Marshal(flow)
 		ioutil.WriteFile(lastFlowFile, b, 0644)
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	err = json.Unmarshal(b, &lastFlow)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	b, err = json.Marshal(flow)
 	if err != nil {
-		return err, nil, nil
+		return nil, nil, err
 	}
 
 	ioutil.WriteFile(lastFlowFile, b, 0644)
@@ -168,5 +168,5 @@ func getFlow(host string) (error, *Flow, *Flow) {
 		os.Exit(1)
 	}
 
-	return nil, flow, lastFlow
+	return flow, lastFlow, err
 }

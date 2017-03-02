@@ -37,7 +37,7 @@ type InfluxDB struct {
 
 // Netflow ingests flow's stats to InfluxDB
 func (i InfluxDB) Netflow() error {
-	err, flow, lastFlow := getFlow(i.VHost)
+	flow, lastFlow, err := getFlow(i.VHost)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (i InfluxDB) Netflow() error {
 
 	api := fmt.Sprintf("%s/write?db=%s", i.API, i.DB)
 	client := NewHTTP()
-	err, b := client.Post(api, "text/plain", query)
+	b, err := client.Post(api, "text/plain", query)
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func (i InfluxDB) System() error {
 	query += fmt.Sprintf("num.goroutine,host=%s value=%d\n", hostname, sys.NumGoroutine)
 
 	api := fmt.Sprintf("%s/write?db=%s", i.API, i.DB)
-	err, b := client.Post(api, "text/plain", query)
+	b, err := client.Post(api, "text/plain", query)
 	if err != nil {
 		return err
 	}
