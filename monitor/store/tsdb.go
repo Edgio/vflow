@@ -47,11 +47,13 @@ type TSDBDataPoint struct {
 	}
 }
 
+// TSDBResp represents TSDP response
 type TSDBResp struct {
 	Failed  int `json:"failed"`
 	Success int `json:"success"`
 }
 
+// Netflow ingests flow's stats to TSDB
 func (t TSDB) Netflow() error {
 	var (
 		dps    []TSDBDataPoint
@@ -108,6 +110,7 @@ func (t TSDB) Netflow() error {
 	return nil
 }
 
+// System ingests system's stats to TSDB
 func (t TSDB) System() error {
 	var dps []TSDBDataPoint
 

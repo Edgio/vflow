@@ -64,6 +64,7 @@ type vFlowServer struct {
 	timestamp int64
 }
 
+// Discovery represents vflow discovery
 type Discovery struct {
 	conn         interface{}
 	group        net.IP
@@ -125,6 +126,7 @@ func (c *RPCClient) Get(req RPCRequest) (*TemplateRecords, error) {
 	return tr, err
 }
 
+// RPC handles RPC with discovery
 func RPC(m MemCache, config *RPCConfig) {
 	if !config.Enabled {
 		return

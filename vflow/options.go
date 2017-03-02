@@ -29,6 +29,7 @@ import (
 	"os"
 )
 
+// Options represents options
 type Options struct {
 	// global options
 	Verbose bool
@@ -60,6 +61,7 @@ type Options struct {
 	MQConfigFile string
 }
 
+// NewOptions constructs new options
 func NewOptions() *Options {
 	return &Options{
 		Verbose: true,
@@ -88,6 +90,7 @@ func NewOptions() *Options {
 	}
 }
 
+// GetOptions gets options through cmd and file
 func GetOptions() *Options {
 	opts := NewOptions()
 	vFlowFlagSet(opts)

@@ -35,7 +35,7 @@ type InfluxDB struct {
 	VHost string
 }
 
-// NetFlow ingests flow's stats to InfluxDB
+// Netflow ingests flow's stats to InfluxDB
 func (i InfluxDB) Netflow() error {
 	err, flow, lastFlow := getFlow(i.VHost)
 	if err != nil {
