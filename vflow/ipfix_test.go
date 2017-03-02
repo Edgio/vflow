@@ -41,7 +41,7 @@ func TestMirrorIPFIX(t *testing.T) {
 	go func() {
 		err := mirrorIPFIX(dst, 10024, msg)
 		if err != nil {
-			t.Error("unexpected error", err)
+			t.Fatal("unexpected error", err)
 		}
 	}()
 
