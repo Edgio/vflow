@@ -12,5 +12,5 @@ before_install:
     - go get golang.org/x/net/ipv6
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
-  - go test -v ./...
+  - go test -v ./... -timeout 1m
   - make build
