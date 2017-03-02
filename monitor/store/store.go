@@ -31,11 +31,14 @@ import (
 	"time"
 )
 
+// Monitor is an interface to store system
+// and netflow statistics
 type Monitor interface {
 	System() error
 	Netflow() error
 }
 
+// IPFIX represents IPFIX metrics
 type IPFIX struct {
 	UDPQueue       int64
 	UDPMirrorQueue int64
@@ -45,6 +48,7 @@ type IPFIX struct {
 	MQErrorCount   int64
 }
 
+// SFlow represents SFlow metrics
 type SFlow struct {
 	UDPQueue     int64
 	MessageQueue int64
@@ -53,6 +57,7 @@ type SFlow struct {
 	MQErrorCount int64
 }
 
+// Flow represents flow (IPFIX+sFlow) metrics
 type Flow struct {
 	StartTime int64
 	Timestamp int64
@@ -60,6 +65,7 @@ type Flow struct {
 	SFlow     SFlow
 }
 
+// Sys represents system/go-runtime statistics
 type Sys struct {
 	MemHeapAlloc    int64
 	MemAlloc        int64
@@ -73,16 +79,19 @@ type Sys struct {
 	MemHeapReleased int64
 }
 
+// Client represents HTTP client
 type Client struct {
 	client *http.Client
 }
 
+// NewHTTP constructs HTTP client
 func NewHTTP() *Client {
 	return &Client{
 		client: new(http.Client),
 	}
 }
 
+// Get tries to get metrics through HTTP w/ get method
 func (c *Client) Get(url string, s interface{}) error {
 
 	resp, err := c.client.Get(url)
@@ -104,6 +113,7 @@ func (c *Client) Get(url string, s interface{}) error {
 	return nil
 }
 
+// Post tries to digest metrics through HTTP w/ post method
 func (c *Client) Post(url string, cType, query string) (error, []byte) {
 	resp, err := c.client.Post(url, cType, bytes.NewBufferString(query))
 	if err != nil {
