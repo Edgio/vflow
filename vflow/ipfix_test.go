@@ -23,6 +23,7 @@ package main
 
 import (
 	"net"
+	"strings"
 	"testing"
 )
 
@@ -41,7 +42,12 @@ func TestMirrorIPFIX(t *testing.T) {
 	go func() {
 		err := mirrorIPFIX(dst, 10024, msg)
 		if err != nil {
-			t.Fatal("unexpected error", err)
+			if strings.Contains(err.Error(), "not permitted") {
+				t.Log(err)
+				ready <- struct{}{}
+			} else {
+				t.Fatal("unexpected error", err)
+			}
 		}
 	}()
 
@@ -76,7 +82,10 @@ func TestMirrorIPFIX(t *testing.T) {
 
 	}()
 
-	<-ready
+	_, ok := <-ready
+	if ok {
+		return
+	}
 
 	body := ipfixBuffer.Get().([]byte)
 	copy(body, []byte("hello"))
