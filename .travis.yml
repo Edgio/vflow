@@ -3,6 +3,8 @@ go:
   - 1.8
   - tip
 
+sudo: required
+
 before_install:
     - go get github.com/Shopify/sarama
     - go get github.com/bitly/go-nsq
