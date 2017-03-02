@@ -1,9 +1,11 @@
 language: go
+sudo: required
 go:
   - 1.8
   - tip
 
-sudo: required
+notifications:
+  email: false
 
 before_install:
     - go get github.com/Shopify/sarama
@@ -12,5 +14,5 @@ before_install:
     - go get golang.org/x/net/ipv6
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
-  - go test -v ./... -timeout 1m
+  - sudo go test -v ./... -timeout 1m
   - make build
