@@ -25,6 +25,7 @@ import (
 	"net"
 	"strings"
 	"testing"
+	"time"
 )
 
 func init() {
@@ -50,6 +51,8 @@ func TestMirrorIPFIX(t *testing.T) {
 			}
 		}
 	}()
+
+	time.Sleep(1 * time.Second)
 
 	go func() {
 		b := make([]byte, 1500)
