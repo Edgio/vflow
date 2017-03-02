@@ -63,6 +63,7 @@ type SFlow struct {
 
 	MaxRouter int
 	Port      int
+	RateLimit int
 }
 
 func NewIPFIX(raddr net.IP) (*IPFIX, error) {
@@ -77,6 +78,7 @@ func NewIPFIX(raddr net.IP) (*IPFIX, error) {
 		ch:        make(chan Packet, 10000),
 		vflow:     raddr,
 		MaxRouter: 10,
+		RateLimit: 25 * 10e3,
 	}, nil
 }
 
@@ -121,10 +123,18 @@ func (i *IPFIX) Run() {
 }
 
 func (i *IPFIX) sendData() {
-	packets := i.genPackets(dataType)
+	var (
+		throttle <-chan time.Time
+		packets  = i.genPackets(dataType)
+	)
+
+	if i.RateLimit > 0 {
+		throttle = time.Tick(time.Duration(1e6/(i.RateLimit)) * time.Microsecond)
+	}
 
 	for {
 		for j := range packets {
+			<-throttle
 			i.ch <- packets[j]
 		}
 	}
@@ -220,6 +230,7 @@ func NewSFlow(raddr net.IP) (*SFlow, error) {
 		ch:        make(chan Packet, 10000),
 		vflow:     raddr,
 		MaxRouter: 10,
+		RateLimit: 25 * 10e3,
 	}, nil
 }
 
@@ -283,10 +294,18 @@ func (s *SFlow) genPackets() []Packet {
 }
 
 func (s *SFlow) sendData() {
-	packets := s.genPackets()
+	var (
+		throttle <-chan time.Time
+		packets  = s.genPackets()
+	)
+
+	if s.RateLimit > 0 {
+		throttle = time.Tick(time.Duration(1e6/(s.RateLimit)) * time.Microsecond)
+	}
 
 	for {
 		for j := range packets {
+			<-throttle
 			s.ch <- packets[j]
 		}
 	}
