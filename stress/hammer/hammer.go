@@ -38,11 +38,13 @@ const (
 	sFlowDataType
 )
 
+// Packet represents generated packet
 type Packet struct {
 	payload []byte
 	length  int
 }
 
+// IPFIX represents IPFIX packet generator
 type IPFIX struct {
 	conn  mirror.Conn
 	ch    chan Packet
@@ -55,6 +57,7 @@ type IPFIX struct {
 	RateLimit int
 }
 
+// SFlow represents SFlow packet generator
 type SFlow struct {
 	conn  mirror.Conn
 	ch    chan Packet
@@ -66,6 +69,7 @@ type SFlow struct {
 	RateLimit int
 }
 
+// NewIPFIX constructs new IPFIX packet generator
 func NewIPFIX(raddr net.IP) (*IPFIX, error) {
 
 	conn, err := mirror.NewRawConn(raddr)
@@ -82,6 +86,7 @@ func NewIPFIX(raddr net.IP) (*IPFIX, error) {
 	}, nil
 }
 
+// Run starts IPFIX simulator - attacking
 func (i *IPFIX) Run() {
 	var wg sync.WaitGroup
 
@@ -218,6 +223,7 @@ func (i *IPFIX) genPackets(typ int) []Packet {
 	return packets
 }
 
+// NewSFlow constructs SFlow packet generator
 func NewSFlow(raddr net.IP) (*SFlow, error) {
 
 	conn, err := mirror.NewRawConn(raddr)
@@ -234,6 +240,7 @@ func NewSFlow(raddr net.IP) (*SFlow, error) {
 	}, nil
 }
 
+// Run starts sFlow simulator - attacking
 func (s *SFlow) Run() {
 	var wg sync.WaitGroup
 
