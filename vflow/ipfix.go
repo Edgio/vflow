@@ -89,7 +89,7 @@ func (i *IPFIX) run() {
 
 	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
-		logger.Println("ipfix disabled")
+		logger.Println("ipfix has been disabled")
 		return
 	}
 
@@ -114,7 +114,7 @@ func (i *IPFIX) run() {
 
 	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
 	go ipfix.RPC(mCache, &ipfix.RPCConfig{
-		Enabled: true,
+		Enabled: opts.IPFIXRPCEnabled,
 		Logger:  logger,
 	})
 

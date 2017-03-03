@@ -84,6 +84,12 @@ func NewSFlow() *SFlow {
 func (s *SFlow) run() {
 	var wg sync.WaitGroup
 
+	// exit if the sflow is disabled
+	if !opts.SFlowEnabled {
+		logger.Println("sflow has been disabled")
+		return
+	}
+
 	hostPort := net.JoinHostPort(s.addr, strconv.Itoa(s.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
 

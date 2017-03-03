@@ -48,6 +48,7 @@ type Options struct {
 
 	// IPFIX options
 	IPFIXEnabled       bool
+	IPFIXRPCEnabled    bool
 	IPFIXPort          int
 	IPFIXUDPSize       int
 	IPFIXWorkers       int
@@ -77,6 +78,7 @@ func NewOptions() *Options {
 		SFlowWorkers: 10,
 
 		IPFIXEnabled:       true,
+		IPFIXRPCEnabled:    true,
 		IPFIXPort:          4739,
 		IPFIXUDPSize:       1500,
 		IPFIXWorkers:       10,
@@ -122,6 +124,7 @@ func vFlowFlagSet(opts *Options) {
 
 	// ipfix options
 	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable IPFIX listener")
+	flag.BoolVar(&opts.IPFIXRPCEnabled, "ipfix-rpc-enabled", opts.IPFIXRPCEnabled, "enable RPC IPFIX")
 	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers number")
