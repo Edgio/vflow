@@ -64,7 +64,7 @@ type Options struct {
 // NewOptions constructs new options
 func NewOptions() *Options {
 	return &Options{
-		Verbose: true,
+		Verbose: false,
 		Logger:  log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
 		StatsEnabled:  true,
