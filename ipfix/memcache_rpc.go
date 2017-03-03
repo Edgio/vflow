@@ -219,6 +219,10 @@ func (d *Discovery) receiverV4() {
 
 	d.vFlowServers = make(map[string]vFlowServer, 10)
 	conn := d.conn.(*ipv4.PacketConn)
+	laddrs, err := getLocalIPs()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for {
 		_, _, addr, err := conn.ReadFrom(b)
@@ -226,16 +230,19 @@ func (d *Discovery) receiverV4() {
 			continue
 		}
 
-		d.mu.Lock()
 		host, _, err := net.SplitHostPort(addr.String())
 		if err != nil {
 			continue
 		}
 
+		if _, ok := laddrs[host]; ok {
+			continue
+		}
+
+		d.mu.Lock()
 		d.vFlowServers[host] = vFlowServer{time.Now().Unix()}
 		d.mu.Unlock()
 	}
-
 }
 
 func (d *Discovery) startV4() {
@@ -257,6 +264,10 @@ func (d *Discovery) receiverV6() {
 
 	d.vFlowServers = make(map[string]vFlowServer, 10)
 	conn := d.conn.(*ipv6.PacketConn)
+	laddrs, err := getLocalIPs()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for {
 		_, _, addr, err := conn.ReadFrom(b)
@@ -264,16 +275,19 @@ func (d *Discovery) receiverV6() {
 			continue
 		}
 
-		d.mu.Lock()
 		host, _, err := net.SplitHostPort(addr.String())
 		if err != nil {
 			continue
 		}
 
+		if _, ok := laddrs[host]; ok {
+			continue
+		}
+
+		d.mu.Lock()
 		d.vFlowServers[host] = vFlowServer{time.Now().Unix()}
 		d.mu.Unlock()
 	}
-
 }
 
 func (d *Discovery) startV6() {
@@ -323,4 +337,26 @@ func getMulticastIfs() ([]net.Interface, error) {
 	}
 
 	return out, nil
+}
+
+func getLocalIPs() (map[string]struct{}, error) {
+	ips := make(map[string]struct{})
+
+	ifs, err := net.Interfaces()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, i := range ifs {
+		addrs, err := i.Addrs()
+		if err != nil || i.Flags != 19 {
+			continue
+		}
+		for _, addr := range addrs {
+			ip, _, _ := net.ParseCIDR(addr.String())
+			ips[ip.String()] = struct{}{}
+		}
+	}
+
+	return ips, nil
 }
