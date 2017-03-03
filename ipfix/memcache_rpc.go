@@ -113,14 +113,21 @@ func RPCServer(mCache MemCache, config *RPCConfig) error {
 }
 
 // NewRPCClient initializes a new client connection
-func NewRPCClient(rAddr string) *RPCClient {
-	conn, _ := net.DialTimeout("tcp", rAddr, 1*time.Second)
-	return &RPCClient{conn: rpc.NewClient(conn)}
+func NewRPCClient(r string) (*RPCClient, error) {
+	raddr := net.JoinHostPort(r, "8085")
+
+	conn, err := net.DialTimeout("tcp", raddr, 1*time.Second)
+	if err != nil {
+		return nil, err
+	}
+
+	return &RPCClient{conn: rpc.NewClient(conn)}, nil
 }
 
 // Get tries to get a request from remote server
 func (c *RPCClient) Get(req RPCRequest) (*TemplateRecords, error) {
 	var tr *TemplateRecords
+
 	err := c.conn.Call("RPC.Get", req, &tr)
 
 	return tr, err
@@ -145,11 +152,18 @@ func RPC(m MemCache, config *RPCConfig) {
 		req := <-rpcChan
 
 		for _, rpcServer := range disc.rpcServers() {
-			r := NewRPCClient(rpcServer)
+
+			r, err := NewRPCClient(rpcServer)
+			if err != nil {
+				config.Logger.Println(err)
+				continue
+			}
+
 			tr, err := r.Get(req)
 			if err != nil {
 				continue
 			}
+
 			m.insert(req.ID, req.IP, *tr)
 			break
 		}
