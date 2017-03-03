@@ -128,7 +128,7 @@ func NewRPCClient(r string) (*RPCClient, error) {
 func (c *RPCClient) Get(req RPCRequest) (*TemplateRecords, error) {
 	var tr *TemplateRecords
 
-	err := c.conn.Call("RPC.Get", req, &tr)
+	err := c.conn.Call("IRPC.Get", req, &tr)
 
 	return tr, err
 }
