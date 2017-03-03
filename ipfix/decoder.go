@@ -144,7 +144,10 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 				tr, ok := mem.retrieve(setHeader.SetID, d.raddr)
 				if !ok {
 					select {
-					case rpcChan <- RPCRequest{}:
+					case rpcChan <- RPCRequest{
+						ID: setHeader.SetID,
+						IP: d.raddr,
+					}:
 					default:
 					}
 					return msg, errUnknownTemplateID
