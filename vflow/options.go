@@ -22,44 +22,45 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"io/ioutil"
 	"log"
 	"os"
+
+	"gopkg.in/yaml.v2"
 )
 
 // Options represents options
 type Options struct {
 	// global options
-	Verbose bool
+	Verbose bool `yaml:"verbose"`
 	Logger  *log.Logger
 
 	// stats options
-	StatsEnabled  bool
-	StatsHTTPPort string
-	StatsHTTPAddr string
+	StatsEnabled  bool   `yaml:"stats-enabled"`
+	StatsHTTPAddr string `yaml:"stats-http-addr"`
+	StatsHTTPPort string `yaml:"stats-http-port"`
 
 	// sFlow options
-	SFlowEnabled bool
-	SFlowPort    int
-	SFlowUDPSize int
-	SFlowWorkers int
+	SFlowEnabled bool `yaml:"sflow-enabled"`
+	SFlowPort    int  `yaml:"sflow-port"`
+	SFlowUDPSize int  `yaml:"sflow-udp-size"`
+	SFlowWorkers int  `yaml:"sflow-workers"`
 
 	// IPFIX options
-	IPFIXEnabled       bool
-	IPFIXRPCEnabled    bool
-	IPFIXPort          int
-	IPFIXUDPSize       int
-	IPFIXWorkers       int
-	IPFIXMirrorAddr    string
-	IPFIXMirrorPort    int
-	IPFIXMirrorWorkers int
-	IPFIXTplCacheFile  string
+	IPFIXEnabled       bool   `yaml:"ipfix-enabled"`
+	IPFIXRPCEnabled    bool   `yaml:"ipfix-rpc-enabled"`
+	IPFIXPort          int    `yaml:"ipfix-port"`
+	IPFIXUDPSize       int    `yaml:"ipfix-udp-size"`
+	IPFIXWorkers       int    `yaml:"ipfix-workers"`
+	IPFIXMirrorAddr    string `yaml:"ipfix-mirror-addr"`
+	IPFIXMirrorPort    int    `yaml:"ipfix-mirror-port"`
+	IPFIXMirrorWorkers int    `yaml:"ipfix-mirror-workers"`
+	IPFIXTplCacheFile  string `yaml:"ipfix-tpl-cache-file"`
 
 	// producer
-	MQName       string
-	MQConfigFile string
+	MQName       string `yaml:"mq-name"`
+	MQConfigFile string `yaml:"mq-config-file"`
 }
 
 // NewOptions constructs new options
@@ -146,7 +147,7 @@ func vFlowLoadCfg(f string, opts *Options) {
 		opts.Logger.Println(err)
 		return
 	}
-	err = json.Unmarshal(b, opts)
+	err = yaml.Unmarshal(b, opts)
 	if err != nil {
 		opts.Logger.Println(err)
 	}
