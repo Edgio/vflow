@@ -8,10 +8,7 @@ notifications:
   email: false
 
 before_install:
-    - go get github.com/Shopify/sarama
-    - go get github.com/bitly/go-nsq
-    - go get golang.org/x/net/ipv4
-    - go get golang.org/x/net/ipv6
+    - go get -d ./...
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
   - go test -v ./... -timeout 1m
