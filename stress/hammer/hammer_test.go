@@ -37,8 +37,7 @@ func TestIPFIXGenPackets(t *testing.T) {
 		if !strings.Contains(err.Error(), "not permitted") {
 			t.Error("unexpected error", err)
 		} else {
-			t.Log(err)
-			return
+			t.Skip(err)
 		}
 	}
 
@@ -63,12 +62,11 @@ func TestSFlowGenPackets(t *testing.T) {
 	src := net.ParseIP("1.1.1.1")
 
 	sflow, err := NewSFlow(ip)
-	if err != nil && !strings.Contains(err.Error(), "not permitted") {
+	if err != nil {
 		if !strings.Contains(err.Error(), "not permitted") {
 			t.Error("unexpected error", err)
 		} else {
-			t.Log(err)
-			return
+			t.Skip(err)
 		}
 	}
 
@@ -78,4 +76,5 @@ func TestSFlowGenPackets(t *testing.T) {
 	if len(packets) < 1 {
 		t.Error("expect to have packets, got", len(packets))
 	}
+
 }
