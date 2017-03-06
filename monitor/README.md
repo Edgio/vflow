@@ -3,7 +3,7 @@
 ### vFlow monitoring collects all statistical and diagnostic information about the vFlow itself.
 
 |Metric          | Type   |API Key        | Protocol| Description                                  |
-|----------------| -------|-------------  |:-------:| --------------------------------------------:|
+|----------------| -------|-------------  |:-------:| ---------------------------------------------|
 |udp.queue       | Gauge  |UDPQueue       | IPFIX   | UDP packets in queue                         |
 |udp.rate        | Gauge  |UDPCount       | IPFIX   | UDP packets per second                       |
 |decode.rate     | Gauge  |DecodedCount   | IPFIX   | Decoded packets per second                   |
