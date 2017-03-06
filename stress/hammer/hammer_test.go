@@ -38,6 +38,7 @@ func TestIPFIXGenPackets(t *testing.T) {
 			t.Error("unexpected error", err)
 		} else {
 			t.Log(err)
+			return
 		}
 	}
 
@@ -67,6 +68,7 @@ func TestSFlowGenPackets(t *testing.T) {
 			t.Error("unexpected error", err)
 		} else {
 			t.Log(err)
+			return
 		}
 	}
 
