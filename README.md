@@ -11,6 +11,11 @@
 
 ![Alt text](/docs/imgs/vflow.gif?raw=true "vFlow")
 
+## Documentation
+- [Architecture](/docs/design.md).
+- [Monitoring](/monitor/README.md).
+- [Stress / Load Generator](/stress/README.md).
+
 ## License
 Licensed under the Apache License, Version 2.0 (the "License")
 
