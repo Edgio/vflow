@@ -23,6 +23,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -34,7 +35,8 @@ import (
 type Options struct {
 	// global options
 	Verbose bool   `yaml:"verbose"`
-	Logfile string `yaml:"log-file"`
+	LogFile string `yaml:"log-file"`
+	PIDFile string `yaml:"pid-file"`
 	Logger  *log.Logger
 
 	// stats options
@@ -68,22 +70,23 @@ type Options struct {
 func NewOptions() *Options {
 	return &Options{
 		Verbose: false,
+		PIDFile: "/var/run/vflow.pid",
 		Logger:  log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
 		StatsEnabled:  true,
-		StatsHTTPPort: "8080",
+		StatsHTTPPort: "8081",
 		StatsHTTPAddr: "",
 
 		SFlowEnabled: true,
 		SFlowPort:    6343,
 		SFlowUDPSize: 1500,
-		SFlowWorkers: 10,
+		SFlowWorkers: 200,
 
 		IPFIXEnabled:       true,
 		IPFIXRPCEnabled:    true,
 		IPFIXPort:          4739,
 		IPFIXUDPSize:       1500,
-		IPFIXWorkers:       10,
+		IPFIXWorkers:       200,
 		IPFIXMirrorAddr:    "",
 		IPFIXMirrorPort:    4172,
 		IPFIXMirrorWorkers: 5,
@@ -97,10 +100,11 @@ func NewOptions() *Options {
 // GetOptions gets options through cmd and file
 func GetOptions() *Options {
 	opts := NewOptions()
-	vFlowFlagSet(opts)
 
-	if opts.Logfile != "" {
-		f, err := os.OpenFile(opts.Logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	opts.vFlowFlagSet()
+
+	if opts.LogFile != "" {
+		f, err := os.OpenFile(opts.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			opts.Logger.Println(err)
 		} else {
@@ -108,10 +112,25 @@ func GetOptions() *Options {
 		}
 	}
 
+	opts.vFlowPIDWrite()
+
 	return opts
 }
 
-func vFlowFlagSet(opts *Options) {
+func (opts Options) vFlowPIDWrite() {
+	f, err := os.OpenFile(opts.PIDFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		opts.Logger.Println(err)
+		return
+	}
+
+	_, err = fmt.Fprintf(f, "%d", os.Getpid())
+	if err != nil {
+		opts.Logger.Println(err)
+	}
+}
+
+func (opts *Options) vFlowFlagSet() {
 
 	var config string
 
@@ -121,7 +140,8 @@ func vFlowFlagSet(opts *Options) {
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
-	flag.StringVar(&opts.Logfile, "log-file", opts.Logfile, "log file name")
+	flag.StringVar(&opts.LogFile, "log-file", opts.LogFile, "log file name")
+	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
 
 	// stats options
 	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable stats listener")
