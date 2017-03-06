@@ -21,3 +21,7 @@
 |mem.total.alloc | Counter|MemTotalAlloc  | SYSTEM  | Bytes allocated                              |
 |mem.heap.sys    | Gauge  |MemHeapSys     | SYSTEM  | Bytes obtained from system                   |
 |num.goroutine   | Gauge  |NumGoRoutine   | SYSTEM  | The number of goroutines that currently exist|
+
+## Grafana sample dashboard
+
+![Alt text](/docs/imgs/grafana.gif?raw=true "vFlow")
