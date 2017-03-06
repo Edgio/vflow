@@ -38,7 +38,7 @@ type options struct {
 
 var opts = options{
 	DBType:       "influxdb",
-	VFlowHost:    "http://localhost:8080",
+	VFlowHost:    "http://localhost:8081",
 	InfluxDBAPI:  "http://localhost:8086",
 	TSDBAPI:      "http://localhost:4242",
 	InfluxDBName: "vflow",
