@@ -33,7 +33,8 @@ import (
 // Options represents options
 type Options struct {
 	// global options
-	Verbose bool `yaml:"verbose"`
+	Verbose bool   `yaml:"verbose"`
+	Logfile string `yaml:"log-file"`
 	Logger  *log.Logger
 
 	// stats options
@@ -98,6 +99,15 @@ func GetOptions() *Options {
 	opts := NewOptions()
 	vFlowFlagSet(opts)
 
+	if opts.Logfile != "" {
+		f, err := os.OpenFile(opts.Logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			opts.Logger.Println(err)
+		}
+
+		opts.Logger.SetOutput(f)
+	}
+
 	return opts
 }
 
@@ -111,6 +121,7 @@ func vFlowFlagSet(opts *Options) {
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
+	flag.StringVar(&opts.Logfile, "log-file", opts.Logfile, "log file name")
 
 	// stats options
 	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable stats listener")
