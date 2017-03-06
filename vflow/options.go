@@ -103,9 +103,9 @@ func GetOptions() *Options {
 		f, err := os.OpenFile(opts.Logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
 			opts.Logger.Println(err)
+		} else {
+			opts.Logger.SetOutput(f)
 		}
-
-		opts.Logger.SetOutput(f)
 	}
 
 	return opts
