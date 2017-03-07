@@ -60,7 +60,7 @@ type IPFIXStats struct {
 }
 
 var (
-	ipfixUdpCh         = make(chan IPFIXUDPMsg, 1000)
+	ipfixUDPCh         = make(chan IPFIXUDPMsg, 1000)
 	ipfixMCh           = make(chan IPFIXUDPMsg, 1000)
 	ipfixMQCh          = make(chan []byte, 1000)
 	ipfixMirrorEnabled bool
@@ -142,7 +142,7 @@ func (i *IPFIX) run() {
 			continue
 		}
 		atomic.AddUint64(&i.stats.UDPCount, 1)
-		ipfixUdpCh <- IPFIXUDPMsg{raddr, b[:n]}
+		ipfixUDPCh <- IPFIXUDPMsg{raddr, b[:n]}
 	}
 
 	wg.Wait()
@@ -167,7 +167,7 @@ func (i *IPFIX) shutdown() {
 
 	// logging and close UDP channel
 	logger.Println("ipfix has been shutdown")
-	close(ipfixUdpCh)
+	close(ipfixUDPCh)
 }
 
 func (i *IPFIX) ipfixWorker() {
@@ -185,7 +185,7 @@ func (i *IPFIX) ipfixWorker() {
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 		buf.Reset()
 
-		if msg, ok = <-ipfixUdpCh; !ok {
+		if msg, ok = <-ipfixUDPCh; !ok {
 			break
 		}
 
@@ -234,7 +234,7 @@ func (i *IPFIX) ipfixWorker() {
 
 func (i *IPFIX) status() *IPFIXStats {
 	return &IPFIXStats{
-		UDPQueue:       len(ipfixUdpCh),
+		UDPQueue:       len(ipfixUDPCh),
 		UDPMirrorQueue: len(ipfixMCh),
 		MessageQueue:   len(ipfixMQCh),
 		UDPCount:       atomic.LoadUint64(&i.stats.UDPCount),
