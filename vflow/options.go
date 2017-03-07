@@ -27,6 +27,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 
 	"gopkg.in/yaml.v2"
 )
@@ -112,6 +113,10 @@ func GetOptions() *Options {
 		}
 	}
 
+	if ok := opts.vFlowIsRunning(); ok {
+		opts.Logger.Fatal("the vFlow already is running!")
+	}
+
 	opts.vFlowPIDWrite()
 
 	return opts
@@ -128,6 +133,21 @@ func (opts Options) vFlowPIDWrite() {
 	if err != nil {
 		opts.Logger.Println(err)
 	}
+}
+
+func (opts Options) vFlowIsRunning() bool {
+	b, err := ioutil.ReadFile(opts.PIDFile)
+	if err != nil {
+		return false
+	}
+
+	cmd := exec.Command("kill", "-0", string(b))
+	_, err = cmd.Output()
+	if err != nil {
+		return false
+	}
+
+	return true
 }
 
 func (opts *Options) vFlowFlagSet() {
