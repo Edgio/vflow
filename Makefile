@@ -31,5 +31,9 @@ tools:
 	go get github.com/golang/lint/golint
 	go get github.com/kisielk/errcheck
 	go get github.com/alecthomas/gocyclo
+
+depends:
+	go get -d ./...
+
 build:
-	cd vflow; go build -o vflow *.go 
+	cd vflow; go build -o vflow $(GOFILES)
