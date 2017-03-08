@@ -37,4 +37,4 @@ depends:
 	go get -d ./...
 
 build: depends
-	cd vflow; go build $(LDFLAGS) -o vflow $(GOFILES); cp vflow /usr/local/bin/
+	cd vflow; go build $(LDFLAGS) -o vflow $(GOFILES)
