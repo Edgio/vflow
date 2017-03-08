@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    kafka.go
-//: details: TODO
+//: details: vflow kafka producer plugin
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -23,11 +23,11 @@
 package producer
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"log"
 
 	"github.com/Shopify/sarama"
+	"gopkg.in/yaml.v2"
 )
 
 // Kafka represents kafka producer
@@ -39,7 +39,7 @@ type Kafka struct {
 
 // KafkaConfig represents kafka configuration
 type KafkaConfig struct {
-	Brokers []string `json:"brokers"`
+	Brokers []string `yaml:"brokers"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
@@ -99,7 +99,7 @@ func (k *Kafka) load(f string) error {
 		return err
 	}
 
-	err = json.Unmarshal(b, &k.config)
+	err = yaml.Unmarshal(b, &k.config)
 	if err != nil {
 		return err
 	}

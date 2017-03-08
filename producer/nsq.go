@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    nsq.go
-//: details: TODO
+//: details: vflow nsq producer plugin
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -23,11 +23,11 @@
 package producer
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"log"
 
 	"github.com/bitly/go-nsq"
+	"gopkg.in/yaml.v2"
 )
 
 // NSQ represents nsq producer
@@ -86,7 +86,7 @@ func (n *NSQ) load(f string) error {
 		return err
 	}
 
-	err = json.Unmarshal(b, &n.config)
+	err = yaml.Unmarshal(b, &n.config)
 	if err != nil {
 		return err
 	}
