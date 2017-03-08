@@ -32,6 +32,8 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+var version string
+
 // Options represents options
 type Options struct {
 	// global options
@@ -39,6 +41,7 @@ type Options struct {
 	LogFile string `yaml:"log-file"`
 	PIDFile string `yaml:"pid-file"`
 	Logger  *log.Logger
+	version bool
 
 	// stats options
 	StatsEnabled  bool   `yaml:"stats-enabled"`
@@ -67,10 +70,17 @@ type Options struct {
 	MQConfigFile string `yaml:"mq-config-file"`
 }
 
+func init() {
+	if version == "" {
+		version = "unknown"
+	}
+}
+
 // NewOptions constructs new options
 func NewOptions() *Options {
 	return &Options{
 		Verbose: false,
+		version: false,
 		PIDFile: "/var/run/vflow.pid",
 		Logger:  log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
@@ -103,6 +113,7 @@ func GetOptions() *Options {
 	opts := NewOptions()
 
 	opts.vFlowFlagSet()
+	opts.vFlowVersion()
 
 	if opts.LogFile != "" {
 		f, err := os.OpenFile(opts.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
@@ -150,6 +161,13 @@ func (opts Options) vFlowIsRunning() bool {
 	return true
 }
 
+func (opts Options) vFlowVersion() {
+	if opts.version {
+		fmt.Printf("vFlow version: %s\n", version)
+		os.Exit(0)
+	}
+}
+
 func (opts *Options) vFlowFlagSet() {
 
 	var config string
@@ -160,6 +178,7 @@ func (opts *Options) vFlowFlagSet() {
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
+	flag.BoolVar(&opts.version, "version", opts.version, "show version")
 	flag.StringVar(&opts.LogFile, "log-file", opts.LogFile, "log file name")
 	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
 
