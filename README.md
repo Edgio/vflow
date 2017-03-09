@@ -28,6 +28,18 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 {"Header":{"Version":5,"IPVersion":1,"AgentSubID":0,"SequenceNo":24324,"SysUpTime":766903208,"SamplesNo":1,"IPAddress":"192.16.14.0"},"ExtSWData":{"SrcVlan":0,"SrcPriority":0,"DstVlan":12,"DstPriority":0},"Sample":{"SequenceNo":0,"SourceID":0,"SamplingRate":2000,"SamplePool":0,"Drops":0,"Input":552,"Output":0,"RecordsNo":2},"Packet":{"L2":{"SrcMAC":"d4:04:ff:01:1d:9e","DstMAC":"30:7c:5e:e5:59:ef","Vlan":12,"EtherType":34525},"L3":{"Version":6,"TrafficClass":0,"FlowLabel":0,"PayloadLen":265,"NextHeader":17,"HopLimit":57,"Src":"2600:8000:5207:6f00::1","Dst":"2606:2800:404e:2:1663:6fe:2cc6:100a"},"L4":{"SrcPort":53,"DstPort":34234}}}
 ```
 
+## Build
+Given that the Go Language compiler (version 1.8 preferred) is installed, you can build it with:
+```
+go get https://github.com/VerizonDigital/vflow
+cd $GOPATH/src/github.com/VerizonDigital/vflow
+
+make build
+or
+go get -d ./...
+cd vflow; go build 
+```
+
 ## License
 Licensed under the Apache License, Version 2.0 (the "License")
 
