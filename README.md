@@ -5,8 +5,8 @@
 - IPFIX RFC7011 collector
 - sFLow v5 raw header packet collector
 - Decoding sFlow raw header L2/L3/L4 
-- Producer to Apache Kafka, NSQ
-- Cloning IPFIX stream to other source
+- Produce to Apache Kafka, NSQ
+- Replicate IPFIX to 3rd party collector
 - Supports IPv4 and IPv6
 - Monitoring with InfluxDB and OpenTSDB backend
 
