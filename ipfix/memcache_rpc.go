@@ -147,12 +147,12 @@ func RPC(m MemCache, config *RPCConfig) {
 	go RPCServer(m, config)
 
 	config.Logger.Println("ipfix RPC enabled")
+	throttle := time.Tick(time.Duration(1e6/10) * time.Microsecond)
 
 	for {
 		req := <-rpcChan
 
 		for _, rpcServer := range disc.rpcServers() {
-
 			r, err := NewRPCClient(rpcServer)
 			if err != nil {
 				config.Logger.Println(err)
@@ -160,6 +160,8 @@ func RPC(m MemCache, config *RPCConfig) {
 			}
 
 			tr, err := r.Get(req)
+			r.conn.Close()
+
 			if err != nil {
 				continue
 			}
@@ -167,6 +169,8 @@ func RPC(m MemCache, config *RPCConfig) {
 			m.insert(req.ID, req.IP, *tr)
 			break
 		}
+
+		<-throttle
 	}
 }
 func vFlowDiscovery() (*Discovery, error) {
