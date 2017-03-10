@@ -16,6 +16,7 @@ High-performance, scalable and reliable IPFIX and sFlow collector.
 
 ## Documentation
 - [Architecture](/docs/design.md).
+- [Configuration](/docs/config.md).
 - [Monitoring](/monitor/README.md).
 - [Stress / Load Generator](/stress/README.md).
 
