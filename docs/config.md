@@ -1,7 +1,5 @@
 # vFlow configuration
 
-## Introduction
-
 ## Format
 
 A config file is a plain text file in [YAML](https://en.wikipedia.org/wiki/YAML) format also you can be able to configure
@@ -18,29 +16,29 @@ key: value
 ## Configuration Keys
 The vFlow configuration contains the following keys
 
-|Key                  | Default                        | Description                                 |
-|---------------------| -------------------------------|---------------------------------------------|
-|log-file             | stdError                       | |
-|verbose              | false                          | |
-|pid-file             | /var/run/vflow.pid             | |
-|ipfix-enabled        | true                           | |
-|ipfix-port           | 4739                           | |
-|ipfix-workers        | 200                            | |
-|ipfix-udp-size       | 1500                           | |
-|ipfix-mirror-addr    | 
-|ipfix-mirror-port    | 4172
-|ipfix-mirror-workers | 5
-|ipfix-tpl-cache-file | /tmp/vflow.templates
-|ipfix-rpc-enabled    | true
-|sflow-enabled        | true
-|sflow-port           | 6343
-|sflow-workers        | 200
-|sflow-udp-size       | 1500
-|stats-enabled        | true
-|stats-http-addr      | *
-|stats-http-port      | 8081
-|mq-name              | kafka
-|mq-config-file       | /usr/local/vflow/etc/kafka.conf
+|Key                  | Default                        | Description                                      |
+|---------------------| -------------------------------|--------------------------------------------------|
+|log-file             | stdError                       | name of log file to send logging output to       |
+|verbose              | false                          | enable the full logging                          |
+|pid-file             | /var/run/vflow.pid             | file in which server should write its process ID |
+|ipfix-enabled        | true                           | enable/disable IPFIX decoders                    |
+|ipfix-port           | 4739                           | server IPFIX UDP port                            |
+|ipfix-workers        | 200                            | IPFIX concurrent decoders                        |
+|ipfix-udp-size       | 1500                           | maximum IPFIX UDP packet size                    |
+|ipfix-mirror-addr    | -                              | IPFIX 3rd party collector address                |
+|ipfix-mirror-port    | 4172                           | IPFIX 3rd party collector port                   |
+|ipfix-mirror-workers | 5                              | IPFIX replicator concurrent packet generator     |
+|ipfix-tpl-cache-file | /tmp/vflow.templates           | IPFIX templates cache file                       |
+|ipfix-rpc-enabled    | true                           | enable/disable IPFIX RPC                         |
+|sflow-enabled        | true                           | enable/disable sFlow decoders                    |
+|sflow-port           | 6343                           | server sFlow UDP port                            |
+|sflow-workers        | 200                            | sFlow concurrent decoders                        |
+|sflow-udp-size       | 1500                           | maximum sFlow UDP packet size                    |
+|stats-enabled        | true                           | enable/disable web stats listener                |
+|stats-http-addr      | *                              | web stats address option at server startup       |
+|stats-http-port      | 8081                           | web stats TCP port                               |
+|mq-name              | kafka                          | message queueing name (kafka or nsq)             |
+|mq-config-file       | /usr/local/vflow/etc/kafka.conf| message queue config file                        |
 
 The default configuration path is /usr/local/vflow/etc/vflow.conf but you can change it as below:
 ```
