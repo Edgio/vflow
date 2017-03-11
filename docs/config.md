@@ -48,3 +48,34 @@ The vFlow version shows as below:
 ```
 vflow -version
 ```
+
+## Example
+```
+ipfix-workers: 600
+sflow-workers: 300
+log-file: /var/log/vflow.log
+```
+
+# Kafka Configuration
+
+## Format
+A config file is a plain text file in [YAML](https://en.wikipedia.org/wiki/YAML) format.
+
+```
+key: value
+```
+
+The default configuration file is /usr/local/vflow/etc/kafka.conf, you can be able to change it through vFlow configuration.
+
+## Configuration Keys
+The Kafka configuration contains the following key
+
+|Key                  | Default                        | Description                                      |
+|---------------------| -------------------------------|--------------------------------------------------|
+|brokers              | -                              | kafka broker addresses                           |
+
+## Example
+```
+brokers: 
+    - 192.16.1.25:9092
+```
