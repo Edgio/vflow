@@ -23,7 +23,7 @@
 package ipfix
 
 import (
-	"errors"
+	"fmt"
 	"io"
 	"net"
 )
@@ -85,12 +85,7 @@ type SetHeader struct {
 	Length uint16
 }
 
-var (
-	rpcChan = make(chan RPCRequest, 1)
-
-	errInvalidVersion    = errors.New("invalid ipfix version")
-	errUnknownTemplateID = errors.New("unknown template id")
-)
+var rpcChan = make(chan RPCRequest, 1)
 
 // NewDecoder constructs a decoder
 func NewDecoder(raddr net.IP, b []byte) *Decoder {
@@ -150,7 +145,10 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 					}:
 					default:
 					}
-					return msg, errUnknownTemplateID
+					return msg, fmt.Errorf("%s unknown template id# %d",
+						d.raddr.String(),
+						setHeader.SetID,
+					)
 				}
 
 				data := decodeData(d.reader, tr)
@@ -203,7 +201,7 @@ func (h *MessageHeader) unmarshal(r *Reader) error {
 
 func (h *MessageHeader) validate() error {
 	if h.Version != 0x000a {
-		return errInvalidVersion
+		return fmt.Errorf("invalid ipfix version (%d)", h.Version)
 	}
 
 	// TODO: needs more validation
