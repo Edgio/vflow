@@ -7,3 +7,7 @@ the IPFIX raw data somewhere else.
 # Architecture
 
 ![Architecture](/docs/imgs/architecture.gif)
+
+# Discovery
+
+Each vFlow uses multicasting on all interfaces to discover nodes to communicate in regard to get any IPFIX new template from other nodes. The multicast IP address is 224.0.0.55 and each node sends hello packet every second. You do not need to enable multicast communications across routers.
