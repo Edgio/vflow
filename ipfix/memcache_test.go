@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    memcache_test.go
-//: details: TODO
+//: details: memory template cache testing
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -26,7 +26,7 @@ import (
 	"testing"
 )
 
-func TestMemCache(t *testing.T) {
+func TestMemCacheRetrieve(t *testing.T) {
 	ip := net.ParseIP("127.0.0.1")
 	mCache := GetCache("cache.file")
 	d := NewDecoder(ip, tpl)
@@ -37,5 +37,22 @@ func TestMemCache(t *testing.T) {
 	}
 	if v.TemplateID != 256 {
 		t.Error("expected template id#:256, got", v.TemplateID)
+	}
+}
+
+func TestMemCacheInsert(t *testing.T) {
+	var tpl TemplateRecords
+	ip := net.ParseIP("127.0.0.1")
+	mCache := GetCache("cache.file")
+
+	tpl.TemplateID = 310
+	mCache.insert(310, ip, tpl)
+
+	v, ok := mCache.retrieve(310, ip)
+	if !ok {
+		t.Error("expected mCache retrieve status true, got", ok)
+	}
+	if v.TemplateID != 310 {
+		t.Error("expected template id#:310, got", v.TemplateID)
 	}
 }
