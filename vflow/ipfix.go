@@ -57,6 +57,7 @@ type IPFIXStats struct {
 	UDPCount       uint64
 	DecodedCount   uint64
 	MQErrorCount   uint64
+	BusyWorker     int32
 }
 
 var (
@@ -102,6 +103,8 @@ func (i *IPFIX) run() {
 	}
 
 	wg.Add(i.workers)
+	atomic.AddInt32(&i.stats.BusyWorker, int32(i.workers))
+
 	for n := 0; n < i.workers; n++ {
 		go func() {
 			defer wg.Done()
@@ -182,6 +185,8 @@ func (i *IPFIX) ipfixWorker() {
 	)
 
 	for {
+		atomic.AddInt32(&i.stats.BusyWorker, -1)
+
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 		buf.Reset()
 
@@ -193,6 +198,8 @@ func (i *IPFIX) ipfixWorker() {
 			logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
+
+		atomic.AddInt32(&i.stats.BusyWorker, 1)
 
 		if ipfixMirrorEnabled {
 			mirror.body = ipfixBuffer.Get().([]byte)
@@ -240,6 +247,7 @@ func (i *IPFIX) status() *IPFIXStats {
 		UDPCount:       atomic.LoadUint64(&i.stats.UDPCount),
 		DecodedCount:   atomic.LoadUint64(&i.stats.DecodedCount),
 		MQErrorCount:   atomic.LoadUint64(&i.stats.MQErrorCount),
+		BusyWorker:     atomic.LoadInt32(&i.stats.BusyWorker),
 	}
 }
 
