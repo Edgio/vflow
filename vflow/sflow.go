@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    sflow.go
-//: details: TODO
+//: details: sflow decoding raw data samples
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -57,6 +57,7 @@ type SFlowStats struct {
 	UDPCount     uint64
 	DecodedCount uint64
 	MQErrorCount uint64
+	BusyWorker   int32
 }
 
 var (
@@ -99,11 +100,12 @@ func (s *SFlow) run() {
 	}
 
 	wg.Add(s.workers)
+	atomic.AddInt32(&s.stats.BusyWorker, int32(s.workers))
+
 	for i := 0; i < s.workers; i++ {
 		go func() {
 			defer wg.Done()
 			s.sFlowWorker()
-
 		}()
 	}
 
@@ -155,6 +157,8 @@ func (s *SFlow) sFlowWorker() {
 	)
 
 	for {
+		atomic.AddInt32(&s.stats.BusyWorker, -1)
+
 		if msg, ok = <-sFlowUDPCh; !ok {
 			break
 		}
@@ -163,6 +167,8 @@ func (s *SFlow) sFlowWorker() {
 			logger.Printf("rcvd sflow data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
+
+		atomic.AddInt32(&s.stats.BusyWorker, 1)
 
 		reader = bytes.NewReader(msg.body)
 		d := sflow.NewSFDecoder(reader, filter)
@@ -216,5 +222,6 @@ func (s *SFlow) status() *SFlowStats {
 		UDPCount:     atomic.LoadUint64(&s.stats.UDPCount),
 		DecodedCount: atomic.LoadUint64(&s.stats.DecodedCount),
 		MQErrorCount: atomic.LoadUint64(&s.stats.MQErrorCount),
+		BusyWorker:   atomic.LoadInt32(&s.stats.BusyWorker),
 	}
 }
