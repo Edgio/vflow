@@ -61,6 +61,7 @@ func (i InfluxDB) Netflow() error {
 	value = abs((flow.SFlow.MQErrorCount - lastFlow.SFlow.MQErrorCount) / delta)
 	query += fmt.Sprintf("mq.error.rate,type=sflow,host=%s value=%d\n", hostname, value)
 
+	query += fmt.Sprintf("workers,type=sflow,host=%s value=%d\n", hostname, flow.SFlow.Workers)
 	query += fmt.Sprintf("udp.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.UDPQueue)
 	query += fmt.Sprintf("udp.queue,type=sflow,host=%s value=%d\n", hostname, flow.SFlow.UDPQueue)
 	query += fmt.Sprintf("mq.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.MessageQueue)
