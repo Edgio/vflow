@@ -37,11 +37,12 @@ var version string
 // Options represents options
 type Options struct {
 	// global options
-	Verbose bool   `yaml:"verbose"`
-	LogFile string `yaml:"log-file"`
-	PIDFile string `yaml:"pid-file"`
-	Logger  *log.Logger
-	version bool
+	Verbose    bool   `yaml:"verbose"`
+	LogFile    string `yaml:"log-file"`
+	PIDFile    string `yaml:"pid-file"`
+	DynWorkers bool   `yaml:"dynamic-workers"`
+	Logger     *log.Logger
+	version    bool
 
 	// stats options
 	StatsEnabled  bool   `yaml:"stats-enabled"`
@@ -79,10 +80,11 @@ func init() {
 // NewOptions constructs new options
 func NewOptions() *Options {
 	return &Options{
-		Verbose: false,
-		version: false,
-		PIDFile: "/var/run/vflow.pid",
-		Logger:  log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
+		Verbose:    false,
+		version:    false,
+		DynWorkers: true,
+		PIDFile:    "/var/run/vflow.pid",
+		Logger:     log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
 		StatsEnabled:  true,
 		StatsHTTPPort: "8081",
@@ -178,6 +180,7 @@ func (opts *Options) vFlowFlagSet() {
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
+	flag.BoolVar(&opts.DynWorkers, "dynamic-workers", opts.DynWorkers, "enable dynamic workers")
 	flag.BoolVar(&opts.version, "version", opts.version, "show version")
 	flag.StringVar(&opts.LogFile, "log-file", opts.LogFile, "log file name")
 	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
