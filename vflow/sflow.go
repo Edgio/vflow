@@ -25,6 +25,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net"
+	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -48,6 +49,7 @@ type SFlow struct {
 	workers int
 	stop    bool
 	stats   SFlowStats
+	pool    chan chan struct{}
 }
 
 // SFlowStats represents sflow stats
@@ -57,7 +59,7 @@ type SFlowStats struct {
 	UDPCount     uint64
 	DecodedCount uint64
 	MQErrorCount uint64
-	BusyWorker   int32
+	Workers      int32
 }
 
 var (
@@ -79,12 +81,11 @@ func NewSFlow() *SFlow {
 	return &SFlow{
 		port:    opts.SFlowPort,
 		workers: opts.SFlowWorkers,
+		pool:    make(chan chan struct{}, 1e6),
 	}
 }
 
 func (s *SFlow) run() {
-	var wg sync.WaitGroup
-
 	// exit if the sflow is disabled
 	if !opts.SFlowEnabled {
 		logger.Println("sflow has been disabled")
@@ -99,13 +100,12 @@ func (s *SFlow) run() {
 		logger.Fatal(err)
 	}
 
-	wg.Add(s.workers)
-	atomic.AddInt32(&s.stats.BusyWorker, int32(s.workers))
-
+	atomic.AddInt32(&s.stats.Workers, int32(s.workers))
 	for i := 0; i < s.workers; i++ {
 		go func() {
-			defer wg.Done()
-			s.sFlowWorker()
+			wQuit := make(chan struct{})
+			s.pool <- wQuit
+			s.sFlowWorker(wQuit)
 		}()
 	}
 
@@ -125,6 +125,15 @@ func (s *SFlow) run() {
 		}
 	}()
 
+	go func() {
+		if !opts.DynWorkers {
+			logger.Println("sFlow dynamic worker disabled")
+			return
+		}
+
+		s.dynWorkers()
+	}()
+
 	for !s.stop {
 		b := sFlowBuffer.Get().([]byte)
 		conn.SetReadDeadline(time.Now().Add(1e9))
@@ -132,11 +141,11 @@ func (s *SFlow) run() {
 		if err != nil {
 			continue
 		}
+
 		atomic.AddUint64(&s.stats.UDPCount, 1)
 		sFlowUDPCh <- SFUDPMsg{raddr, b[:n]}
 	}
 
-	wg.Wait()
 }
 
 func (s *SFlow) shutdown() {
@@ -147,7 +156,7 @@ func (s *SFlow) shutdown() {
 	close(sFlowUDPCh)
 }
 
-func (s *SFlow) sFlowWorker() {
+func (s *SFlow) sFlowWorker(wQuit chan struct{}) {
 	var (
 		filter = []uint32{sflow.DataCounterSample}
 		reader *bytes.Reader
@@ -156,19 +165,22 @@ func (s *SFlow) sFlowWorker() {
 		b      []byte
 	)
 
+LOOP:
 	for {
-		atomic.AddInt32(&s.stats.BusyWorker, -1)
 
-		if msg, ok = <-sFlowUDPCh; !ok {
-			break
+		select {
+		case <-wQuit:
+			break LOOP
+		case msg, ok = <-sFlowUDPCh:
+			if !ok {
+				break LOOP
+			}
 		}
 
 		if opts.Verbose {
 			logger.Printf("rcvd sflow data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
-
-		atomic.AddInt32(&s.stats.BusyWorker, 1)
 
 		reader = bytes.NewReader(msg.body)
 		d := sflow.NewSFDecoder(reader, filter)
@@ -222,6 +234,65 @@ func (s *SFlow) status() *SFlowStats {
 		UDPCount:     atomic.LoadUint64(&s.stats.UDPCount),
 		DecodedCount: atomic.LoadUint64(&s.stats.DecodedCount),
 		MQErrorCount: atomic.LoadUint64(&s.stats.MQErrorCount),
-		BusyWorker:   atomic.LoadInt32(&s.stats.BusyWorker),
+		Workers:      atomic.LoadInt32(&s.stats.Workers),
+	}
+}
+
+func (s *SFlow) dynWorkers() {
+	var load, normalSeq, newWorkers, n int
+
+	maxWorkers := int32(runtime.NumCPU() * 1e4)
+	tick := time.Tick(120 * time.Second)
+
+	for {
+		<-tick
+		load = 0
+
+		for n = 0; n < 30; n++ {
+			time.Sleep(1 * time.Second)
+			load += len(sFlowUDPCh)
+		}
+
+		if load > 15 && s.stats.Workers < maxWorkers {
+
+			switch {
+			case load > 300:
+				newWorkers = 100
+			case load > 200:
+				newWorkers = 60
+			case load > 100:
+				newWorkers = 40
+			default:
+				newWorkers = 30
+			}
+
+			for n = 0; n < newWorkers; n++ {
+				go func() {
+					atomic.AddInt32(&s.stats.Workers, 1)
+					wQuit := make(chan struct{})
+					s.pool <- wQuit
+					s.sFlowWorker(wQuit)
+				}()
+			}
+
+		}
+
+		if load == 0 {
+			normalSeq++
+		} else {
+			normalSeq = 0
+			continue
+		}
+
+		if normalSeq > 15 {
+			for n = 0; n < 10; n++ {
+				if len(s.pool) > s.workers {
+					atomic.AddInt32(&s.stats.Workers, -1)
+					wQuit := <-s.pool
+					close(wQuit)
+				}
+			}
+			normalSeq = 0
+		}
 	}
 }
