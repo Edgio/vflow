@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    options.go
-//: details: TODO
+//: details: vFlow options :: configuration and command line
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -28,11 +28,15 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"runtime"
 
 	"gopkg.in/yaml.v2"
 )
 
-var version string
+var (
+	version    string
+	maxWorkers = runtime.NumCPU() * 1e4
+)
 
 // Options represents options
 type Options struct {
