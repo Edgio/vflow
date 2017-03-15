@@ -25,7 +25,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"net"
-	"runtime"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -81,7 +80,7 @@ func NewSFlow() *SFlow {
 	return &SFlow{
 		port:    opts.SFlowPort,
 		workers: opts.SFlowWorkers,
-		pool:    make(chan chan struct{}, 1e6),
+		pool:    make(chan chan struct{}, maxWorkers),
 	}
 }
 
@@ -241,7 +240,6 @@ func (s *SFlow) status() *SFlowStats {
 func (s *SFlow) dynWorkers() {
 	var load, normalSeq, newWorkers, n int
 
-	maxWorkers := int32(runtime.NumCPU() * 1e4)
 	tick := time.Tick(120 * time.Second)
 
 	for {
@@ -253,7 +251,7 @@ func (s *SFlow) dynWorkers() {
 			load += len(sFlowUDPCh)
 		}
 
-		if load > 15 && s.stats.Workers < maxWorkers {
+		if load > 15 && s.stats.Workers < int32(maxWorkers) {
 
 			switch {
 			case load > 300:
