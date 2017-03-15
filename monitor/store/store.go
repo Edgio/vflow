@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    store.go
-//: details: TODO
+//: details: an interface to other store back-end
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -55,6 +55,7 @@ type SFlow struct {
 	UDPCount     int64
 	DecodedCount int64
 	MQErrorCount int64
+	Workers      int64
 }
 
 // Flow represents flow (IPFIX+sFlow) metrics
