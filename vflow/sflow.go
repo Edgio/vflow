@@ -238,7 +238,7 @@ func (s *SFlow) status() *SFlowStats {
 }
 
 func (s *SFlow) dynWorkers() {
-	var load, normalSeq, newWorkers, n int
+	var load, nSeq, newWorkers, workers, n int
 
 	tick := time.Tick(120 * time.Second)
 
@@ -251,7 +251,7 @@ func (s *SFlow) dynWorkers() {
 			load += len(sFlowUDPCh)
 		}
 
-		if load > 15 && s.stats.Workers < int32(maxWorkers) {
+		if load > 15 {
 
 			switch {
 			case load > 300:
@@ -262,6 +262,12 @@ func (s *SFlow) dynWorkers() {
 				newWorkers = 40
 			default:
 				newWorkers = 30
+			}
+
+			workers = int(atomic.LoadInt32(&s.stats.Workers))
+			if workers+newWorkers > maxWorkers {
+				logger.Println("sflow :: max out workers")
+				continue
 			}
 
 			for n = 0; n < newWorkers; n++ {
@@ -276,13 +282,13 @@ func (s *SFlow) dynWorkers() {
 		}
 
 		if load == 0 {
-			normalSeq++
+			nSeq++
 		} else {
-			normalSeq = 0
+			nSeq = 0
 			continue
 		}
 
-		if normalSeq > 15 {
+		if nSeq > 15 {
 			for n = 0; n < 10; n++ {
 				if len(s.pool) > s.workers {
 					atomic.AddInt32(&s.stats.Workers, -1)
@@ -290,7 +296,8 @@ func (s *SFlow) dynWorkers() {
 					close(wQuit)
 				}
 			}
-			normalSeq = 0
+
+			nSeq = 0
 		}
 	}
 }
