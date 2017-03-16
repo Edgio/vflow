@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    ipfix.go
-//: details: TODO
+//: details: ipfix decoders handler
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -41,6 +41,7 @@ type IPFIX struct {
 	workers int
 	stop    bool
 	stats   IPFIXStats
+	pool    chan chan struct{}
 }
 
 // IPFIXUDPMsg represents IPFIX UDP data
@@ -57,7 +58,7 @@ type IPFIXStats struct {
 	UDPCount       uint64
 	DecodedCount   uint64
 	MQErrorCount   uint64
-	BusyWorker     int32
+	Workers        int32
 }
 
 var (
@@ -82,12 +83,11 @@ func NewIPFIX() *IPFIX {
 	return &IPFIX{
 		port:    opts.IPFIXPort,
 		workers: opts.IPFIXWorkers,
+		pool:    make(chan chan struct{}, maxWorkers),
 	}
 }
 
 func (i *IPFIX) run() {
-	var wg sync.WaitGroup
-
 	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
 		logger.Println("ipfix has been disabled")
@@ -102,14 +102,12 @@ func (i *IPFIX) run() {
 
 	}
 
-	wg.Add(i.workers)
-	atomic.AddInt32(&i.stats.BusyWorker, int32(i.workers))
-
+	atomic.AddInt32(&i.stats.Workers, int32(i.workers))
 	for n := 0; n < i.workers; n++ {
 		go func() {
-			defer wg.Done()
-			i.ipfixWorker()
-
+			wQuit := make(chan struct{})
+			i.pool <- wQuit
+			i.ipfixWorker(wQuit)
 		}()
 	}
 
@@ -137,6 +135,15 @@ func (i *IPFIX) run() {
 		}
 	}()
 
+	go func() {
+		if !opts.DynWorkers {
+			logger.Println("IPFIX dynamic worker disabled")
+			return
+		}
+
+		i.dynWorkers()
+	}()
+
 	for !i.stop {
 		b := ipfixBuffer.Get().([]byte)
 		conn.SetReadDeadline(time.Now().Add(1e9))
@@ -148,7 +155,6 @@ func (i *IPFIX) run() {
 		ipfixUDPCh <- IPFIXUDPMsg{raddr, b[:n]}
 	}
 
-	wg.Wait()
 }
 
 func (i *IPFIX) shutdown() {
@@ -173,7 +179,7 @@ func (i *IPFIX) shutdown() {
 	close(ipfixUDPCh)
 }
 
-func (i *IPFIX) ipfixWorker() {
+func (i *IPFIX) ipfixWorker(wQuit chan struct{}) {
 	var (
 		decodedMsg *ipfix.Message
 		mirror     IPFIXUDPMsg
@@ -184,22 +190,25 @@ func (i *IPFIX) ipfixWorker() {
 		b          []byte
 	)
 
+LOOP:
 	for {
-		atomic.AddInt32(&i.stats.BusyWorker, -1)
 
 		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
 		buf.Reset()
 
-		if msg, ok = <-ipfixUDPCh; !ok {
-			break
+		select {
+		case <-wQuit:
+			break LOOP
+		case msg, ok = <-ipfixUDPCh:
+			if !ok {
+				break LOOP
+			}
 		}
 
 		if opts.Verbose {
 			logger.Printf("rcvd ipfix data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
 		}
-
-		atomic.AddInt32(&i.stats.BusyWorker, 1)
 
 		if ipfixMirrorEnabled {
 			mirror.body = ipfixBuffer.Get().([]byte)
@@ -236,6 +245,7 @@ func (i *IPFIX) ipfixWorker() {
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
+
 	}
 }
 
@@ -247,7 +257,7 @@ func (i *IPFIX) status() *IPFIXStats {
 		UDPCount:       atomic.LoadUint64(&i.stats.UDPCount),
 		DecodedCount:   atomic.LoadUint64(&i.stats.DecodedCount),
 		MQErrorCount:   atomic.LoadUint64(&i.stats.MQErrorCount),
-		BusyWorker:     atomic.LoadInt32(&i.stats.BusyWorker),
+		Workers:        atomic.LoadInt32(&i.stats.Workers),
 	}
 }
 
@@ -340,6 +350,71 @@ func mirrorIPFIXDispatcher(ch chan IPFIXUDPMsg) {
 			ch4 <- msg
 		} else {
 			ch6 <- msg
+		}
+	}
+}
+
+func (i *IPFIX) dynWorkers() {
+	var load, nSeq, newWorkers, workers, n int
+
+	tick := time.Tick(120 * time.Second)
+
+	for {
+		<-tick
+		load = 0
+
+		for n = 0; n < 30; n++ {
+			time.Sleep(1 * time.Second)
+			load += len(sFlowUDPCh)
+		}
+
+		if load > 15 {
+
+			switch {
+			case load > 300:
+				newWorkers = 100
+			case load > 200:
+				newWorkers = 60
+			case load > 100:
+				newWorkers = 40
+			default:
+				newWorkers = 30
+			}
+
+			workers = int(atomic.LoadInt32(&i.stats.Workers))
+			if workers+newWorkers > maxWorkers {
+				logger.Println("sflow :: max out workers")
+				continue
+			}
+
+			for n = 0; n < newWorkers; n++ {
+				go func() {
+					atomic.AddInt32(&i.stats.Workers, 1)
+					wQuit := make(chan struct{})
+					i.pool <- wQuit
+					i.ipfixWorker(wQuit)
+				}()
+			}
+
+		}
+
+		if load == 0 {
+			nSeq++
+		} else {
+			nSeq = 0
+			continue
+		}
+
+		if nSeq > 15 {
+			for n = 0; n < 10; n++ {
+				if len(i.pool) > i.workers {
+					atomic.AddInt32(&i.stats.Workers, -1)
+					wQuit := <-i.pool
+					close(wQuit)
+				}
+			}
+
+			nSeq = 0
 		}
 	}
 }
