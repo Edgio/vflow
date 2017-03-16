@@ -34,6 +34,7 @@ The vFlow configuration contains the following keys
 |sflow-port           | 6343                           | server sFlow UDP port                            |
 |sflow-workers        | 200                            | sFlow concurrent decoders                        |
 |sflow-udp-size       | 1500                           | maximum sFlow UDP packet size                    |
+|dynamic-workers      | true                           | enable/disable dynamic workers feature           |
 |stats-enabled        | true                           | enable/disable web stats listener                |
 |stats-http-addr      | *                              | web stats address option at server startup       |
 |stats-http-port      | 8081                           | web stats TCP port                               |
