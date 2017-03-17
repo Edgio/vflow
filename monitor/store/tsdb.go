@@ -78,6 +78,8 @@ func (t TSDB) Netflow() error {
 		{"sflow", "decode.rate"},
 		{"ipfix", "mq.error.rate"},
 		{"sflow", "mq.error.rate"},
+		{"ipfix", "workers"},
+		{"sflow", "workers"},
 	}
 
 	values = append(values, abs((flow.IPFIX.UDPCount-lastFlow.IPFIX.UDPCount)/delta))
@@ -86,6 +88,8 @@ func (t TSDB) Netflow() error {
 	values = append(values, abs((flow.SFlow.DecodedCount-lastFlow.SFlow.DecodedCount)/delta))
 	values = append(values, abs((flow.IPFIX.MQErrorCount-lastFlow.IPFIX.MQErrorCount)/delta))
 	values = append(values, abs((flow.SFlow.MQErrorCount-lastFlow.SFlow.MQErrorCount)/delta))
+	values = append(values, flow.IPFIX.Workers)
+	values = append(values, flow.SFlow.Workers)
 
 	for i, m := range metrics {
 		dps = append(dps, TSDBDataPoint{
