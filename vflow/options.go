@@ -183,26 +183,26 @@ func (opts *Options) vFlowFlagSet() {
 	vFlowLoadCfg(config, opts)
 
 	// global options
-	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable verbose logging")
-	flag.BoolVar(&opts.DynWorkers, "dynamic-workers", opts.DynWorkers, "enable dynamic workers")
+	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable/disable verbose logging")
+	flag.BoolVar(&opts.DynWorkers, "dynamic-workers", opts.DynWorkers, "enable/disable dynamic workers")
 	flag.BoolVar(&opts.version, "version", opts.version, "show version")
 	flag.StringVar(&opts.LogFile, "log-file", opts.LogFile, "log file name")
 	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
 
 	// stats options
-	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable stats listener")
+	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable/disable stats listener")
 	flag.StringVar(&opts.StatsHTTPPort, "stats-http-port", opts.StatsHTTPPort, "stats port listener")
 	flag.StringVar(&opts.StatsHTTPAddr, "stats-http-addr", opts.StatsHTTPAddr, "stats bind address listener")
 
 	// sflow options
-	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable sflow listener")
+	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable/disable sflow listener")
 	flag.IntVar(&opts.SFlowPort, "sflow-port", opts.SFlowPort, "sflow port number")
 	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
 	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers number")
 
 	// ipfix options
-	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable IPFIX listener")
-	flag.BoolVar(&opts.IPFIXRPCEnabled, "ipfix-rpc-enabled", opts.IPFIXRPCEnabled, "enable RPC IPFIX")
+	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable/disable IPFIX listener")
+	flag.BoolVar(&opts.IPFIXRPCEnabled, "ipfix-rpc-enabled", opts.IPFIXRPCEnabled, "enable/disable RPC IPFIX")
 	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers number")
@@ -214,6 +214,26 @@ func (opts *Options) vFlowFlagSet() {
 	// producer options
 	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
 	flag.StringVar(&opts.MQConfigFile, "mqueue-conf", opts.MQConfigFile, "producer message queue configuration file")
+
+	flag.Usage = func() {
+		flag.PrintDefaults()
+		fmt.Fprintf(os.Stderr, `
+    Example:
+	# set workers
+	vflow -sflow-workers 15 -ipfix-workers 20
+
+	# set 3rd party ipfix collector
+	vflow -ipfix-mirror-addr 192.168.1.10 -ipfix-mirror-port 4319
+
+	# enaable verbose logging
+	vflow -verbose=true
+
+	# for more information
+	https://github.com/VerizonDigital/vflow/blob/master/docs/config.md
+
+    `)
+
+	}
 
 	flag.Parse()
 }
