@@ -95,8 +95,9 @@ func NewDecoder(raddr net.IP, b []byte) *Decoder {
 // Decode decodes the IPFIX raw data
 func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 	var (
-		msg = new(Message)
-		err error
+		nextSet int
+		msg     = new(Message)
+		err     error
 	)
 
 	// IPFIX Message Header decoding
@@ -135,22 +136,24 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 			// Reserved
 		default:
 			// data
-			for d.reader.Len() > 0 {
-				tr, ok := mem.retrieve(setHeader.SetID, d.raddr)
-				if !ok {
-					select {
-					case rpcChan <- RPCRequest{
-						ID: setHeader.SetID,
-						IP: d.raddr,
-					}:
-					default:
-					}
-					return msg, fmt.Errorf("%s unknown template id# %d",
-						d.raddr.String(),
-						setHeader.SetID,
-					)
+			tr, ok := mem.retrieve(setHeader.SetID, d.raddr)
+			if !ok {
+				select {
+				case rpcChan <- RPCRequest{
+					ID: setHeader.SetID,
+					IP: d.raddr,
+				}:
+				default:
 				}
+				return msg, fmt.Errorf("%s unknown template id# %d",
+					d.raddr.String(),
+					setHeader.SetID,
+				)
+			}
 
+			// data records
+			nextSet = d.reader.Len() - int(setHeader.Length) + 4
+			for d.reader.Len() > nextSet {
 				data := decodeData(d.reader, tr)
 				msg.DataSets = append(msg.DataSets, data)
 			}
