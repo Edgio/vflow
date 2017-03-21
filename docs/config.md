@@ -71,12 +71,17 @@ The default configuration file is /usr/local/vflow/etc/kafka.conf, you can be ab
 ## Configuration Keys
 The Kafka configuration contains the following key
 
-|Key                  | Default                        | Description                                      |
-|---------------------| -------------------------------|--------------------------------------------------|
-|brokers              | -                              | kafka broker addresses                           |
+|Key                  | Default                        | Description                                                      |
+|---------------------| -------------------------------|------------------------------------------------------------------|
+|brokers              | -                              | kafka broker addresses                                           |
+|compression          | none                           | compression codecs: gzip, snappy, lz4                            |
+|retry-max            | 0                              | the total number of times to retry                               |
+|retry-backoff        | 0                              | wait for leader election to occur before retrying in milliseconds|
 
 ## Example
 ```
 brokers: 
     - 192.16.1.25:9092
+retry-max: 2
+retry-backoff: 10
 ```
