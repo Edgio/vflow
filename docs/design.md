@@ -17,6 +17,10 @@ The number of worker processes can be changed at runtime automated based on the 
 
 Each vFlow uses multicasting on all interfaces to discover nodes to communicate in regard to get any IPFIX new template from other nodes. The multicast IP address is 224.0.0.55 and each node sends hello packet every second. You do not need to enable multicast communications across routers.
 
+# Pluggable architecture
+
+The vFlow accepts message queue plugin. for the time being it has Kafka and NSQ plugins but you can write for a message queue like RabbitMQ quick and easy.
+
 # Hardware requirements
 
 |Load|IPFIX PPS|CPU|RAM|
