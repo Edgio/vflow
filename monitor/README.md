@@ -25,3 +25,52 @@
 ## Grafana sample dashboard
 
 ![Alt text](/docs/imgs/grafana.gif?raw=true "vFlow")
+
+## vFlow API
+
+You can hit vFlow stats API directy to create your own monitoring
+
+Flow API : http://localhost:8081/flow 
+
+```
+{
+   "IPFIX" : {
+      "MessageQueue" : 0,
+      "DecodedCount" : 733,
+      "MQErrorCount" : 0,
+      "UDPCount" : 733,
+      "UDPMirrorQueue" : 0,
+      "UDPQueue" : 0,
+      "Workers" : 100
+   },
+   "SFlow" : {
+      "MessageQueue" : 0,
+      "UDPCount" : 268,
+      "MQErrorCount" : 0,
+      "DecodedCount" : 253,
+      "UDPQueue" : 0,
+      "Workers" : 100
+   },
+   "StartTime" : 1490134512
+}
+```
+
+System API : http://localhost:8081/sys
+
+```
+{
+   "GCSys" : 450560,
+   "MemTotalAlloc" : 11435376,
+   "MCacheInuse" : 4800,
+   "GCNext" : 5053510,
+   "MemHeapReleased" : 0,
+   "NumGoroutine" : 237,
+   "GoVersion" : "go1.7.4",
+   "NumLogicalCPU" : 4,
+   "GCLast" : "2017-03-21 22:17:50.923246779 +0000 UTC",
+   "MemHeapAlloc" : 4151416,
+   "MemAlloc" : 4151416,
+   "StartTime" : 1490134512,
+   "MemHeapSys" : 5734400
+}
+```
