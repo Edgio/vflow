@@ -25,6 +25,7 @@ package producer
 import (
 	"io/ioutil"
 	"log"
+	"time"
 
 	"github.com/Shopify/sarama"
 	"gopkg.in/yaml.v2"
@@ -39,11 +40,17 @@ type Kafka struct {
 
 // KafkaConfig represents kafka configuration
 type KafkaConfig struct {
-	Brokers []string `yaml:"brokers"`
+	Brokers      []string `yaml:"brokers"`
+	Compression  string   `yaml:"compression"`
+	RetryMax     int      `yaml:"retry-max"`
+	RetryBackoff int      `yaml:"retry-backoff"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
-	var err error
+	var (
+		config = sarama.NewConfig()
+		err    error
+	)
 
 	// set default values
 	k.config = KafkaConfig{
@@ -55,7 +62,27 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 		logger.Println(err)
 	}
 
-	k.producer, err = sarama.NewAsyncProducer(k.config.Brokers, nil)
+	// init kafka configuration
+	config.ClientID = "vFlow.Kafka"
+	config.Producer.Retry.Max = k.config.RetryMax
+	config.Producer.Retry.Backoff = time.Duration(k.config.RetryBackoff) * time.Millisecond
+
+	switch k.config.Compression {
+	case "gzip":
+		config.Producer.Compression = sarama.CompressionGZIP
+	case "lz4":
+		config.Producer.Compression = sarama.CompressionLZ4
+	case "snappy":
+		config.Producer.Compression = sarama.CompressionSnappy
+	default:
+		config.Producer.Compression = sarama.CompressionNone
+	}
+
+	if err = config.Validate(); err != nil {
+		logger.Fatal(err)
+	}
+
+	k.producer, err = sarama.NewAsyncProducer(k.config.Brokers, config)
 	k.logger = logger
 	if err != nil {
 		return err
