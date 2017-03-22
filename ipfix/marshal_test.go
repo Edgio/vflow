@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    marshal_test.go
-//: details: TODO
+//: details: provides support for automated testing of marshal methods
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -88,49 +88,30 @@ func TestJSONMarshal(t *testing.T) {
 	if msg.Header.Version != 10 {
 		t.Error("expect Version 10, got", msg.Header.Version)
 	}
+
 	for _, ds := range msg.DataSets {
 		for _, f := range ds {
 			switch f.ID {
 			case 1:
-				if f.Value.(float64) != 40 {
-					t.Error("expect ID 1 value 40, got", f.Value)
-				}
+				chkFloat64(t, f, 40)
 			case 2:
-				if f.Value.(float64) != 1 {
-					t.Error("expect ID 2 value 1, got", f.Value)
-				}
+				chkFloat64(t, f, 1)
 			case 4:
-				if f.Value.(float64) != 6 {
-					t.Error("expect ID 4 value 6, got", f.Value)
-				}
+				chkFloat64(t, f, 6)
 			case 5:
-				if f.Value.(float64) != 0 {
-					t.Error("expect ID 5 value 0, got", f.Value)
-				}
+				chkFloat64(t, f, 0)
 			case 6:
-				if f.Value.(string) != "0x10" {
-					t.Error("expect ID 6 value 0x10, got", f.Value)
-				}
+				chkString(t, f, "0x10")
 			case 8:
-				if f.Value != "91.125.130.121" {
-					t.Error("expect ID 8 value 91.125.130.121, got", f.Value)
-				}
+				chkString(t, f, "91.125.130.121")
 			case 12:
-				if f.Value != "192.229.220.133" {
-					t.Error("expect ID 12 value 192.229.220.133, got", f.Value)
-				}
+				chkString(t, f, "192.229.220.133")
 			case 13:
-				if f.Value.(float64) != 24 {
-					t.Error("expect ID 13 value 24, got", f.Value)
-				}
+				chkFloat64(t, f, 24)
 			case 14:
-				if f.Value.(float64) != 1270 {
-					t.Error("expect ID 14 value 1270, got", f.Value)
-				}
+				chkFloat64(t, f, 1270)
 			case 152:
-				if f.Value.(float64) != 1483484685331 {
-					t.Error("expect ID 152 value 1483484685331, got", f.Value)
-				}
+				chkFloat64(t, f, 1483484685331)
 			}
 		}
 	}
@@ -143,4 +124,16 @@ func BenchmarkJSONMarshal(b *testing.B) {
 		mockDecodedMsg.JSONMarshal(buf)
 	}
 
+}
+
+func chkFloat64(t *testing.T, f DecodedField, expect float64) {
+	if f.Value.(float64) != expect {
+		t.Errorf("expect ID %d value %f, got %f", f.ID, expect, f.Value)
+	}
+}
+
+func chkString(t *testing.T, f DecodedField, expect string) {
+	if f.Value.(string) != expect {
+		t.Errorf("expect ID %d value %s, got %s", f.ID, expect, f.Value.(string))
+	}
 }
