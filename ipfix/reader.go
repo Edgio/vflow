@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    reader.go
-//: details: TODO
+//: details: bytes reader
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -47,9 +47,10 @@ func (r *Reader) Uint8() (uint8, error) {
 		return 0, errReader
 	}
 
+	d := r.data[0]
 	r.data = r.data[1:]
 
-	return r.data[0], nil
+	return d, nil
 }
 
 // Uint16 reads two bytes as big-endian
