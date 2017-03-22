@@ -88,6 +88,14 @@ func TestJSONMarshal(t *testing.T) {
 	if msg.Header.Version != 10 {
 		t.Error("expect Version 10, got", msg.Header.Version)
 	}
+}
+
+func TestJSONMarshalDataSets(t *testing.T) {
+	buf := bytes.NewBufferString("")
+	msg := Message{}
+
+	b, _ := mockDecodedMsg.JSONMarshal(buf)
+	json.Unmarshal(b, &msg)
 
 	for _, ds := range msg.DataSets {
 		for _, f := range ds {
