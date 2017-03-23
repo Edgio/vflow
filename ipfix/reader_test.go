@@ -69,6 +69,20 @@ func TestUint32(t *testing.T) {
 	}
 }
 
+func TestUint64(t *testing.T) {
+	b := []byte{0x05, 0x11, 0x01, 0x16, 0x05, 0x01, 0x21, 0x26}
+
+	r := NewReader(b)
+	i, err := r.Uint64()
+	if err != nil {
+		t.Error("unexpected error happened, got", err)
+	}
+
+	if i != 365074238878589222 {
+		t.Error("expect read 365074238878589222, got", i)
+	}
+}
+
 func TestReadN(t *testing.T) {
 	b := []byte{0x05, 0x11, 0x01, 0x16}
 
