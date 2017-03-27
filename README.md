@@ -34,7 +34,7 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 ## Build
 Given that the Go Language compiler (version 1.8 preferred) is installed, you can build it with:
 ```
-go get https://github.com/VerizonDigital/vflow
+go get github.com/VerizonDigital/vflow
 cd $GOPATH/src/github.com/VerizonDigital/vflow
 
 make build
