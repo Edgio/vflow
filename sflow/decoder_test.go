@@ -50,7 +50,7 @@ func TestSFHeaderDecode(t *testing.T) {
 	d := NewSFDecoder(reader, filter)
 	datagram, err := d.sfHeaderDecode()
 	if err != nil {
-		t.Error("", err)
+		t.Error("unexpected error", err)
 	}
 
 	if datagram.IPAddress.String() != "192.229.214.0" {
@@ -69,7 +69,7 @@ func TestGetSampleInfo(t *testing.T) {
 	d := NewSFDecoder(reader, filter)
 	sfTypeFormat, sfDataLength, err := d.getSampleInfo()
 	if err != nil {
-		t.Error("")
+		t.Error("unexpected error", err)
 	}
 	if sfTypeFormat != 1 {
 		t.Error("expected type format# 1, got", sfTypeFormat)
