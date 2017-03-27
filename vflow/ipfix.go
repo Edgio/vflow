@@ -99,7 +99,7 @@ func (i *IPFIX) run() {
 
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-
+		logger.Fatal(err)
 	}
 
 	atomic.AddInt32(&i.stats.Workers, int32(i.workers))
