@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    mirror_test.go
-//: details: TODO
+//: details: provides support for automated testing of mirror methods
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -24,9 +24,11 @@ package mirror
 import (
 	"net"
 	"strings"
+	"syscall"
 	"testing"
 
 	"golang.org/x/net/ipv4"
+	"golang.org/x/net/ipv6"
 )
 
 func TestNewRawConn(t *testing.T) {
@@ -39,8 +41,23 @@ func TestNewRawConn(t *testing.T) {
 		}
 		t.Error("unexpected error", err)
 	}
-	if c.family != 2 {
+	if c.family != syscall.AF_INET {
 		t.Error("expected family# 2, got", c.family)
+	}
+}
+
+func TestNewRawConnIPv6(t *testing.T) {
+	ip := net.ParseIP("2001:0db8:0000:0000:0000:ff00:0042:8329")
+	c, err := NewRawConn(ip)
+	if err != nil {
+		if strings.Contains(err.Error(), "not permitted") {
+			t.Log(err)
+			return
+		}
+		t.Error("unexpected error", err)
+	}
+	if c.family != syscall.AF_INET6 {
+		t.Error("expected family# 10, got", c.family)
 	}
 }
 
@@ -65,6 +82,24 @@ func TestIPv4Header(t *testing.T) {
 	}
 	if h.Checksum != 0 {
 		t.Error("expect Checksum: 0, got", h.Checksum)
+	}
+}
+
+func TestIPv6Header(t *testing.T) {
+	ipv6RawHeader := NewIPv6HeaderTpl(17)
+	b := ipv6RawHeader.Marshal()
+	h, err := ipv6.ParseHeader(b)
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+	if h.Version != 6 {
+		t.Error("expect version: 4, got", h.Version)
+	}
+	if h.NextHeader != 17 {
+		t.Error("expect protocol: 17, got", h.NextHeader)
+	}
+	if h.HopLimit != 64 {
+		t.Error("expect TTL: 64, got", h.HopLimit)
 	}
 }
 
