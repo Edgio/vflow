@@ -23,8 +23,12 @@
 package producer
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
+	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/Shopify/sarama"
@@ -78,6 +82,11 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 		config.Producer.Compression = sarama.CompressionNone
 	}
 
+	// get env config
+	if err = k.loadEnv(config); err != nil {
+		logger.Println(err)
+	}
+
 	if err = config.Validate(); err != nil {
 		logger.Fatal(err)
 	}
@@ -129,6 +138,42 @@ func (k *Kafka) load(f string) error {
 	err = yaml.Unmarshal(b, &k.config)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (k *Kafka) loadEnv(config *sarama.Config) error {
+	var err error
+
+	env := "VFLOW_KAFKA_BROKERS"
+	val, ok := os.LookupEnv(env)
+	if ok {
+		k.config.Brokers = strings.Split(val, ";")
+	}
+
+	env = "VFLOW_KAFKA_COMPRESSION"
+	val, ok = os.LookupEnv(env)
+	if ok {
+		k.config.Compression = val
+	}
+
+	env = "VFLOW_KAFKA_RETRY_MAX"
+	val, ok = os.LookupEnv(env)
+	if ok {
+		k.config.RetryMax, err = strconv.Atoi(val)
+		if err != nil {
+			return fmt.Errorf("%s: %s", env, err)
+		}
+	}
+
+	env = "VFLOW_KAFKA_RETRY_BACKOFF"
+	val, ok = os.LookupEnv(env)
+	if ok {
+		k.config.RetryBackoff, err = strconv.Atoi(val)
+		if err != nil {
+			return fmt.Errorf("%s: %s", env, err)
+		}
 	}
 
 	return nil
