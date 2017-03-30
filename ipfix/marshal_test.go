@@ -29,6 +29,17 @@ import (
 	"testing"
 )
 
+type TestMessage struct {
+	AgentID  string
+	Header   MessageHeader
+	DataSets [][]TestDecodedField
+}
+
+type TestDecodedField struct {
+	I uint16
+	V interface{}
+}
+
 var mockDecodedMsg = Message{
 	AgentID: "10.10.10.10",
 	Header: MessageHeader{
@@ -71,7 +82,7 @@ var mockDecodedMsg = Message{
 
 func TestJSONMarshal(t *testing.T) {
 	buf := bytes.NewBufferString("")
-	msg := Message{}
+	msg := TestMessage{}
 
 	b, err := mockDecodedMsg.JSONMarshal(buf)
 	if err != nil {
@@ -92,14 +103,14 @@ func TestJSONMarshal(t *testing.T) {
 
 func TestJSONMarshalDataSets(t *testing.T) {
 	buf := bytes.NewBufferString("")
-	msg := Message{}
+	msg := TestMessage{}
 
 	b, _ := mockDecodedMsg.JSONMarshal(buf)
 	json.Unmarshal(b, &msg)
 
 	for _, ds := range msg.DataSets {
 		for _, f := range ds {
-			switch f.ID {
+			switch f.I {
 			case 1:
 				chkFloat64(t, f, 40)
 			case 2:
@@ -134,14 +145,14 @@ func BenchmarkJSONMarshal(b *testing.B) {
 
 }
 
-func chkFloat64(t *testing.T, f DecodedField, expect float64) {
-	if f.Value.(float64) != expect {
-		t.Errorf("expect ID %d value %f, got %f", f.ID, expect, f.Value)
+func chkFloat64(t *testing.T, f TestDecodedField, expect float64) {
+	if f.V.(float64) != expect {
+		t.Errorf("expect ID %d value %f, got %f", f.I, expect, f.V)
 	}
 }
 
-func chkString(t *testing.T, f DecodedField, expect string) {
-	if f.Value.(string) != expect {
-		t.Errorf("expect ID %d value %s, got %s", f.ID, expect, f.Value.(string))
+func chkString(t *testing.T, f TestDecodedField, expect string) {
+	if f.V.(string) != expect {
+		t.Errorf("expect ID %d value %s, got %s", f.I, expect, f.V.(string))
 	}
 }

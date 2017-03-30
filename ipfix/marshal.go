@@ -69,9 +69,9 @@ func (m *Message) encodeDataSet(b *bytes.Buffer) error {
 
 		b.WriteByte('[')
 		for j := range m.DataSets[i] {
-			b.WriteString("{\"ID\":")
+			b.WriteString("{\"I\":")
 			b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].ID), 10))
-			b.WriteString(",\"Value\":")
+			b.WriteString(",\"V\":")
 			err = m.writeValue(b, i, j)
 
 			if j < length-1 {
