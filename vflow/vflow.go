@@ -62,7 +62,18 @@ func main() {
 	go statsHTTPServer(ipfix, sFlow)
 
 	<-signalCh
-	go sFlow.shutdown()
-	go ipfix.shutdown()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		sFlow.shutdown()
+	}()
+
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		ipfix.shutdown()
+	}()
+
 	wg.Wait()
 }
