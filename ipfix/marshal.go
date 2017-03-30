@@ -56,7 +56,7 @@ func (m *Message) encodeDataSet(b *bytes.Buffer) error {
 	var (
 		length   int
 		dsLength int
-		err      error = nil
+		err      error
 	)
 
 	b.WriteString("\"DataSets\":")
@@ -97,7 +97,7 @@ func (m *Message) encodeDataSetFlat(b *bytes.Buffer) error {
 	var (
 		length   int
 		dsLength int
-		err      error = nil
+		err      error
 	)
 
 	b.WriteString("\"DataSets\":")
