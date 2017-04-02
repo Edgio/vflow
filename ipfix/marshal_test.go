@@ -81,7 +81,7 @@ var mockDecodedMsg = Message{
 }
 
 func TestJSONMarshal(t *testing.T) {
-	buf := bytes.NewBufferString("")
+	buf := new(bytes.Buffer)
 	msg := TestMessage{}
 
 	b, err := mockDecodedMsg.JSONMarshal(buf)
@@ -102,7 +102,7 @@ func TestJSONMarshal(t *testing.T) {
 }
 
 func TestJSONMarshalDataSets(t *testing.T) {
-	buf := bytes.NewBufferString("")
+	buf := new(bytes.Buffer)
 	msg := TestMessage{}
 
 	b, _ := mockDecodedMsg.JSONMarshal(buf)
@@ -137,7 +137,7 @@ func TestJSONMarshalDataSets(t *testing.T) {
 }
 
 func BenchmarkJSONMarshal(b *testing.B) {
-	buf := bytes.NewBufferString("")
+	buf := new(bytes.Buffer)
 
 	for i := 0; i < b.N; i++ {
 		mockDecodedMsg.JSONMarshal(buf)

@@ -184,7 +184,7 @@ func (i *IPFIX) ipfixWorker(wQuit chan struct{}) {
 		decodedMsg *ipfix.Message
 		mirror     IPFIXUDPMsg
 		msg        = IPFIXUDPMsg{body: ipfixBuffer.Get().([]byte)}
-		buf        = bytes.NewBufferString("")
+		buf        = new(bytes.Buffer)
 		err        error
 		ok         bool
 		b          []byte
