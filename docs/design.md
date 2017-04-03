@@ -27,5 +27,5 @@ The vFlow accepts message queue plugin. for the time being it has Kafka and NSQ 
 |----|---------|---|---|
 |low| < 1K |2-4|64M|
 |moderate| < 10K| 8+| 256M|
-|high| < 50K| 12+| 512G|
+|high| < 50K| 12+| 512M|
 |x-high| < 100K | 24+ | 1G|
