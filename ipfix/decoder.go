@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    decoder.go
-//: details: TODO
+//: details: decodes IPFIX packets
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -26,12 +26,14 @@ import (
 	"fmt"
 	"io"
 	"net"
+
+	"github.com/VerizonDigital/vflow/reader"
 )
 
 // Decoder represents IPFIX payload and remote address
 type Decoder struct {
 	raddr  net.IP
-	reader *Reader
+	reader *reader.Reader
 }
 
 // MessageHeader represents IPFIX message header
@@ -89,7 +91,7 @@ var rpcChan = make(chan RPCRequest, 1)
 
 // NewDecoder constructs a decoder
 func NewDecoder(raddr net.IP, b []byte) *Decoder {
-	return &Decoder{raddr, NewReader(b)}
+	return &Decoder{raddr, reader.NewReader(b)}
 }
 
 // Decode decodes the IPFIX raw data
@@ -176,7 +178,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 // |                    Observation Domain ID                      |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (h *MessageHeader) unmarshal(r *Reader) error {
+func (h *MessageHeader) unmarshal(r *reader.Reader) error {
 	var err error
 
 	if h.Version, err = r.Uint16(); err != nil {
@@ -219,7 +221,7 @@ func (h *MessageHeader) validate() error {
 // |          Set ID               |          Length               |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (h *SetHeader) unmarshal(r *Reader) error {
+func (h *SetHeader) unmarshal(r *reader.Reader) error {
 	var err error
 
 	if h.SetID, err = r.Uint16(); err != nil {
@@ -242,7 +244,7 @@ func (h *SetHeader) unmarshal(r *Reader) error {
 // |         Template ID           |         Field Count           |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (t *TemplateHeader) unmarshal(r *Reader) error {
+func (t *TemplateHeader) unmarshal(r *reader.Reader) error {
 	var err error
 
 	if t.TemplateID, err = r.Uint16(); err != nil {
@@ -268,7 +270,7 @@ func (t *TemplateHeader) unmarshal(r *Reader) error {
 // |     Scope Field Count = N     |0|  Scope 1 Infor. Element id. |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (t *TemplateHeader) unmarshalOpts(r *Reader) error {
+func (t *TemplateHeader) unmarshalOpts(r *reader.Reader) error {
 	var err error
 
 	if t.TemplateID, err = r.Uint16(); err != nil {
@@ -295,7 +297,7 @@ func (t *TemplateHeader) unmarshalOpts(r *Reader) error {
 // |                      Enterprise Number                        |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (f *TemplateFieldSpecifier) unmarshal(r *Reader) error {
+func (f *TemplateFieldSpecifier) unmarshal(r *reader.Reader) error {
 	var err error
 
 	if f.ElementID, err = r.Uint16(); err != nil {
@@ -332,7 +334,7 @@ func (f *TemplateFieldSpecifier) unmarshal(r *Reader) error {
 // |             ...               |              ...              |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (tr *TemplateRecords) unmarshal(r *Reader) {
+func (tr *TemplateRecords) unmarshal(r *reader.Reader) {
 	var (
 		th = TemplateHeader{}
 		tf = TemplateFieldSpecifier{}
@@ -376,7 +378,7 @@ func (tr *TemplateRecords) unmarshal(r *Reader) {
 //  |     Option M Field Length     |      Padding (optional)       |
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (tr *TemplateRecords) unmarshalOpts(r *Reader) {
+func (tr *TemplateRecords) unmarshalOpts(r *reader.Reader) {
 	var (
 		th = TemplateHeader{}
 		tf = TemplateFieldSpecifier{}
@@ -398,7 +400,7 @@ func (tr *TemplateRecords) unmarshalOpts(r *Reader) {
 	}
 }
 
-func decodeData(r *Reader, tr TemplateRecords) []DecodedField {
+func decodeData(r *reader.Reader, tr TemplateRecords) []DecodedField {
 	var (
 		fields []DecodedField
 		b      []byte
