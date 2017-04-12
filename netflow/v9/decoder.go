@@ -22,6 +22,10 @@
 //: ----------------------------------------------------------------------------
 package netflow
 
+import (
+	"github.com/VerizonDigital/vflow/reader"
+)
+
 //   The Packet Header format is specified as:
 //
 //    0                   1                   2                   3
@@ -46,4 +50,34 @@ type PacketHeader struct {
 	UNIXSecs  uint32 // Time in seconds since 0000 UTC 197
 	SeqNum    uint32 // Incremental sequence counter of all Export Packets
 	SrcID     uint32 // A 32-bit value that identifies the Exporter
+}
+
+func (h *PacketHeader) unmarshal(r *reader.Reader) error {
+	var err error
+
+	if h.Version, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if h.Count, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if h.SysUpTime, err = r.Uint32(); err != nil {
+		return err
+	}
+
+	if h.UNIXSecs, err = r.Uint32(); err != nil {
+		return err
+	}
+
+	if h.SeqNum, err = r.Uint32(); err != nil {
+		return err
+	}
+
+	if h.SrcID, err = r.Uint32(); err != nil {
+		return err
+	}
+
+	return nil
 }
