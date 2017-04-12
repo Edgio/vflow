@@ -36,11 +36,13 @@ type PacketHeader struct {
 	SrcID     uint32 // A 32-bit value that identifies the Exporter
 }
 
+// SetHeader represents netflow v9 data flowset id and length
 type SetHeader struct {
 	FlowSetID uint16 // FlowSet ID value 0:: template, 1:: options template, 255< :: data
 	Length    uint16 // Total length of this FlowSet
 }
 
+// TemplateHeader represents netflow v9 data template id and field count
 type TemplateHeader struct {
 	TemplateID uint16 // Template ID
 	FieldCount uint16 // Number of fields in this Template Record
