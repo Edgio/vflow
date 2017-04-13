@@ -48,6 +48,19 @@ type TemplateHeader struct {
 	FieldCount uint16 // Number of fields in this Template Record
 }
 
+// TemplateField represents field properties
+type TemplateField struct {
+	ElementID uint16
+	Length    uint16
+}
+
+// TemplateRecord represents template fields
+type TemplateRecord struct {
+	TemplateID uint16
+	FieldCount uint16
+	Fields     []TemplateField
+}
+
 //   The Packet Header format is specified as:
 //
 //    0                   1                   2                   3
@@ -132,4 +145,54 @@ func (t *TemplateHeader) unmarshal(r *reader.Reader) error {
 	}
 
 	return nil
+}
+
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |        Field Type             |         Field Length          |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (f *TemplateField) unmarshal(r *reader.Reader) error {
+	var err error
+
+	if f.ElementID, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if f.Length, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |      Template ID 256          |         Field Count           |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |        Field Type 1           |         Field Length 1        |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |        Field Type 2           |         Field Length 2        |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |             ...               |              ...              |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |        Field Type N           |         Field Length N        |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (tr *TemplateRecord) unmarshal(r *reader.Reader) {
+	var (
+		th = TemplateHeader{}
+		tf = TemplateField{}
+	)
+
+	th.unmarshal(r)
+	tr.TemplateID = th.TemplateID
+	tr.FieldCount = th.FieldCount
+
+	for i := th.FieldCount; i > 0; i-- {
+		tf.unmarshal(r)
+		tr.Fields = append(tr.Fields, tf)
+	}
 }
