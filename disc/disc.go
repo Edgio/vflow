@@ -26,6 +26,7 @@ import (
 	"errors"
 	"log"
 	"net"
+	"strconv"
 	"sync"
 	"time"
 
@@ -53,12 +54,17 @@ var (
 )
 
 // Run starts sending multicast hello packet
-func Run() error {
+func Run(ip, port string) error {
 	tick := time.NewTicker(1 * time.Second)
 
+	p, err := strconv.Atoi(port)
+	if err != nil {
+		return err
+	}
+
 	c, err := net.DialUDP("udp", nil, &net.UDPAddr{
-		IP:   net.ParseIP("224.0.0.55"),
-		Port: 1024,
+		IP:   net.ParseIP(ip),
+		Port: p,
 	})
 
 	b := []byte("hello vflow")
