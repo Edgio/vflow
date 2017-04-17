@@ -40,18 +40,11 @@ type vFlowServer struct {
 
 // Discovery represents vflow discovery
 type Discovery struct {
-	conn         interface{}
-	group        net.IP
-	port         int
-	rcvdMsg      chan net.IP
 	vFlowServers map[string]vFlowServer
 	mu           sync.RWMutex
 }
 
-var (
-	errNotAvail            = errors.New("the template is not available")
-	errMCInterfaceNotAvail = errors.New("multicast interface not available")
-)
+var errMCInterfaceNotAvail = errors.New("multicast interface not available")
 
 // Run starts sending multicast hello packet
 func Run(ip, port string) error {
@@ -169,6 +162,21 @@ func Listen(ip, port string) (*Discovery, error) {
 	}()
 
 	return disc, nil
+}
+
+// Nodes returns a slice of available vFlow nodes
+func (d *Discovery) Nodes() []string {
+	var servers []string
+
+	now := time.Now().Unix()
+	for ip, server := range d.vFlowServers {
+		if now-server.timestamp < 300 {
+			servers = append(servers, ip)
+		} else {
+			delete(d.vFlowServers, ip)
+		}
+	}
+	return servers
 }
 
 func getMulticastIfs() ([]net.Interface, error) {
