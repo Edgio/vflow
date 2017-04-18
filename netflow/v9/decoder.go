@@ -23,6 +23,7 @@
 package netflow
 
 import (
+	"github.com/VerizonDigital/vflow/ipfix"
 	"github.com/VerizonDigital/vflow/reader"
 )
 
@@ -59,6 +60,12 @@ type TemplateRecord struct {
 	TemplateID uint16
 	FieldCount uint16
 	Fields     []TemplateField
+}
+
+// DecodedField represents a decoded field
+type DecodedField struct {
+	ID    uint16
+	Value interface{}
 }
 
 //   The Packet Header format is specified as:
@@ -195,4 +202,25 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) {
 		tf.unmarshal(r)
 		tr.Fields = append(tr.Fields, tf)
 	}
+}
+
+func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
+	var (
+		fields []DecodedField
+		b      []byte
+	)
+
+	for i := 0; i < len(tr.Fields); i++ {
+		b, _ = r.Read(int(tr.Fields[i].Length))
+		m := ipfix.InfoModel[ipfix.ElementKey{
+			0,
+			tr.Fields[i].ElementID,
+		}]
+		fields = append(fields, DecodedField{
+			ID:    m.FieldID,
+			Value: ipfix.Interpret(b, m.Type),
+		})
+	}
+
+	return fields
 }
