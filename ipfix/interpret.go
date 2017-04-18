@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    ipfix.go
-//: details: TODO
+//: details: Read IPFIX and Netflow v9 data fields based on the type
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -28,7 +28,8 @@ import (
 	"net"
 )
 
-func interpret(b []byte, t FieldType) interface{} {
+// Interpret read data fields based on the type - big endian
+func Interpret(b []byte, t FieldType) interface{} {
 	if len(b) < t.minLen() {
 		return b
 	}
