@@ -408,13 +408,13 @@ func decodeData(r *reader.Reader, tr TemplateRecords) []DecodedField {
 
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		b, _ = r.Read(int(tr.FieldSpecifiers[i].Length))
-		m := ipfixInfoModel[elementKey{
+		m := InfoModel[ElementKey{
 			tr.FieldSpecifiers[i].EnterpriseNo,
 			tr.FieldSpecifiers[i].ElementID,
 		}]
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
-			Value: interpret(b, m.Type),
+			Value: Interpret(b, m.Type),
 		})
 	}
 
