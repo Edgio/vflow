@@ -263,7 +263,7 @@ func (i *IPFIX) status() *IPFIXStats {
 
 func mirrorIPFIX(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 	var (
-		packet = make([]byte, 1500)
+		packet = make([]byte, opts.IPFIXUDPSize)
 		msg    IPFIXUDPMsg
 		pLen   int
 		err    error
