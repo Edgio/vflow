@@ -57,9 +57,11 @@ type TemplateField struct {
 
 // TemplateRecord represents template fields
 type TemplateRecord struct {
-	TemplateID uint16
-	FieldCount uint16
-	Fields     []TemplateField
+	TemplateID           uint16
+	FieldCount           uint16
+	FieldSpecifiers      []TemplateField
+	ScopeFieldCount      uint16
+	ScopeFieldSpecifiers []TemplateFieldSpecifier
 }
 
 // DecodedField represents a decoded field
@@ -200,7 +202,7 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) {
 
 	for i := th.FieldCount; i > 0; i-- {
 		tf.unmarshal(r)
-		tr.Fields = append(tr.Fields, tf)
+		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
 }
 
@@ -210,11 +212,11 @@ func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
 		b      []byte
 	)
 
-	for i := 0; i < len(tr.Fields); i++ {
-		b, _ = r.Read(int(tr.Fields[i].Length))
+	for i := 0; i < len(tr.FieldSpecifiers); i++ {
+		b, _ = r.Read(int(tr.FieldSpecifiers[i].Length))
 		m := ipfix.InfoModel[ipfix.ElementKey{
 			0,
-			tr.Fields[i].ElementID,
+			tr.FieldSpecifiers[i].ElementID,
 		}]
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
