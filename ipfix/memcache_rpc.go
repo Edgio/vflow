@@ -88,7 +88,7 @@ func NewRPC(mCache MemCache) *IRPC {
 }
 
 // Get retrieves a request from mCache
-func (r *IRPC) Get(req RPCRequest, resp *TemplateRecords) error {
+func (r *IRPC) Get(req RPCRequest, resp *TemplateRecord) error {
 	var ok bool
 
 	*resp, ok = r.mCache.retrieve(req.ID, req.IP)
@@ -125,8 +125,8 @@ func NewRPCClient(r string) (*RPCClient, error) {
 }
 
 // Get tries to get a request from remote server
-func (c *RPCClient) Get(req RPCRequest) (*TemplateRecords, error) {
-	var tr *TemplateRecords
+func (c *RPCClient) Get(req RPCRequest) (*TemplateRecord, error) {
+	var tr *TemplateRecord
 
 	err := c.conn.Call("IRPC.Get", req, &tr)
 

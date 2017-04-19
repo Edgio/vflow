@@ -4,7 +4,7 @@
 //: All Rights Reserved
 //:
 //: file:    memcache.go
-//: details: TODO
+//: details: handles template caching in memory with sharding feature
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -40,7 +40,7 @@ type MemCache []*TemplatesShard
 // Data represents template records and
 // updated timestamp
 type Data struct {
-	Template  TemplateRecords
+	Template  TemplateRecord
 	Timestamp int64
 }
 
@@ -90,14 +90,14 @@ func (m MemCache) getShard(id uint16, addr net.IP) (*TemplatesShard, uint32) {
 	return m[uint(hSum32)%uint(shardNo)], hSum32
 }
 
-func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecords) {
+func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecord) {
 	shard, key := m.getShard(id, addr)
 	shard.Lock()
 	defer shard.Unlock()
 	shard.Templates[key] = Data{tr, time.Now().Unix()}
 }
 
-func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecords, bool) {
+func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecord, bool) {
 	shard, key := m.getShard(id, addr)
 	shard.RLock()
 	defer shard.RUnlock()

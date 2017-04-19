@@ -52,8 +52,8 @@ type TemplateHeader struct {
 	ScopeFieldCount uint16
 }
 
-// TemplateRecords represents template records
-type TemplateRecords struct {
+// TemplateRecord represents template records
+type TemplateRecord struct {
 	TemplateID           uint16
 	FieldCount           uint16
 	FieldSpecifiers      []TemplateFieldSpecifier
@@ -126,12 +126,12 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		switch {
 		case setHeader.SetID == 2:
 			// Template set
-			tr := TemplateRecords{}
+			tr := TemplateRecord{}
 			tr.unmarshal(d.reader)
 			mem.insert(tr.TemplateID, d.raddr, tr)
 		case setHeader.SetID == 3:
 			// Option set
-			tr := TemplateRecords{}
+			tr := TemplateRecord{}
 			tr.unmarshalOpts(d.reader)
 			mem.insert(tr.TemplateID, d.raddr, tr)
 		case setHeader.SetID >= 4 && setHeader.SetID <= 255:
@@ -334,7 +334,7 @@ func (f *TemplateFieldSpecifier) unmarshal(r *reader.Reader) error {
 // |             ...               |              ...              |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (tr *TemplateRecords) unmarshal(r *reader.Reader) {
+func (tr *TemplateRecord) unmarshal(r *reader.Reader) {
 	var (
 		th = TemplateHeader{}
 		tf = TemplateFieldSpecifier{}
@@ -378,7 +378,7 @@ func (tr *TemplateRecords) unmarshal(r *reader.Reader) {
 //  |     Option M Field Length     |      Padding (optional)       |
 //  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (tr *TemplateRecords) unmarshalOpts(r *reader.Reader) {
+func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) {
 	var (
 		th = TemplateHeader{}
 		tf = TemplateFieldSpecifier{}
@@ -400,7 +400,7 @@ func (tr *TemplateRecords) unmarshalOpts(r *reader.Reader) {
 	}
 }
 
-func decodeData(r *reader.Reader, tr TemplateRecords) []DecodedField {
+func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
 	var (
 		fields []DecodedField
 		b      []byte
