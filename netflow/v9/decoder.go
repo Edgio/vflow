@@ -45,12 +45,14 @@ type SetHeader struct {
 
 // TemplateHeader represents netflow v9 data template id and field count
 type TemplateHeader struct {
-	TemplateID uint16 // Template ID
-	FieldCount uint16 // Number of fields in this Template Record
+	TemplateID     uint16 // Template ID
+	FieldCount     uint16 // Number of fields in this Template Record
+	OptionLen      uint16 // The length in bytes of any Scope field definition (Option)
+	OptionScopeLen uint16 // The length in bytes of any options field definitions (Option)
 }
 
-// TemplateField represents field properties
-type TemplateField struct {
+// TemplateFieldSpecifier represents field properties
+type TemplateFieldSpecifier struct {
 	ElementID uint16
 	Length    uint16
 }
@@ -59,7 +61,7 @@ type TemplateField struct {
 type TemplateRecord struct {
 	TemplateID           uint16
 	FieldCount           uint16
-	FieldSpecifiers      []TemplateField
+	FieldSpecifiers      []TemplateFieldSpecifier
 	ScopeFieldCount      uint16
 	ScopeFieldSpecifiers []TemplateFieldSpecifier
 }
@@ -156,13 +158,31 @@ func (t *TemplateHeader) unmarshal(r *reader.Reader) error {
 	return nil
 }
 
+func (t *TemplateHeader) unmarshalOpts(r *reader.Reader) error {
+	var err error
+
+	if t.TemplateID, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if t.OptionScopeLen, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	if t.OptionLen, err = r.Uint16(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // 0                   1                   2                   3
 // 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // |        Field Type             |         Field Length          |
 // +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-func (f *TemplateField) unmarshal(r *reader.Reader) error {
+func (f *TemplateFieldSpecifier) unmarshal(r *reader.Reader) error {
 	var err error
 
 	if f.ElementID, err = r.Uint16(); err != nil {
@@ -193,7 +213,7 @@ func (f *TemplateField) unmarshal(r *reader.Reader) error {
 func (tr *TemplateRecord) unmarshal(r *reader.Reader) {
 	var (
 		th = TemplateHeader{}
-		tf = TemplateField{}
+		tf = TemplateFieldSpecifier{}
 	)
 
 	th.unmarshal(r)
@@ -204,6 +224,45 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) {
 		tf.unmarshal(r)
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
+}
+
+// 0                   1                   2                   3
+// 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |       FlowSet ID = 1          |          Length               |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |         Template ID           |      Option Scope Length      |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |        Option Length          |       Scope 1 Field Type      |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |     Scope 1 Field Length      |               ...             |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |     Scope N Field Length      |      Option 1 Field Type      |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |     Option 1 Field Length     |             ...               |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// |     Option M Field Length     |           Padding             |
+// +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) {
+	var (
+		th = TemplateHeader{}
+		tf = TemplateFieldSpecifier{}
+	)
+
+	th.unmarshalOpts(r)
+	tr.TemplateID = th.TemplateID
+
+	for i := th.OptionScopeLen / 4; i > 0; i-- {
+		tf.unmarshal(r)
+		tr.ScopeFieldSpecifiers = append(tr.FieldSpecifiers, tf)
+	}
+
+	for i := th.OptionLen / 4; i > 0; i-- {
+		tf.unmarshal(r)
+		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
+	}
+
 }
 
 func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
