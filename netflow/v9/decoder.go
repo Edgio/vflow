@@ -23,6 +23,10 @@
 package netflow
 
 import (
+	"fmt"
+	"io"
+	"net"
+
 	"github.com/VerizonDigital/vflow/ipfix"
 	"github.com/VerizonDigital/vflow/reader"
 )
@@ -72,6 +76,19 @@ type DecodedField struct {
 	Value interface{}
 }
 
+// Decoder represents Netflow payload and remote address
+type Decoder struct {
+	raddr  net.IP
+	reader *reader.Reader
+}
+
+// Message represents Netflow decoded data
+type Message struct {
+	AgentID  string
+	Header   PacketHeader
+	DataSets [][]DecodedField
+}
+
 //   The Packet Header format is specified as:
 //
 //    0                   1                   2                   3
@@ -114,6 +131,16 @@ func (h *PacketHeader) unmarshal(r *reader.Reader) error {
 	if h.SrcID, err = r.Uint32(); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (h *PacketHeader) validate() error {
+	if h.Version != 9 {
+		return fmt.Errorf("invalid netflow version (%d)", h.Version)
+	}
+
+	// TODO: needs more validation
 
 	return nil
 }
@@ -284,4 +311,59 @@ func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
 	}
 
 	return fields
+}
+
+// NewDecoder constructs a decoder
+func NewDecoder(raddr net.IP, b []byte) *Decoder {
+	return &Decoder{raddr, reader.NewReader(b)}
+}
+
+// Decode decodes the Netflow raw data
+func (d *Decoder) Decode(mem MemCache) (*Message, error) {
+	var (
+		msg = new(Message)
+		err error
+	)
+
+	// Netflow Message Header decoding
+	if err = msg.Header.unmarshal(d.reader); err != nil {
+		return nil, err
+	}
+	// Netflow Message Header validation
+	if err = msg.Header.validate(); err != nil {
+		return nil, err
+	}
+
+	// Add source IP address as Agent ID
+	msg.AgentID = d.raddr.String()
+
+	for d.reader.Len() > 4 {
+
+		setHeader := new(SetHeader)
+		setHeader.unmarshal(d.reader)
+
+		if setHeader.Length < 4 {
+			return nil, io.ErrUnexpectedEOF
+		}
+
+		switch {
+		case setHeader.FlowSetID == 2:
+			// Template set
+			tr := TemplateRecord{}
+			tr.unmarshal(d.reader)
+			mem.insert(tr.TemplateID, d.raddr, tr)
+		case setHeader.FlowSetID == 3:
+			// Option set
+			tr := TemplateRecord{}
+			tr.unmarshalOpts(d.reader)
+			mem.insert(tr.TemplateID, d.raddr, tr)
+		case setHeader.FlowSetID >= 4 && setHeader.FlowSetID <= 255:
+			// Reserved
+		default:
+			// data
+			//TODO
+		}
+	}
+
+	return msg, nil
 }
