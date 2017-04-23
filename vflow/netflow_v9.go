@@ -51,4 +51,32 @@ type NetflowV9Stats struct {
 	Workers      int32
 }
 
-// TODO
+// NewIPFIX constructs IPFIX
+func NewNetflowV9() *NetflowV9 {
+	return &NetflowV9{
+		port:    opts.IPFIXPort,
+		workers: opts.IPFIXWorkers,
+		pool:    make(chan chan struct{}, maxWorkers),
+	}
+}
+
+func (i *NetflowV9) run() {
+	//TODO
+}
+
+func (i *NetflowV9) shutdown() {
+	//TODO
+}
+
+func (i *NetflowV9) netflowWorker(wQuit chan struct{}) {
+	// TODO
+}
+
+func (i *NetflowV9) status() *NetflowV9Stats {
+	//TODO
+	return &NetflowV9Stats{}
+}
+
+func (i *NetflowV9) dynWorkers() {
+	//TODO
+}
