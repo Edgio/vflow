@@ -128,7 +128,7 @@ func (i *IPFIX) run() {
 		p.MQErrorCount = &i.stats.MQErrorCount
 		p.Logger = logger
 		p.Chan = ipfixMQCh
-		p.Topic = "ipfix"
+		p.Topic = opts.IPFIXTopic
 
 		if err := p.Run(); err != nil {
 			logger.Fatal(err)

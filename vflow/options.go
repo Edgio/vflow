@@ -54,10 +54,11 @@ type Options struct {
 	StatsHTTPPort string `yaml:"stats-http-port"`
 
 	// sFlow options
-	SFlowEnabled bool `yaml:"sflow-enabled"`
-	SFlowPort    int  `yaml:"sflow-port"`
-	SFlowUDPSize int  `yaml:"sflow-udp-size"`
-	SFlowWorkers int  `yaml:"sflow-workers"`
+	SFlowEnabled bool   `yaml:"sflow-enabled"`
+	SFlowPort    int    `yaml:"sflow-port"`
+	SFlowUDPSize int    `yaml:"sflow-udp-size"`
+	SFlowWorkers int    `yaml:"sflow-workers"`
+	SFlowTopic   string `yaml:"sflow-topic"`
 
 	// IPFIX options
 	IPFIXEnabled       bool   `yaml:"ipfix-enabled"`
@@ -65,15 +66,17 @@ type Options struct {
 	IPFIXPort          int    `yaml:"ipfix-port"`
 	IPFIXUDPSize       int    `yaml:"ipfix-udp-size"`
 	IPFIXWorkers       int    `yaml:"ipfix-workers"`
+	IPFIXTopic         string `yaml:"ipfix-topic"`
 	IPFIXMirrorAddr    string `yaml:"ipfix-mirror-addr"`
 	IPFIXMirrorPort    int    `yaml:"ipfix-mirror-port"`
 	IPFIXMirrorWorkers int    `yaml:"ipfix-mirror-workers"`
 	IPFIXTplCacheFile  string `yaml:"ipfix-tpl-cache-file"`
 
 	// Netflow
-	NetflowEnabled bool `yaml:"netflow-enabled"`
-	NetflowPort    int  `yaml:"netflow-port"`
-	NetflowWorkers int  `yaml:"netflow-workers"`
+	NetflowEnabled bool   `yaml:"netflow-enabled"`
+	NetflowPort    int    `yaml:"netflow-port"`
+	NetflowWorkers int    `yaml:"netflow-workers"`
+	NetflowTopic   string `yaml:"netflow-topic"`
 
 	// producer
 	MQName       string `yaml:"mq-name"`
@@ -103,12 +106,14 @@ func NewOptions() *Options {
 		SFlowPort:    6343,
 		SFlowUDPSize: 1500,
 		SFlowWorkers: 200,
+		SFlowTopic:   "vflow.sflow",
 
 		IPFIXEnabled:       true,
 		IPFIXRPCEnabled:    true,
 		IPFIXPort:          4739,
 		IPFIXUDPSize:       1500,
 		IPFIXWorkers:       200,
+		IPFIXTopic:         "vflow.ipfix",
 		IPFIXMirrorAddr:    "",
 		IPFIXMirrorPort:    4172,
 		IPFIXMirrorWorkers: 5,
@@ -207,6 +212,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.IntVar(&opts.SFlowPort, "sflow-port", opts.SFlowPort, "sflow port number")
 	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
 	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers number")
+	flag.StringVar(&opts.SFlowTopic, "sflow-topic", opts.SFlowTopic, "sflow topic name")
 
 	// ipfix options
 	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable/disable IPFIX listener")
@@ -214,6 +220,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers number")
+	flag.StringVar(&opts.IPFIXTopic, "ipfix-topic", opts.IPFIXTopic, "ipfix topic name")
 	flag.StringVar(&opts.IPFIXTplCacheFile, "ipfix-tpl-cache-file", opts.IPFIXTplCacheFile, "IPFIX template cache file")
 	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
 	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")

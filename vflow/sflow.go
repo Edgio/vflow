@@ -117,7 +117,7 @@ func (s *SFlow) run() {
 		p.MQErrorCount = &s.stats.MQErrorCount
 		p.Logger = logger
 		p.Chan = sFlowMQCh
-		p.Topic = "sflow"
+		p.Topic = opts.SFlowTopic
 
 		if err := p.Run(); err != nil {
 			logger.Fatal(err)

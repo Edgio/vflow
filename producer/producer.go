@@ -72,7 +72,7 @@ func (p *Producer) Run() error {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		topic := "vflow." + p.Topic
+		topic := p.Topic
 		p.MQ.inputMsg(topic, p.Chan, p.MQErrorCount)
 	}()
 
