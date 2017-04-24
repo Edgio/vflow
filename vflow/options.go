@@ -73,10 +73,13 @@ type Options struct {
 	IPFIXTplCacheFile  string `yaml:"ipfix-tpl-cache-file"`
 
 	// Netflow
-	NetflowEnabled bool   `yaml:"netflow-enabled"`
-	NetflowPort    int    `yaml:"netflow-port"`
-	NetflowWorkers int    `yaml:"netflow-workers"`
-	NetflowTopic   string `yaml:"netflow-topic"`
+	NetflowV9Enabled      bool   `yaml:"netflow9-enabled"`
+	NetflowV9RPCEnabled   bool   `yaml:"netflow9-rpc-enabled"`
+	NetflowV9Port         int    `yaml:"netflow9-port"`
+	NetflowV9UDPSize      int    `yaml:"netflow9-udp-size"`
+	NetflowV9Workers      int    `yaml:"netflow9-workers"`
+	NetflowV9Topic        string `yaml:"netflow9-topic"`
+	NetflowV9TplCacheFile string `yaml:"netflow9-tpl-cache-file"`
 
 	// producer
 	MQName       string `yaml:"mq-name"`
@@ -119,9 +122,10 @@ func NewOptions() *Options {
 		IPFIXMirrorWorkers: 5,
 		IPFIXTplCacheFile:  "/tmp/vflow.templates",
 
-		NetflowEnabled: false,
-		NetflowPort:    4729,
-		NetflowWorkers: 50,
+		NetflowV9Enabled: false,
+		NetflowV9Port:    4729,
+		NetflowV9Workers: 50,
+		NetflowV9Topic:   "vflow.netflow9",
 
 		MQName:       "kafka",
 		MQConfigFile: "/usr/local/vflow/etc/kafka.conf",
