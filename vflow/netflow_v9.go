@@ -51,7 +51,7 @@ type NetflowV9Stats struct {
 	Workers      int32
 }
 
-// NewIPFIX constructs IPFIX
+// NewNetflowV9 constructs NetflowV9
 func NewNetflowV9() *NetflowV9 {
 	return &NetflowV9{
 		port:    opts.IPFIXPort,
