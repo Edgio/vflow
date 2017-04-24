@@ -186,10 +186,9 @@ func (opts Options) vFlowVersion() {
 func (opts *Options) vFlowFlagSet() {
 
 	var config string
-
 	flag.StringVar(&config, "config", "/usr/local/vflow/etc/vflow.conf", "path to config file")
 
-	vFlowLoadCfg(config, opts)
+	vFlowLoadCfg(opts)
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable/disable verbose logging")
@@ -247,8 +246,17 @@ func (opts *Options) vFlowFlagSet() {
 	flag.Parse()
 }
 
-func vFlowLoadCfg(f string, opts *Options) {
-	b, err := ioutil.ReadFile(f)
+func vFlowLoadCfg(opts *Options) {
+	var file = "/usr/local/vflow/etc/vflow.conf"
+
+	for i, flag := range os.Args {
+		if flag == "-config" {
+			file = os.Args[i+1]
+			break
+		}
+	}
+
+	b, err := ioutil.ReadFile(file)
 	if err != nil {
 		opts.Logger.Println(err)
 		return
