@@ -1,10 +1,9 @@
-// Package mirror clones the IPFIX packets w/ spoofing feature
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
 //: file:    mirror.go
-//: details: TODO
+//: details: mirror replicates IPFIX UDP packets to 3rd party collector
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -20,6 +19,8 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
+
+// Package mirror replicates the IPFIX packets w/ spoofing feature to 3rd party collector
 package mirror
 
 import (
