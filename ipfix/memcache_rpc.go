@@ -326,6 +326,9 @@ func (d *Discovery) rpcServers() []string {
 	var servers []string
 
 	now := time.Now().Unix()
+
+	d.mu.Lock()
+
 	for ip, server := range d.vFlowServers {
 		if now-server.timestamp < 300 {
 			servers = append(servers, ip)
@@ -333,6 +336,9 @@ func (d *Discovery) rpcServers() []string {
 			delete(d.vFlowServers, ip)
 		}
 	}
+
+	d.mu.Unlock()
+
 	return servers
 }
 

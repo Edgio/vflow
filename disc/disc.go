@@ -169,6 +169,9 @@ func (d *Discovery) Nodes() []string {
 	var servers []string
 
 	now := time.Now().Unix()
+
+	d.mu.Lock()
+
 	for ip, server := range d.vFlowServers {
 		if now-server.timestamp < 300 {
 			servers = append(servers, ip)
@@ -176,6 +179,9 @@ func (d *Discovery) Nodes() []string {
 			delete(d.vFlowServers, ip)
 		}
 	}
+
+	d.mu.Unlock()
+
 	return servers
 }
 
