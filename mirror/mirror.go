@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-// Package mirror replicates the IPFIX packets w/ spoofing feature to 3rd party collector
+// Package mirror replicates the IPFIX packets with spoofing feature to 3rd party collector
 package mirror
 
 import (
