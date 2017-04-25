@@ -19,6 +19,7 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
+
 package main
 
 import (
@@ -142,7 +143,25 @@ func (i *NetflowV9) run() {
 }
 
 func (i *NetflowV9) shutdown() {
-	//TODO
+	// exit if the netflow v9 is disabled
+	if !opts.NetflowV9Enabled {
+		logger.Println("netflow v9 disabled")
+		return
+	}
+
+	// stop reading from UDP listener
+	i.stop = true
+	logger.Println("stopping netflow v9 service gracefully ...")
+	time.Sleep(1 * time.Second)
+
+	// dump the templates to storage
+	if err := mCache.Dump(opts.NetflowV9TplCacheFile); err != nil {
+		logger.Println("couldn't not dump template", err)
+	}
+
+	// logging and close UDP channel
+	logger.Println("netflow v9 has been shutdown")
+	close(netflowV9UDPCh)
 }
 
 func (i *NetflowV9) netflowV9Worker(wQuit chan struct{}) {
@@ -150,8 +169,15 @@ func (i *NetflowV9) netflowV9Worker(wQuit chan struct{}) {
 }
 
 func (i *NetflowV9) status() *NetflowV9Stats {
-	//TODO
-	return &NetflowV9Stats{}
+	return &NetflowV9Stats{
+		UDPQueue:     len(netflowV9UDPCh),
+		MessageQueue: len(netflowV9MQCh),
+		UDPCount:     atomic.LoadUint64(&i.stats.UDPCount),
+		DecodedCount: atomic.LoadUint64(&i.stats.DecodedCount),
+		MQErrorCount: atomic.LoadUint64(&i.stats.MQErrorCount),
+		Workers:      atomic.LoadInt32(&i.stats.Workers),
+	}
+
 }
 
 func (i *NetflowV9) dynWorkers() {
