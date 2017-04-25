@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    tsdb.go
-//: details: TODO
+//: details: TSDB insget handler
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -20,7 +20,6 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-// Package store ingest monitoring time series data points
 package store
 
 import (

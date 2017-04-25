@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-// Package store ingest monitoring time series data points
+// Package store ingest monitoring time series data points to different back-ends
 package store
 
 import (
