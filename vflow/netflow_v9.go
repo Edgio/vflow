@@ -23,12 +23,14 @@
 package main
 
 import (
+	"bytes"
 	"net"
 	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/VerizonDigital/vflow/netflow/v9"
 	"github.com/VerizonDigital/vflow/producer"
 )
 
@@ -61,6 +63,8 @@ type NetflowV9Stats struct {
 var (
 	netflowV9UDPCh = make(chan NetflowV9UDPMsg, 1000)
 	netflowV9MQCh  = make(chan []byte, 1000)
+
+	mCacheNF9 netflow9.MemCache
 
 	// ipfix udp payload pool
 	netflowV9Buffer = &sync.Pool{
@@ -155,7 +159,7 @@ func (i *NetflowV9) shutdown() {
 	time.Sleep(1 * time.Second)
 
 	// dump the templates to storage
-	if err := mCache.Dump(opts.NetflowV9TplCacheFile); err != nil {
+	if err := mCacheNF9.Dump(opts.NetflowV9TplCacheFile); err != nil {
 		logger.Println("couldn't not dump template", err)
 	}
 
@@ -165,7 +169,53 @@ func (i *NetflowV9) shutdown() {
 }
 
 func (i *NetflowV9) netflowV9Worker(wQuit chan struct{}) {
-	// TODO
+	var (
+		decodedMsg *netflow9.Message
+		msg        = NetflowV9UDPMsg{body: netflowV9Buffer.Get().([]byte)}
+		buf        = new(bytes.Buffer)
+		err        error
+		ok         bool
+		b          []byte
+	)
+
+LOOP:
+	for {
+
+		netflowV9Buffer.Put(msg.body[:opts.NetflowV9UDPSize])
+		buf.Reset()
+
+		select {
+		case <-wQuit:
+			break LOOP
+		case msg, ok = <-netflowV9UDPCh:
+			if !ok {
+				break LOOP
+			}
+		}
+
+		if opts.Verbose {
+			logger.Printf("rcvd netflow v9 data from: %s, size: %d bytes",
+				msg.raddr, len(msg.body))
+		}
+
+		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
+		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
+			logger.Println(err)
+			continue
+		}
+
+		atomic.AddUint64(&i.stats.DecodedCount, 1)
+
+		if decodedMsg.DataSets != nil {
+			//TODO
+		}
+
+		if opts.Verbose {
+			logger.Println(string(b))
+		}
+
+	}
+
 }
 
 func (i *NetflowV9) status() *NetflowV9Stats {
