@@ -1,5 +1,8 @@
 ![vFlow](docs/imgs/vflow_logo.png?raw=true "vFlow logo")
-## [![Build Status](https://travis-ci.org/VerizonDigital/vflow.svg?branch=master)](https://travis-ci.org/VerizonDigital/vflow) [![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow)
+##
+[![Build Status](https://travis-ci.org/VerizonDigital/vflow.svg?branch=master)](https://travis-ci.org/VerizonDigital/vflow) 
+[![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow)
+[![GoDoc](https://godoc.org/github.com/VerizonDigital/vflow?status.svg)](https://godoc.org/github.com/VerizonDigital/vflow)
 
 High-performance, scalable and reliable IPFIX and sFlow collector. 
 
