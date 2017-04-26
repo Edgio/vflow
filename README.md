@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow)
 [![GoDoc](https://godoc.org/github.com/VerizonDigital/vflow?status.svg)](https://godoc.org/github.com/VerizonDigital/vflow)
 
-High-performance, scalable and reliable IPFIX and sFlow collector. 
+High-performance, scalable and reliable IPFIX, sFlow and Netflow collector. 
 
 ## Features
 - IPFIX RFC7011 collector
