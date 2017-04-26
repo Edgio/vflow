@@ -1,4 +1,3 @@
-// Package netflow decodes netflow version v9 packets
 //: ----------------------------------------------------------------------------
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
@@ -20,7 +19,9 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
-package netflow
+
+// Package netflow9 decodes netflow version v9 packets
+package netflow9
 
 import (
 	"fmt"
