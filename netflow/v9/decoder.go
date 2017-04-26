@@ -321,8 +321,9 @@ func NewDecoder(raddr net.IP, b []byte) *Decoder {
 // Decode decodes the Netflow raw data
 func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 	var (
-		msg = new(Message)
-		err error
+		nextSet int
+		msg     = new(Message)
+		err     error
 	)
 
 	// Netflow Message Header decoding
@@ -361,7 +362,20 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 			// Reserved
 		default:
 			// data
-			//TODO
+			tr, ok := mem.retrieve(setHeader.FlowSetID, d.raddr)
+			if !ok {
+				return msg, fmt.Errorf("%s unknown template id# %d",
+					d.raddr.String(),
+					setHeader.FlowSetID,
+				)
+			}
+
+			// data records
+			nextSet = d.reader.Len() - int(setHeader.Length) + 4
+			for d.reader.Len() > nextSet {
+				data := decodeData(d.reader, tr)
+				msg.DataSets = append(msg.DataSets, data)
+			}
 		}
 	}
 
