@@ -19,6 +19,7 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
+
 package main
 
 import (
@@ -365,7 +366,7 @@ func (i *IPFIX) dynWorkers() {
 
 		for n = 0; n < 30; n++ {
 			time.Sleep(1 * time.Second)
-			load += len(sFlowUDPCh)
+			load += len(ipfixUDPCh)
 		}
 
 		if load > 15 {
