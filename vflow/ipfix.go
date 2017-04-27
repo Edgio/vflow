@@ -384,7 +384,7 @@ func (i *IPFIX) dynWorkers() {
 
 			workers = int(atomic.LoadInt32(&i.stats.Workers))
 			if workers+newWorkers > maxWorkers {
-				logger.Println("sflow :: max out workers")
+				logger.Println("ipfix :: max out workers")
 				continue
 			}
 
