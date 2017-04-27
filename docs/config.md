@@ -24,6 +24,7 @@ The vFlow configuration contains the following keys
 |ipfix-enabled        | true                           | enable/disable IPFIX decoders                    |
 |ipfix-port           | 4739                           | server IPFIX UDP port                            |
 |ipfix-workers        | 200                            | IPFIX concurrent decoders                        |
+|ipfix-topic          | vflow.ipfix                    | ipfix message queue topic name                   |
 |ipfix-udp-size       | 1500                           | maximum IPFIX UDP packet size                    |
 |ipfix-mirror-addr    | -                              | IPFIX 3rd party collector address                |
 |ipfix-mirror-port    | 4172                           | IPFIX 3rd party collector port                   |
@@ -35,6 +36,7 @@ The vFlow configuration contains the following keys
 |sflow-workers        | 200                            | sFlow concurrent decoders                        |
 |sflow-udp-size       | 1500                           | maximum sFlow UDP packet size                    |
 |dynamic-workers      | true                           | enable/disable dynamic workers feature           |
+|sflow-topic          | vflow.sflow                    | sFlow message queue topic name                   |
 |stats-enabled        | true                           | enable/disable web stats listener                |
 |stats-http-addr      | *                              | web stats address option at server startup       |
 |stats-http-port      | 8081                           | web stats TCP port                               |
