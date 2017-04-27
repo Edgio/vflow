@@ -207,7 +207,16 @@ LOOP:
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
 		if decodedMsg.DataSets != nil {
-			//TODO
+			b, err = decodedMsg.JSONMarshal(buf)
+			if err != nil {
+				logger.Println(err)
+				continue
+			}
+
+			select {
+			case netflowV9MQCh <- b:
+			default:
+			}
 		}
 
 		if opts.Verbose {
@@ -231,5 +240,67 @@ func (i *NetflowV9) status() *NetflowV9Stats {
 }
 
 func (i *NetflowV9) dynWorkers() {
-	//TODO
+	var load, nSeq, newWorkers, workers, n int
+
+	tick := time.Tick(120 * time.Second)
+
+	for {
+		<-tick
+		load = 0
+
+		for n = 0; n < 30; n++ {
+			time.Sleep(1 * time.Second)
+			load += len(netflowV9UDPCh)
+		}
+
+		if load > 15 {
+
+			switch {
+			case load > 300:
+				newWorkers = 100
+			case load > 200:
+				newWorkers = 60
+			case load > 100:
+				newWorkers = 40
+			default:
+				newWorkers = 30
+			}
+
+			workers = int(atomic.LoadInt32(&i.stats.Workers))
+			if workers+newWorkers > maxWorkers {
+				logger.Println("netflow v9 :: max out workers")
+				continue
+			}
+
+			for n = 0; n < newWorkers; n++ {
+				go func() {
+					atomic.AddInt32(&i.stats.Workers, 1)
+					wQuit := make(chan struct{})
+					i.pool <- wQuit
+					i.netflowV9Worker(wQuit)
+				}()
+			}
+
+		}
+
+		if load == 0 {
+			nSeq++
+		} else {
+			nSeq = 0
+			continue
+		}
+
+		if nSeq > 15 {
+			for n = 0; n < 10; n++ {
+				if len(i.pool) > i.workers {
+					atomic.AddInt32(&i.stats.Workers, -1)
+					wQuit := <-i.pool
+					close(wQuit)
+				}
+			}
+
+			nSeq = 0
+		}
+	}
+
 }
