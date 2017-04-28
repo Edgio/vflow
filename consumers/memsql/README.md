@@ -1,7 +1,9 @@
 ## MemSQL Pipeline, Apache Kafka
 
+![Alt text](/docs/imgs/vflow_memsql.jpeg?raw=true "vFlow")
+
 ```
-memsql> select * from samples order by bytes desc lmit 20;
+memsql> select * from samples order by bytes desc limit 20;
 +----------------+-----------------+-----------------+--------+--------+-------+---------+---------+----------+--------+---------------------+
 | device         | src             | dst             | srcASN | dstASN | proto | srcPort | dstPort | tcpFlags | bytes  | datetime            |
 +----------------+-----------------+-----------------+--------+--------+-------+---------+---------+----------+--------+---------------------+
