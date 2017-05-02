@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    stats.go
-//: details: TODO
+//: details: exposes flow status
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -78,16 +78,18 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // StatsFlowHandler handles /flow endpoint
-func StatsFlowHandler(i *IPFIX, s *SFlow) http.HandlerFunc {
+func StatsFlowHandler(i *IPFIX, s *SFlow, n *NetflowV9) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data = &struct {
 			StartTime int64
 			IPFIX     *IPFIXStats
 			SFlow     *SFlowStats
+			NetflowV9 *NetflowV9Stats
 		}{
 			startTime,
 			i.status(),
 			s.status(),
+			n.status(),
 		}
 
 		j, err := json.Marshal(data)
@@ -101,14 +103,14 @@ func StatsFlowHandler(i *IPFIX, s *SFlow) http.HandlerFunc {
 	}
 }
 
-func statsHTTPServer(ipfix *IPFIX, sflow *SFlow) {
+func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9) {
 	if !opts.StatsEnabled {
 		return
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sys", StatsSysHandler)
-	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow))
+	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow, netflow9))
 
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
 
