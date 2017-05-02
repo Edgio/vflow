@@ -36,6 +36,11 @@ var (
 	logger *log.Logger
 )
 
+type proto interface {
+	run()
+	shutdown()
+}
+
 func main() {
 	var (
 		wg       sync.WaitGroup
@@ -48,34 +53,29 @@ func main() {
 
 	sFlow := NewSFlow()
 	ipfix := NewIPFIX()
+	netflow9 := NewNetflowV9()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		sFlow.run()
-	}()
+	protos := []proto{sFlow, ipfix, netflow9}
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ipfix.run()
-	}()
+	for _, p := range protos {
+		wg.Add(1)
+		go func(p proto) {
+			defer wg.Done()
+			p.run()
+		}(p)
+	}
 
-	go statsHTTPServer(ipfix, sFlow)
+	go statsHTTPServer(ipfix, sFlow, netflow9)
 
 	<-signalCh
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		sFlow.shutdown()
-	}()
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		ipfix.shutdown()
-	}()
+	for _, p := range protos {
+		wg.Add(1)
+		go func(p proto) {
+			defer wg.Done()
+			p.shutdown()
+		}(p)
+	}
 
 	wg.Wait()
 }
