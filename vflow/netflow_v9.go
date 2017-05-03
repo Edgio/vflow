@@ -77,8 +77,8 @@ var (
 // NewNetflowV9 constructs NetflowV9
 func NewNetflowV9() *NetflowV9 {
 	return &NetflowV9{
-		port:    opts.IPFIXPort,
-		workers: opts.IPFIXWorkers,
+		port:    opts.NetflowV9Port,
+		workers: opts.NetflowV9Workers,
 		pool:    make(chan chan struct{}, maxWorkers),
 	}
 }
