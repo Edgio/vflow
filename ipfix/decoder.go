@@ -147,7 +147,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 				}:
 				default:
 				}
-				return msg, fmt.Errorf("%s unknown template id# %d",
+				return msg, fmt.Errorf("%s unknown ipfix template id# %d",
 					d.raddr.String(),
 					setHeader.SetID,
 				)

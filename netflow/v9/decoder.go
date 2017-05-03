@@ -364,7 +364,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 			// data
 			tr, ok := mem.retrieve(setHeader.FlowSetID, d.raddr)
 			if !ok {
-				return msg, fmt.Errorf("%s unknown template id# %d",
+				return msg, fmt.Errorf("%s unknown netflow v9 template id# %d",
 					d.raddr.String(),
 					setHeader.FlowSetID,
 				)
