@@ -122,10 +122,11 @@ func NewOptions() *Options {
 		IPFIXMirrorWorkers: 5,
 		IPFIXTplCacheFile:  "/tmp/vflow.templates",
 
-		NetflowV9Enabled: false,
-		NetflowV9Port:    4729,
-		NetflowV9Workers: 50,
-		NetflowV9Topic:   "vflow.netflow9",
+		NetflowV9Enabled:      false,
+		NetflowV9Port:         4729,
+		NetflowV9Workers:      50,
+		NetflowV9Topic:        "vflow.netflow9",
+		NetflowV9TplCacheFile: "/tmp/netflowv9.templates",
 
 		MQName:       "kafka",
 		MQConfigFile: "/usr/local/vflow/etc/kafka.conf",
