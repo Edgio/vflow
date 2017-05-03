@@ -75,7 +75,6 @@ type Options struct {
 
 	// Netflow
 	NetflowV9Enabled      bool   `yaml:"netflow9-enabled"`
-	NetflowV9RPCEnabled   bool   `yaml:"netflow9-rpc-enabled"`
 	NetflowV9Port         int    `yaml:"netflow9-port"`
 	NetflowV9UDPSize      int    `yaml:"netflow9-udp-size"`
 	NetflowV9Workers      int    `yaml:"netflow9-workers"`
@@ -230,6 +229,14 @@ func (opts *Options) vFlowFlagSet() {
 	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
 	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
 	flag.IntVar(&opts.IPFIXMirrorWorkers, "ipfix-mirror-workers", opts.IPFIXMirrorWorkers, "IPFIX mirror workers number")
+
+	// netflow version 9
+	flag.BoolVar(&opts.NetflowV9Enabled, "netflow9-enabled", opts.NetflowV9Enabled, "enable/disable netflow version 9 listener")
+	flag.IntVar(&opts.NetflowV9Port, "netflow9-port", opts.NetflowV9Port, "Netflow Version 9 port number")
+	flag.IntVar(&opts.NetflowV9UDPSize, "netflow9-max-udp-size", opts.NetflowV9UDPSize, "Netflow version 9 maximum UDP size")
+	flag.IntVar(&opts.NetflowV9Workers, "netflow9-workers", opts.NetflowV9Workers, "Netflow version 9 workers number")
+	flag.StringVar(&opts.NetflowV9Topic, "netflow9-topic", opts.NetflowV9Topic, "Netflow version 9 topic name")
+	flag.StringVar(&opts.NetflowV9TplCacheFile, "netflow9-tpl-cache-file", opts.NetflowV9TplCacheFile, "Netflow version 9 template cache file")
 
 	// producer options
 	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
