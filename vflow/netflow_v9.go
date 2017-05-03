@@ -85,7 +85,7 @@ func NewNetflowV9() *NetflowV9 {
 
 func (i *NetflowV9) run() {
 	//TODO
-	// exit if the ipfix is disabled
+	// exit if the netflow v9 is disabled
 	if !opts.NetflowV9Enabled {
 		logger.Println("netflowv9 has been disabled")
 		return
