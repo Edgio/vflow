@@ -348,12 +348,12 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		}
 
 		switch {
-		case setHeader.FlowSetID == 2:
+		case setHeader.FlowSetID == 0:
 			// Template set
 			tr := TemplateRecord{}
 			tr.unmarshal(d.reader)
 			mem.insert(tr.TemplateID, d.raddr, tr)
-		case setHeader.FlowSetID == 3:
+		case setHeader.FlowSetID == 1:
 			// Option set
 			tr := TemplateRecord{}
 			tr.unmarshalOpts(d.reader)
