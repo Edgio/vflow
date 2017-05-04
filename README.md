@@ -9,7 +9,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector.
 ## Features
 - IPFIX RFC7011 collector
 - sFLow v5 raw header packet collector
-- Netflow v9 (active development)
+- Netflow v9 (Beta)
 - Decoding sFlow raw header L2/L3/L4 
 - Produce to Apache Kafka, NSQ
 - Replicate IPFIX to 3rd party collector
@@ -33,6 +33,10 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 ## Decoded sFlow data
 ```json
 {"Header":{"Version":5,"IPVersion":1,"AgentSubID":0,"SequenceNo":24324,"SysUpTime":766903208,"SamplesNo":1,"IPAddress":"192.16.14.0"},"ExtSWData":{"SrcVlan":0,"SrcPriority":0,"DstVlan":12,"DstPriority":0},"Sample":{"SequenceNo":0,"SourceID":0,"SamplingRate":2000,"SamplePool":0,"Drops":0,"Input":552,"Output":0,"RecordsNo":2},"Packet":{"L2":{"SrcMAC":"d4:04:ff:01:1d:9e","DstMAC":"30:7c:5e:e5:59:ef","Vlan":12,"EtherType":34525},"L3":{"Version":6,"TrafficClass":0,"FlowLabel":0,"PayloadLen":265,"NextHeader":17,"HopLimit":57,"Src":"2600:8000:5207:6f00::1","Dst":"2606:2800:404e:2:1663:6fe:2cc6:100a"},"L4":{"SrcPort":53,"DstPort":34234}}}
+```
+## Decoded Netflow v9 data
+```json
+{"AgentID":"10.81.70.56","Header":{"Version":9,"Count":1,"SysUpTime":357280,"UNIXSecs":1493918653,"SeqNum":14,"SrcID":87},"DataSets":[[{"I":1,"V":"0x00000050"},{"I":2,"V":"0x00000002"},{"I":4,"V":2},{"I":5,"V":192},{"I":6,"V":"0x00"},{"I":7,"V":0},{"I":8,"V":"10.81.70.56"},{"I":9,"V":0},{"I":10,"V":0},{"I":11,"V":0},{"I":12,"V":"224.0.0.22"},{"I":13,"V":0},{"I":14,"V":0},{"I":15,"V":"0.0.0.0"},{"I":16,"V":0},{"I":17,"V":0},{"I":21,"V":300044},{"I":22,"V":299144}]]}
 ```
 
 ## Build
