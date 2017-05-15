@@ -21,6 +21,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector.
 ## Documentation
 - [Architecture](/docs/design.md).
 - [Configuration](/docs/config.md).
+- [JUNOS Integration](/docs/junos_integration.md).
 - [Monitoring](/monitor/README.md).
 - [Stress / Load Generator](/stress/README.md).
 
