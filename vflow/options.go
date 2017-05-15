@@ -122,10 +122,10 @@ func NewOptions() *Options {
 		IPFIXMirrorWorkers: 5,
 		IPFIXTplCacheFile:  "/tmp/vflow.templates",
 
-		NetflowV9Enabled:      false,
+		NetflowV9Enabled:      true,
 		NetflowV9Port:         4729,
 		NetflowV9UDPSize:      1500,
-		NetflowV9Workers:      50,
+		NetflowV9Workers:      200,
 		NetflowV9Topic:        "vflow.netflow9",
 		NetflowV9TplCacheFile: "/tmp/netflowv9.templates",
 
