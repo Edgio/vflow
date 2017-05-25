@@ -40,6 +40,9 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 {"AgentID":"10.81.70.56","Header":{"Version":9,"Count":1,"SysUpTime":357280,"UNIXSecs":1493918653,"SeqNum":14,"SrcID":87},"DataSets":[[{"I":1,"V":"0x00000050"},{"I":2,"V":"0x00000002"},{"I":4,"V":2},{"I":5,"V":192},{"I":6,"V":"0x00"},{"I":7,"V":0},{"I":8,"V":"10.81.70.56"},{"I":9,"V":0},{"I":10,"V":0},{"I":11,"V":0},{"I":12,"V":"224.0.0.22"},{"I":13,"V":0},{"I":14,"V":0},{"I":15,"V":"0.0.0.0"},{"I":16,"V":0},{"I":17,"V":0},{"I":21,"V":300044},{"I":22,"V":299144}]]}
 ```
 
+## Supported platform
+- Linux 
+
 ## Build
 Given that the Go Language compiler (version 1.8 preferred) is installed, you can build it with:
 ```
