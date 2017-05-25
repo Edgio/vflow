@@ -21,7 +21,6 @@
 //: ----------------------------------------------------------------------------
 
 // Package main is the command line vflow IPFIX consumer with simple filter feature
-
 package main
 
 import (
