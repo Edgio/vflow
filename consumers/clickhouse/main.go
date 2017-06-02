@@ -79,14 +79,16 @@ func init() {
 func main() {
 	var (
 		wg sync.WaitGroup
-		ch = make(chan []byte, 1000)
+		ch = make(chan ipfix, 10000)
 	)
 
 	config := cluster.NewConfig()
 	config.Consumer.Return.Errors = true
 	config.Group.Return.Notifications = true
 
-	go ingestClickHouse(ch)
+	for i := 0; i < 5; i++ {
+		go ingestClickHouse(ch)
+	}
 
 	wg.Add(opts.Workers)
 
@@ -113,8 +115,13 @@ func main() {
 					}
 					pCount = count
 				case msg, more := <-consumer.Messages():
+					objmap := ipfix{}
 					if more {
-						ch <- msg.Value
+						if err := json.Unmarshal(msg.Value, &objmap); err != nil {
+							log.Println(err)
+						} else {
+							ch <- objmap
+						}
 						consumer.MarkOffset(msg, "")
 						count++
 					}
@@ -126,8 +133,8 @@ func main() {
 	wg.Wait()
 }
 
-func ingestClickHouse(ch chan []byte) {
-	var objmap ipfix
+func ingestClickHouse(ch chan ipfix) {
+	var sample ipfix
 
 	connect, err := sql.Open("clickhouse", "tcp://127.0.0.1:9000?debug=false")
 	if err != nil {
@@ -142,23 +149,20 @@ func ingestClickHouse(ch chan []byte) {
 		return
 	}
 
-	_, err = connect.Exec(`use vflow`)
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	for {
-		tx, _ := connect.Begin()
-		stmt, _ := tx.Prepare("INSERT INTO samples (date,time,device,src,dst,srcASN,dstASN, proto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-		for i := 0; i < 1000; i++ {
+		tx, err := connect.Begin()
+		if err != nil {
+			log.Fatal(err)
+		}
+		stmt, err := tx.Prepare("INSERT INTO vflow.samples (date,time,device,src,dst,srcASN,dstASN, proto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+		if err != nil {
+			log.Fatal(err)
+		}
 
-			sample := <-ch
-			if err := json.Unmarshal(sample, &objmap); err != nil {
-				log.Println(err)
-			}
+		for i := 0; i < 10000; i++ {
 
-			for _, data := range objmap.DataSets {
-
+			sample = <-ch
+			for _, data := range sample.DataSets {
 				s := dIPFIXSample{}
 				for _, dd := range data {
 					switch dd.I {
@@ -177,7 +181,7 @@ func ingestClickHouse(ch chan []byte) {
 				if _, err := stmt.Exec(
 					time.Now(),
 					time.Now(),
-					objmap.AgentID,
+					sample.AgentID,
 					s.src,
 					s.dst,
 					s.srcASN,
@@ -190,8 +194,10 @@ func ingestClickHouse(ch chan []byte) {
 			}
 		}
 
-		if err := tx.Commit(); err != nil {
-			log.Fatal(err)
-		}
+		go func(tx *sql.Tx) {
+			if err := tx.Commit(); err != nil {
+				log.Fatal(err)
+			}
+		}(tx)
 	}
 }
