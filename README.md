@@ -24,6 +24,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector.
 - [JUNOS Integration](/docs/junos_integration.md).
 - [Monitoring](/monitor/README.md).
 - [Stress / Load Generator](/stress/README.md).
+- [Kafka consumer examples](https://github.com/VerizonDigital/vflow/tree/master/consumers).
 
 ## Decoded IPFIX data
 The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http://www.iana.org/assignments/ipfix/ipfix.xhtml)
