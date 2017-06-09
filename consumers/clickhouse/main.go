@@ -38,8 +38,6 @@ import (
 type options struct {
 	Broker  string
 	Topic   string
-	Id      int
-	Value   string
 	Debug   bool
 	Workers int
 }
@@ -68,9 +66,7 @@ var opts options
 func init() {
 	flag.StringVar(&opts.Broker, "broker", "127.0.0.1:9092", "broker ipaddress:port")
 	flag.StringVar(&opts.Topic, "topic", "vflow.ipfix", "kafka topic")
-	flag.StringVar(&opts.Value, "value", "8.8.8.8", "element value - string")
 	flag.BoolVar(&opts.Debug, "debug", false, "enabled/disabled debug")
-	flag.IntVar(&opts.Id, "id", 12, "IPFIX element ID")
 	flag.IntVar(&opts.Workers, "workers", 16, "workers number / partition number")
 
 	flag.Parse()
