@@ -1,4 +1,5 @@
 ## Clickhouse, Apache Kafka
+ClickHouse is an open source column-oriented database management system capable of real time generation of analytical data reports using SQL queries. (https://clickhouse.yandex/)
 ![Alt text](/docs/imgs/clickhouse.jpeg?raw=true "vFlow")
 The below clickhouse setup needs a zookeeper server, replica server is optional.
 
