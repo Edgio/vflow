@@ -1,4 +1,31 @@
 ## Clickhouse, Apache Kafka
+The below clickhouse setup needs a zookeeper server, replica server is optional.
+
+### Configuration (/etc/clickhouse-server/config.xml)
+Configure at least a zookeeper host (replica server is optional)
+
+```
+<zookeeper>
+    <node index="1">
+        <host>zk001</host>
+        <port>2181</port>
+    </node>
+    <session_timeout_ms>1000</session_timeout_ms>
+</zookeeper>
+
+<remote_servers>
+    <logs>
+        <shard>
+            <weight>1</weight>
+            <internal_replication>false</internal_replication>
+            <replica>
+                <host>CLICKHOUSE_SRV1</host>
+                <port>9000</port>
+            </replica>
+        </shard>
+    </logs>
+</remote_servers>    
+```
 
 ### Create Database
 ```
