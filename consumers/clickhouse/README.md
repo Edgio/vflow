@@ -1,5 +1,5 @@
 ## Clickhouse, Apache Kafka
-ClickHouse is an open source column-oriented database management system capable of real time generation of analytical data reports using SQL queries. (https://clickhouse.yandex/)
+ClickHouse is an open source column-oriented database management system capable of real time generation of analytical data reports using SQL queries. ClickHouse's performance exceeds comparable column-oriented DBMS currently available on the market. It processes hundreds of millions to more than a billion rows and tens of gigabytes of data per single server per second. ClickHouse uses all available hardware to it's full potential to process each query as fast as possible. The peak processing performance for a single query (after decompression, only used columns) stands at more than 2 terabytes per second. (https://clickhouse.yandex/)
 ![Alt text](/docs/imgs/clickhouse.jpeg?raw=true "vFlow")
 The below clickhouse setup needs a zookeeper server, replica server is optional.
 
