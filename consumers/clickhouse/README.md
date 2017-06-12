@@ -1,4 +1,5 @@
 ## Clickhouse, Apache Kafka
+![Alt text](/docs/imgs/clickhouse.jpeg?raw=true "vFlow")
 The below clickhouse setup needs a zookeeper server, replica server is optional.
 
 ### Configuration (/etc/clickhouse-server/config.xml)
