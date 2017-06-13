@@ -55,6 +55,8 @@ go build main.go
 ```
 
 ### Benchmark Details
+I tried it with two clickhouse servers, one for ingest and one for query. they had below hardware information and you can see the below results based on the above database configuration.
+
 Hardware
 - CPU Intel Core Processor (Haswell, no TSX) cores = 8, 2.6GHz, x86_64
 - Memory 16G
