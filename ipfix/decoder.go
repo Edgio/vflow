@@ -97,9 +97,8 @@ func NewDecoder(raddr net.IP, b []byte) *Decoder {
 // Decode decodes the IPFIX raw data
 func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 	var (
-		nextSet int
-		msg     = new(Message)
-		err     error
+		msg = new(Message)
+		err error
 	)
 
 	// IPFIX Message Header decoding
@@ -154,9 +153,12 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 			}
 
 			// data records
-			nextSet = d.reader.Len() - int(setHeader.Length) + 4
-			for d.reader.Len() > nextSet {
-				data := decodeData(d.reader, tr)
+			for d.reader.Len() > 2 {
+				data, err := decodeData(d.reader, tr)
+				if err != nil {
+					return msg, err
+				}
+
 				msg.DataSets = append(msg.DataSets, data)
 			}
 		}
@@ -400,23 +402,46 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) {
 	}
 }
 
-func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
+func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 	var (
 		fields []DecodedField
+		err    error
 		b      []byte
 	)
 
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
-		b, _ = r.Read(int(tr.FieldSpecifiers[i].Length))
+		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
+		if err != nil {
+			return nil, err
+		}
+
 		m := InfoModel[ElementKey{
 			tr.FieldSpecifiers[i].EnterpriseNo,
 			tr.FieldSpecifiers[i].ElementID,
 		}]
+
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
 			Value: Interpret(b, m.Type),
 		})
 	}
 
-	return fields
+	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
+		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
+		if err != nil {
+			return nil, err
+		}
+
+		m := InfoModel[ElementKey{
+			tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+			tr.ScopeFieldSpecifiers[i].ElementID,
+		}]
+
+		fields = append(fields, DecodedField{
+			ID:    m.FieldID,
+			Value: Interpret(b, m.Type),
+		})
+	}
+
+	return fields, nil
 }
