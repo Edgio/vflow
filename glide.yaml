@@ -1,0 +1,14 @@
+package: github.com/VerizonDigital/vflow
+import:
+- package: github.com/Shopify/sarama
+  version: ^1.12.0
+- package: github.com/bitly/go-nsq
+  version: ^1.0.6
+- package: github.com/bsm/sarama-cluster
+  version: ^2.1.8
+- package: github.com/kshvakov/clickhouse
+- package: golang.org/x/net
+  subpackages:
+  - ipv4
+  - ipv6
+- package: gopkg.in/yaml.v2
