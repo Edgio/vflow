@@ -37,6 +37,7 @@ type NATS struct {
 	logger     *log.Logger
 }
 
+// NATSConfig is the struct that holds all configuation for NATS connections
 type NATSConfig struct {
 	URL string `json:"endpoint"`
 }
