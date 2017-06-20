@@ -29,46 +29,46 @@ import (
 )
 
 // Interpret read data fields based on the type - big endian
-func Interpret(b []byte, t FieldType) interface{} {
-	if len(b) < t.minLen() {
-		return b
+func Interpret(b *[]byte, t FieldType) interface{} {
+	if len(*b) < t.minLen() {
+		return *b
 	}
 
 	switch t {
 	case Boolean:
-		return b[0] == 1
+		return (*b)[0] == 1
 	case Uint8:
-		return b[0]
+		return (*b)[0]
 	case Uint16:
-		return binary.BigEndian.Uint16(b)
+		return binary.BigEndian.Uint16(*b)
 	case Uint32:
-		return binary.BigEndian.Uint32(b)
+		return binary.BigEndian.Uint32(*b)
 	case Uint64:
-		return binary.BigEndian.Uint64(b)
+		return binary.BigEndian.Uint64(*b)
 	case Int8:
-		return int8(b[0])
+		return int8((*b)[0])
 	case Int16:
-		return int16(binary.BigEndian.Uint16(b))
+		return int16(binary.BigEndian.Uint16(*b))
 	case Int32:
-		return int32(binary.BigEndian.Uint32(b))
+		return int32(binary.BigEndian.Uint32(*b))
 	case Int64:
-		return int64(binary.BigEndian.Uint64(b))
+		return int64(binary.BigEndian.Uint64(*b))
 	case Float32:
-		return math.Float32frombits(binary.BigEndian.Uint32(b))
+		return math.Float32frombits(binary.BigEndian.Uint32(*b))
 	case Float64:
-		return math.Float64frombits(binary.BigEndian.Uint64(b))
+		return math.Float64frombits(binary.BigEndian.Uint64(*b))
 	case MacAddress:
-		return net.HardwareAddr(b)
+		return net.HardwareAddr(*b)
 	case String:
-		return string(b)
+		return string(*b)
 	case Ipv4Address, Ipv6Address:
-		return net.IP(b)
+		return net.IP(*b)
 	case DateTimeSeconds, DateTimeMilliseconds, DateTimeMicroseconds, DateTimeNanoseconds:
-		return int64(binary.BigEndian.Uint64(b))
+		return int64(binary.BigEndian.Uint64(*b))
 	case Unknown, OctetArray:
-		return b
+		return *b
 	}
-	return b
+	return *b
 }
 
 func (t FieldType) minLen() int {

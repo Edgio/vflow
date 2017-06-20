@@ -306,7 +306,7 @@ func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
 		}]
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
-			Value: ipfix.Interpret(b, m.Type),
+			Value: ipfix.Interpret(&b, m.Type),
 		})
 	}
 

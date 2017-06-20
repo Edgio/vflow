@@ -422,7 +422,7 @@ func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
-			Value: Interpret(b, m.Type),
+			Value: Interpret(&b, m.Type),
 		})
 	}
 
@@ -439,7 +439,7 @@ func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
-			Value: Interpret(b, m.Type),
+			Value: Interpret(&b, m.Type),
 		})
 	}
 
