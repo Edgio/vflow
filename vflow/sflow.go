@@ -219,7 +219,7 @@ LOOP:
 		}
 
 		select {
-		case sFlowMQCh <- b:
+		case sFlowMQCh <- append([]byte{}, b...):
 		default:
 		}
 
