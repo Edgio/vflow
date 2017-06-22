@@ -421,7 +421,8 @@ func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, fmt.Errorf("IPFIX element key not exist")
+			return nil, fmt.Errorf("IPFIX element key (%d) not exist",
+				tr.FieldSpecifiers[i].ElementID)
 		}
 
 		fields = append(fields, DecodedField{
@@ -442,7 +443,8 @@ func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, fmt.Errorf("IPFIX element key not exist (scope)")
+			return nil, fmt.Errorf("IPFIX element key (%d) not exist (scope)",
+				tr.ScopeFieldSpecifiers[i].ElementID)
 		}
 
 		fields = append(fields, DecodedField{
