@@ -415,10 +415,15 @@ func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 			return nil, err
 		}
 
-		m := InfoModel[ElementKey{
+		m, ok := InfoModel[ElementKey{
 			tr.FieldSpecifiers[i].EnterpriseNo,
 			tr.FieldSpecifiers[i].ElementID,
 		}]
+
+		if !ok {
+			return nil, fmt.Errorf("IPFIX element key (%d) not exist",
+				tr.FieldSpecifiers[i].ElementID)
+		}
 
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
@@ -432,10 +437,15 @@ func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 			return nil, err
 		}
 
-		m := InfoModel[ElementKey{
+		m, ok := InfoModel[ElementKey{
 			tr.ScopeFieldSpecifiers[i].EnterpriseNo,
 			tr.ScopeFieldSpecifiers[i].ElementID,
 		}]
+
+		if !ok {
+			return nil, fmt.Errorf("IPFIX element key (%d) not exist (scope)",
+				tr.ScopeFieldSpecifiers[i].ElementID)
+		}
 
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,

@@ -292,25 +292,58 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) {
 
 }
 
-func decodeData(r *reader.Reader, tr TemplateRecord) []DecodedField {
+func decodeData(r *reader.Reader, tr TemplateRecord) ([]DecodedField, error) {
 	var (
 		fields []DecodedField
+		err    error
 		b      []byte
 	)
 
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
-		b, _ = r.Read(int(tr.FieldSpecifiers[i].Length))
-		m := ipfix.InfoModel[ipfix.ElementKey{
+		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
+		if err != nil {
+			return nil, err
+		}
+
+		m, ok := ipfix.InfoModel[ipfix.ElementKey{
 			0,
 			tr.FieldSpecifiers[i].ElementID,
 		}]
+
+		if !ok {
+			return nil, fmt.Errorf("Netflow element key (%d) not exist",
+				tr.FieldSpecifiers[i].ElementID)
+		}
+
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
 			Value: ipfix.Interpret(&b, m.Type),
 		})
 	}
 
-	return fields
+	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
+		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
+		if err != nil {
+			return nil, err
+		}
+
+		m, ok := ipfix.InfoModel[ipfix.ElementKey{
+			0,
+			tr.ScopeFieldSpecifiers[i].ElementID,
+		}]
+
+		if !ok {
+			return nil, fmt.Errorf("Netflow element key (%d) not exist (scope)",
+				tr.ScopeFieldSpecifiers[i].ElementID)
+		}
+
+		fields = append(fields, DecodedField{
+			ID:    m.FieldID,
+			Value: ipfix.Interpret(&b, m.Type),
+		})
+	}
+
+	return fields, nil
 }
 
 // NewDecoder constructs a decoder
@@ -373,7 +406,11 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 			// data records
 			nextSet = d.reader.Len() - int(setHeader.Length) + 4
 			for d.reader.Len() > nextSet {
-				data := decodeData(d.reader, tr)
+				data, err := decodeData(d.reader, tr)
+				if err != nil {
+					return msg, err
+				}
+
 				msg.DataSets = append(msg.DataSets, data)
 			}
 		}

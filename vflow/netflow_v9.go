@@ -216,7 +216,7 @@ LOOP:
 			}
 
 			select {
-			case netflowV9MQCh <- b:
+			case netflowV9MQCh <- append([]byte{}, b...):
 			default:
 			}
 		}

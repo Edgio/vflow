@@ -237,7 +237,7 @@ LOOP:
 			}
 
 			select {
-			case ipfixMQCh <- b:
+			case ipfixMQCh <- append([]byte{}, b...):
 			default:
 			}
 		}

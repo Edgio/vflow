@@ -37,6 +37,7 @@ type NATS struct {
 	logger     *log.Logger
 }
 
+// NATSConfig is the struct that holds all configuation for NATS connections
 type NATSConfig struct {
 	URL string `json:"endpoint"`
 }
@@ -72,7 +73,7 @@ func (n *NATS) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			break
 		}
 
-		err = n.connection.Publish(topic, append([]byte{}, msg...))
+		err = n.connection.Publish(topic, msg)
 		if err != nil {
 			n.logger.Println(err)
 			*ec++

@@ -72,7 +72,7 @@ func (n *NSQ) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			break
 		}
 
-		err = n.producer.Publish(topic, append([]byte{}, msg...))
+		err = n.producer.Publish(topic, msg)
 		if err != nil {
 			n.logger.Println(err)
 			*ec++
