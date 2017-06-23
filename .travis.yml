@@ -8,8 +8,9 @@ notifications:
   email: false
 
 before_install:
-    - go get -d ./...
+    - go get -v github.com/Masterminds/glide
+    - glide install
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
-  - go test -v ./... -timeout 1m
+  - go test -timeout 1m -v $(glide novendor)
   - make build
