@@ -59,12 +59,23 @@ type SFlow struct {
 	Workers      int64
 }
 
+// Netflow9 represents Netflow9 metrics
+type NetflowV9 struct {
+	UDPQueue     int64
+	MessageQueue int64
+	UDPCount     int64
+	DecodedCount int64
+	MQErrorCount int64
+	Workers      int64
+}
+
 // Flow represents flow (IPFIX+sFlow) metrics
 type Flow struct {
 	StartTime int64
 	Timestamp int64
 	IPFIX     IPFIX
 	SFlow     SFlow
+	NetflowV9 NetflowV9
 }
 
 // Sys represents system/go-runtime statistics
