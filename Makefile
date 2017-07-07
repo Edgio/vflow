@@ -1,6 +1,6 @@
 PACKAGES=$(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --unique)
-GOFILES= vflow.go ipfix.go sflow.go netflow_v9.go options.go stats.go 
 LDFLAGS= -ldflags "-X main.version=0.3.2"
+
 
 default: test
 
@@ -10,16 +10,16 @@ test:
 bench:
 	go test -v ./... -bench=. -timeout 2m
 
-run:
-	cd vflow; go run $(GOFILES) -sflow-workers 100 -ipfix-workers 100
+run: build
+	cd vflow; ./vflow -sflow-workers 100 -ipfix-workers 100
 
-debug:
-	cd vflow; go run $(GOFILES) -sflow-workers 100 -ipfix-workers 100 -verbose=true
+debug: build
+	cd vflow; ./vflow -sflow-workers 100 -ipfix-workers 100 -verbose=true
 
-gctrace:
-	cd vflow; env GODEBUG=gctrace=1 go run $(GOFILES) -sflow-workers 100 -ipfix-workers 100
+gctrace: build
+	cd vflow; env GODEBUG=gctrace=1 ./vflow -sflow-workers 100 -ipfix-workers 100
 
-lint:	
+lint:
 	golint ./...
 
 cyclo:
@@ -37,4 +37,4 @@ depends:
 	go get -d ./...
 
 build: depends
-	cd vflow; go build $(LDFLAGS) -o vflow $(GOFILES)
+	cd vflow; go build $(LDFLAGS) 
