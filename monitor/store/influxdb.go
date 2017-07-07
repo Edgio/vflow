@@ -52,21 +52,35 @@ func (i InfluxDB) Netflow() error {
 	query := fmt.Sprintf("udp.rate,type=ipfix,host=%s value=%d\n", hostname, value)
 	value = abs((flow.SFlow.UDPCount - lastFlow.SFlow.UDPCount) / delta)
 	query += fmt.Sprintf("udp.rate,type=sflow,host=%s value=%d\n", hostname, value)
+	value = abs((flow.NetflowV9.UDPCount - lastFlow.NetflowV9.UDPCount) / delta)
+	query += fmt.Sprintf("udp.rate,type=netflowv9,host=%s value=%d\n", hostname, value)
+
 	value = abs((flow.IPFIX.DecodedCount - lastFlow.IPFIX.DecodedCount) / delta)
 	query += fmt.Sprintf("decode.rate,type=ipfix,host=%s value=%d\n", hostname, value)
 	value = abs((flow.SFlow.DecodedCount - lastFlow.SFlow.DecodedCount) / delta)
 	query += fmt.Sprintf("decode.rate,type=sflow,host=%s value=%d\n", hostname, value)
+	value = abs((flow.NetflowV9.DecodedCount - lastFlow.NetflowV9.DecodedCount) / delta)
+	query += fmt.Sprintf("decode.rate,type=netflowv9,host=%s value=%d\n", hostname, value)
+
 	value = abs((flow.IPFIX.MQErrorCount - lastFlow.IPFIX.MQErrorCount) / delta)
 	query += fmt.Sprintf("mq.error.rate,type=ipfix,host=%s value=%d\n", hostname, value)
 	value = abs((flow.SFlow.MQErrorCount - lastFlow.SFlow.MQErrorCount) / delta)
 	query += fmt.Sprintf("mq.error.rate,type=sflow,host=%s value=%d\n", hostname, value)
+	value = abs((flow.NetflowV9.MQErrorCount - lastFlow.NetflowV9.MQErrorCount) / delta)
+	query += fmt.Sprintf("mq.error.rate,type=netflowv9,host=%s value=%d\n", hostname, value)
 
 	query += fmt.Sprintf("workers,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.Workers)
 	query += fmt.Sprintf("workers,type=sflow,host=%s value=%d\n", hostname, flow.SFlow.Workers)
+	query += fmt.Sprintf("workers,type=netflowv9,host=%s value=%d\n", hostname, flow.NetflowV9.Workers)
+
 	query += fmt.Sprintf("udp.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.UDPQueue)
 	query += fmt.Sprintf("udp.queue,type=sflow,host=%s value=%d\n", hostname, flow.SFlow.UDPQueue)
+	query += fmt.Sprintf("udp.queue,type=netflowv9,host=%s value=%d\n", hostname, flow.NetflowV9.UDPQueue)
+
 	query += fmt.Sprintf("mq.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.MessageQueue)
 	query += fmt.Sprintf("mq.queue,type=sflow,host=%s value=%d\n", hostname, flow.SFlow.MessageQueue)
+	query += fmt.Sprintf("mq.queue,type=netflowv9,host=%s value=%d\n", hostname, flow.NetflowV9.MessageQueue)
+
 	query += fmt.Sprintf("udp.mirror.queue,type=ipfix,host=%s value=%d\n", hostname, flow.IPFIX.UDPMirrorQueue)
 
 	api := fmt.Sprintf("%s/write?db=%s", i.API, i.DB)

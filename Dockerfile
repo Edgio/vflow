@@ -27,6 +27,6 @@ RUN ["go", "build", "-o", "/usr/local/bin/vflow"]
 
 ADD scripts/vflow.supervisor /etc/supervisor/conf.d/vflow.conf
 
-EXPOSE 4739 6343 8081
+EXPOSE 4739 6343 4729 8081
 
 CMD ["supervisord", "-n"]
