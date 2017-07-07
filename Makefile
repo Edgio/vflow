@@ -1,5 +1,4 @@
 PACKAGES=$(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --unique)
-GOFILES= vflow.go ipfix.go sflow.go netflow_v9.go options.go stats.go 
 LDFLAGS= -ldflags "-X main.version=0.3.1"
 
 default: test
@@ -38,33 +37,3 @@ depends:
 
 build: depends
 	cd vflow; go build $(LDFLAGS) 
-
-build-windows: depends
-	cd vflow; gox $(LDFLAGS) 
-
-
-vflow/vflow_windows_386.exe: depends
-	cd vflow; gox $(LDFLAGS) -os="windows" -arch="386"
-
-vflow/vflow_windows_amd64.exe: depends
-	cd vflow; gox $(LDFLAGS) -os="windows" -arch="amd64"
-
-vflow/vflow_darwin_386: depends
-	cd vflow; gox $(LDFLAGS) -os="darwin" -arch="386"
-
-vflow/vflow_darwin_amd64: depends
-	cd vflow; gox $(LDFLAGS) -os="darwin" -arch="amd64"
-
-vflow/vflow_freebsd_386: depends
-	cd vflow; gox $(LDFLAGS) -os="freebsd" -arch="386"
-
-vflow/vflow_freebsd_amd64: depends
-	cd vflow; gox $(LDFLAGS) -os="freebsd" -arch="amd64"
-
-vflow/vflow_linux_386: depends
-	cd vflow; gox $(LDFLAGS) -os="linux" -arch="386"
-
-vflow/vflow_linux_amd64: depends
-	cd vflow; gox $(LDFLAGS) -os="linux" -arch="amd64"
-
-cross-compile: vflow/vflow_windows_386.exe vflow/vflow_windows_amd64.exe vflow/vflow_darwin_386 vflow/vflow_darwin_amd64 vflow/vflow_freebsd_386 vflow/vflow_freebsd_amd64 vflow/vflow_linux_386 vflow/vflow_linux_amd64
