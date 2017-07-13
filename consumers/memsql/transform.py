@@ -86,22 +86,24 @@ for records in transform_records():
                 elif field["I"] == 1:
                     octetDeltaCount = field["V"]
 
+            out = b"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+                  % (
+                        flows["AgentID"],
+                        sourceIPAddress,
+                        destinationIPAddress,
+                        ipNextHopIPAddress,
+                        bgpSourceAsNumber,
+                        bgpDestinationAsNumber,
+                        protocolIdentifier,
+                        sourceTransportPort,
+                        destinationTransportPort,
+                        tcpControlBits,
+                        ingressInterface,
+                        egressInterface,
+                        octetDeltaCount,
+                        exported_time,
+                    )
 
-            out = b"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (flows["AgentID"],
-                                            sourceIPAddress,
-                                            destinationIPAddress,
-                                            ipNextHopIPAddress,
-                                            bgpSourceAsNumber,
-                                            bgpDestinationAsNumber,
-                                            protocolIdentifier,
-                                            sourceTransportPort,
-                                            destinationTransportPort,
-                                            tcpControlBits,
-                                            ingressInterface,
-                                            egressInterface,
-                                            octetDeltaCount,
-                                            exported_time,
-                                            )
             sys.stdout.write(out)
     except:
         continue
