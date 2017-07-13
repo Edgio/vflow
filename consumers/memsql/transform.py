@@ -53,7 +53,10 @@ for records in transform_records():
             sourceTransportPort = 0
             destinationTransportPort = 0
             tcpControlBits = "unknown"
+            ipNextHopIPAddress = "unknown"
             octetDeltaCount = 0
+            ingressInterface = 0
+            egressInterface = 0
 
             for field in flow:
                 if field["I"] in [214]:
@@ -62,10 +65,16 @@ for records in transform_records():
                     sourceIPAddress = field["V"]
                 elif field["I"] in [12, 28]:
                     destinationIPAddress = field["V"]
+                elif field["I"] in [15, 62]:
+                    ipNextHopIPAddress = field["V"]
                 elif field["I"] == 16:
                     bgpSourceAsNumber = field["V"]
                 elif field["I"] == 17:
                     bgpDestinationAsNumber = field["V"]
+                elif field["I"] == 14:
+                    ingressInterface = field["V"]
+                elif field["I"] == 10:
+                    egressInterface = field["V"]
                 elif field["I"] == 7:
                     sourceTransportPort = field["V"]
                 elif field["I"] == 11:
@@ -77,19 +86,22 @@ for records in transform_records():
                 elif field["I"] == 1:
                     octetDeltaCount = field["V"]
 
-            out = b"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (
-                    flows["AgentID"],
-                    sourceIPAddress,
-                    destinationIPAddress,
-                    bgpSourceAsNumber,
-                    bgpDestinationAsNumber,
-                    protocolIdentifier,
-                    sourceTransportPort,
-                    destinationTransportPort,
-                    tcpControlBits,
-                    octetDeltaCount,
-                    exported_time,
-            )
+
+            out = b"%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" % (flows["AgentID"],
+                                            sourceIPAddress,
+                                            destinationIPAddress,
+                                            ipNextHopIPAddress,
+                                            bgpSourceAsNumber,
+                                            bgpDestinationAsNumber,
+                                            protocolIdentifier,
+                                            sourceTransportPort,
+                                            destinationTransportPort,
+                                            tcpControlBits,
+                                            ingressInterface,
+                                            egressInterface,
+                                            octetDeltaCount,
+                                            exported_time,
+                                            )
             sys.stdout.write(out)
     except:
         continue
