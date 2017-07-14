@@ -45,5 +45,5 @@ dpkg: build
 	mkdir -p ${DEBPATH}/usr/local/bin
 	cp vflow/vflow ${DEBPATH}/usr/local/bin
 	dpkg-deb -b ${DEBPATH}
-	mv ${DEBPATH}.deb scripts/vflow.deb
+	mv ${DEBPATH}.deb scripts/vflow${VERSION}.deb
 	sed -i 's/${VERSION}/%VERSION%/' ${DEBPATH}/DEBIAN/control
