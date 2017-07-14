@@ -1,4 +1,5 @@
 ## MemSQL Pipeline, Apache Kafka
+The memSQL v5.8 has built in Kafka consumer and you don't need to spend time for developing a consumer. you can create the below pipeline very quick. I tried it once the vFlow was producing 75k-100k message per seconds and the memSQL installed on a Dell G6 32 cores. It could be able to consume without lag. I put a shell script to clean up the database to having just 5-10 minutes of the flows.  
 
 ![Alt text](/docs/imgs/vflow_memsql.jpeg?raw=true "vFlow")
 
