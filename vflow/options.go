@@ -268,7 +268,7 @@ func (opts *Options) vFlowFlagSet() {
 }
 
 func vFlowLoadCfg(opts *Options) {
-	var file = "/usr/local/vflow/etc/vflow.conf"
+	var file = "/etc/vflow/vflow.conf"
 
 	for i, flag := range os.Args {
 		if flag == "-config" {
