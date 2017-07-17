@@ -46,8 +46,8 @@ The vFlow configuration contains the following keys
 |stats-enabled           | true                           | enable/disable web stats listener                |
 |stats-http-addr         | *                              | web stats address option at server startup       |
 |stats-http-port         | 8081                           | web stats TCP port                               |
-|mq-name                 | kafka                          | message queueing name (kafka or nsq)             |
-|mq-config-file          | /usr/local/vflow/etc/kafka.conf| message queue config file                        |
+|mq-name                 | kafka                          | message queueing name (kafka, nsq or nats)       |
+|mq-config-file          | /etc/vflow/mq.conf             | message queue config file                        |
 
 The default configuration path is /etc/vflow/vflow.conf but you can change it as below:
 ```
@@ -74,7 +74,7 @@ A config file is a plain text file in [YAML](https://en.wikipedia.org/wiki/YAML)
 key: value
 ```
 
-The default configuration file is /usr/local/vflow/etc/kafka.conf, you can be able to change it through vFlow configuration.
+The default configuration file is /etc/vflow/mq.conf, you can be able to change it through vFlow configuration.
 
 ## Configuration Keys
 The Kafka configuration contains the following key
