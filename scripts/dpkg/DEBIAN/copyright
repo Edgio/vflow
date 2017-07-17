@@ -1,0 +1,6 @@
+Upstream-Name: vflow
+Source: https://github.com/VerizonDigital/vflow
+
+Files: *
+Copyright: Copyright (C) 2017  Verizon (www.verizon.com; www.github.com/Verizon)
+License: Apache-2.0
