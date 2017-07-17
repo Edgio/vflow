@@ -41,9 +41,16 @@ build: depends
 	cd vflow; go build $(LDFLAGS)
 
 dpkg: build
+	mkdir -p ${DEBPATH}/etc/init.d ${DEBPATH}/etc/logrotate.d
+	mkdir -p ${DEBPATH}/etc/vflow ${DEBPATH}/usr/share/doc/vflow
+	mkdir -p ${DEBPATH}/usr/bin ${DEBPATH}/usr/local/vflow
 	sed -i 's/%VERSION%/${VERSION}/' ${DEBPATH}/DEBIAN/control
-	mkdir -p ${DEBPATH}/usr/local/bin
-	cp vflow/vflow ${DEBPATH}/usr/local/bin
+	cp vflow/vflow ${DEBPATH}/usr/bin/
+	cp scripts/vflow.service ${DEBPATH}/etc/init.d/vflow
+	cp scripts/vflow.logrotate ${DEBPATH}/etc/logrotate.d/vflow
+	cp scripts/vflow.conf ${DEBPATH}/etc/vflow/vflow.conf
+	cp scripts/kafka.conf ${DEBPATH}/etc/vflow/kafka.conf
+	cp ${DEBPATH}/DEBIAN/copyright ${DEBPATH}/usr/share/doc/vflow/
 	dpkg-deb -b ${DEBPATH}
 	mv ${DEBPATH}.deb scripts/vflow${VERSION}.deb
 	sed -i 's/${VERSION}/%VERSION%/' ${DEBPATH}/DEBIAN/control
