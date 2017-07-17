@@ -55,6 +55,20 @@ or
 go get -d ./...
 cd vflow; go build 
 ```
+## Installation
+You can download and install pre-built debian package. 
+```
+dpkg -i vflow0.3.3.deb
+```
+Once you installed you need to configure the below files, for more information check [configuration guide](/docs/config.md):
+```
+/etc/vflow/vflow.conf
+/etc/vflow/mq.conf
+```
+You can start the service by the below:
+```
+service vflow start
+```
 
 ## Docker
 1. Install [Docker](https://www.docker.com/).
