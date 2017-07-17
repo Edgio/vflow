@@ -49,9 +49,9 @@ The vFlow configuration contains the following keys
 |mq-name                 | kafka                          | message queueing name (kafka or nsq)             |
 |mq-config-file          | /usr/local/vflow/etc/kafka.conf| message queue config file                        |
 
-The default configuration path is /usr/local/vflow/etc/vflow.conf but you can change it as below:
+The default configuration path is /etc/vflow/vflow.conf but you can change it as below:
 ```
-vflow -config /etc/vflow.conf
+vflow -config /usr/local/etc/vflow.conf
 ```
 The vFlow version shows as below:
 ```
