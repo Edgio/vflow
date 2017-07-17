@@ -49,7 +49,7 @@ dpkg: build
 	cp scripts/vflow.service ${DEBPATH}/etc/init.d/vflow
 	cp scripts/vflow.logrotate ${DEBPATH}/etc/logrotate.d/vflow
 	cp scripts/vflow.conf ${DEBPATH}/etc/vflow/vflow.conf
-	cp scripts/kafka.conf ${DEBPATH}/etc/vflow/kafka.conf
+	cp scripts/kafka.conf ${DEBPATH}/etc/vflow/mq.conf
 	cp ${DEBPATH}/DEBIAN/copyright ${DEBPATH}/usr/share/doc/vflow/
 	dpkg-deb -b ${DEBPATH}
 	mv ${DEBPATH}.deb scripts/vflow${VERSION}.deb
