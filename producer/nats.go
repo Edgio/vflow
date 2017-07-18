@@ -52,11 +52,15 @@ func (n *NATS) setup(configFile string, logger *log.Logger) error {
 		logger.Println(err)
 		return err
 	}
+
 	n.connection, err = nats.Connect(n.config.URL)
 	if err != nil {
 		logger.Println(err)
 		return err
 	}
+
+	n.logger = logger
+
 	return nil
 }
 
@@ -66,6 +70,9 @@ func (n *NATS) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 		err error
 		ok  bool
 	)
+
+	n.logger.Printf("start producer: NATS, server: %+v, topic: %s\n",
+		n.config.URL, topic)
 
 	for {
 		msg, ok = <-mCh
