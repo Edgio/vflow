@@ -43,7 +43,11 @@ type NSQConfig struct {
 }
 
 func (n *NSQ) setup(configFile string, logger *log.Logger) error {
-	var err error
+	var (
+		err error
+		cfg = nsq.NewConfig()
+	)
+
 	// set default values
 	n.config = NSQConfig{
 		Broker: "localhost:4150",
@@ -54,7 +58,8 @@ func (n *NSQ) setup(configFile string, logger *log.Logger) error {
 		logger.Println(err)
 	}
 
-	n.producer, _ = nsq.NewProducer(n.config.Broker, nil)
+	n.producer, _ = nsq.NewProducer(n.config.Broker, cfg)
+	n.logger = logger
 
 	return nil
 }
@@ -65,6 +70,9 @@ func (n *NSQ) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 		err error
 		ok  bool
 	)
+
+	n.logger.Printf("start producer: NSQ, brokers: %+v, topic: %s\n",
+		n.config.Broker, topic)
 
 	for {
 		msg, ok = <-mCh
