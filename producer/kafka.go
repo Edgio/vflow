@@ -58,7 +58,9 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 
 	// set default values
 	k.config = KafkaConfig{
-		Brokers: []string{"localhost:9092"},
+		Brokers:      []string{"localhost:9092"},
+		RetryMax:     2,
+		RetryBackoff: 10,
 	}
 
 	// load configuration if available
