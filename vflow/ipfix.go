@@ -229,7 +229,7 @@ LOOP:
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
-		if decodedMsg.DataSets != nil {
+		if len(decodedMsg.DataSets) > 0 {
 			b, err = decodedMsg.JSONMarshal(buf)
 			if err != nil {
 				logger.Println(err)
@@ -240,10 +240,10 @@ LOOP:
 			case ipfixMQCh <- append([]byte{}, b...):
 			default:
 			}
-		}
 
-		if opts.Verbose {
-			logger.Println(string(b))
+			if opts.Verbose {
+				logger.Println(string(b))
+			}
 		}
 
 	}
