@@ -24,6 +24,7 @@ package ipfix
 
 import (
 	"net"
+	"reflect"
 	"testing"
 )
 
@@ -55,5 +56,24 @@ func TestMemCacheInsert(t *testing.T) {
 	}
 	if v.TemplateID != 310 {
 		t.Error("expected template id#:310, got", v.TemplateID)
+	}
+}
+
+func TestMemCacheAllSetIds(t *testing.T) {
+	var tpl TemplateRecord
+	ip := net.ParseIP("127.0.0.1")
+	mCache := GetCache("cache.file")
+
+	tpl.TemplateID = 310
+	mCache.insert(tpl.TemplateID, ip, tpl)
+	tpl.TemplateID = 410
+	mCache.insert(tpl.TemplateID, ip, tpl)
+	tpl.TemplateID = 210
+	mCache.insert(tpl.TemplateID, ip, tpl)
+
+	expected := []int{210, 310, 410}
+	actual := mCache.allSetIds()
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("Expected set IDs %v, got %v", expected, actual)
 	}
 }

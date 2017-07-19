@@ -96,3 +96,29 @@ func TestReadN(t *testing.T) {
 		t.Error("expect read [5 17], got", i)
 	}
 }
+
+func TestReadCount(t *testing.T) {
+	b := make([]byte, 18)
+	for i := range b {
+		b[i] = byte(i)
+	}
+	r := NewReader(b)
+	check := func(expected int) {
+		count := r.ReadCount()
+		if count != expected {
+			t.Error("Unexpected ReadCount(). Expected", expected, "got", count)
+		}
+	}
+
+	check(0)
+	r.Uint8()
+	check(1)
+	r.Uint16()
+	check(3)
+	r.Uint32()
+	check(7)
+	r.Uint64()
+	check(15)
+	r.Read(3)
+	check(18)
+}
