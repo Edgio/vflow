@@ -21,6 +21,7 @@ The vFlow configuration contains the following keys
 |log-file                | stdError                       | name of log file to send logging output to       |
 |verbose                 | false                          | enable the full logging                          |
 |pid-file                | /var/run/vflow.pid             | file in which server should write its process ID |
+|cpu-cap                 | the number of available CPUs   | sets the maximum number of CPUs                  |
 |ipfix-enabled           | true                           | enable/disable IPFIX decoders                    |
 |ipfix-port              | 4739                           | server IPFIX UDP port                            |
 |ipfix-workers           | 200                            | IPFIX concurrent decoders                        |

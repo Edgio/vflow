@@ -27,6 +27,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime"
 	"sync"
 	"syscall"
 )
@@ -48,6 +49,7 @@ func main() {
 	)
 
 	opts = GetOptions()
+	runtime.GOMAXPROCS(opts.GetCPU())
 
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
 

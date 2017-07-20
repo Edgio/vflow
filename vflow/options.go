@@ -30,6 +30,8 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"strconv"
+	"strings"
 
 	"gopkg.in/yaml.v2"
 )
@@ -45,6 +47,7 @@ type Options struct {
 	Verbose    bool   `yaml:"verbose"`
 	LogFile    string `yaml:"log-file"`
 	PIDFile    string `yaml:"pid-file"`
+	CPUCap     string `yaml:"cpu-cap"`
 	DynWorkers bool   `yaml:"dynamic-workers"`
 	Logger     *log.Logger
 	version    bool
@@ -99,6 +102,7 @@ func NewOptions() *Options {
 		version:    false,
 		DynWorkers: true,
 		PIDFile:    "/var/run/vflow.pid",
+		CPUCap:     "100%",
 		Logger:     log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime),
 
 		StatsEnabled:  true,
@@ -194,10 +198,52 @@ func (opts Options) vFlowVersion() {
 	}
 }
 
+// GetCPU returns the number of the CPU
+func (opts Options) GetCPU() int {
+	var (
+		numCPU      int
+		availCPU    = runtime.NumCPU()
+		invalCPUErr = "the CPU percentage is invalid: it should be between 1-100"
+		numCPUErr   = "the CPU number should be greater than zero!"
+	)
+
+	if strings.Contains(opts.CPUCap, "%") {
+		pctStr := strings.Trim(opts.CPUCap, "%")
+
+		pctInt, err := strconv.Atoi(pctStr)
+		if err != nil {
+			opts.Logger.Fatalf("invalid CPU cap")
+		}
+
+		if pctInt < 1 || pctInt > 100 {
+			opts.Logger.Fatalf(invalCPUErr)
+		}
+
+		numCPU = int(float32(availCPU) * (float32(pctInt) / 100))
+	} else {
+		numInt, err := strconv.Atoi(opts.CPUCap)
+		if err != nil {
+			opts.Logger.Fatalf("invalid CPU cap")
+		}
+
+		if numInt < 1 {
+			opts.Logger.Fatalf(numCPUErr)
+		}
+
+		numCPU = numInt
+	}
+
+	if numCPU > availCPU {
+		numCPU = availCPU
+	}
+
+	return numCPU
+}
+
 func (opts *Options) vFlowFlagSet() {
 
 	var config string
-	flag.StringVar(&config, "config", "/usr/local/vflow/etc/vflow.conf", "path to config file")
+	flag.StringVar(&config, "config", "/etc/vflow/vflow.conf", "path to config file")
 
 	vFlowLoadCfg(opts)
 
@@ -207,6 +253,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.BoolVar(&opts.version, "version", opts.version, "show version")
 	flag.StringVar(&opts.LogFile, "log-file", opts.LogFile, "log file name")
 	flag.StringVar(&opts.PIDFile, "pid-file", opts.PIDFile, "pid file name")
+	flag.StringVar(&opts.CPUCap, "cpu-cap", opts.CPUCap, "Maximum amount of CPU [percent / number]")
 
 	// stats options
 	flag.BoolVar(&opts.StatsEnabled, "stats-enabled", opts.StatsEnabled, "enable/disable stats listener")
