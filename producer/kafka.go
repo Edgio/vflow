@@ -25,10 +25,10 @@ package producer
 import (
 	"crypto/tls"
 	"crypto/x509"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -46,14 +46,14 @@ type Kafka struct {
 
 // KafkaConfig represents kafka configuration
 type KafkaConfig struct {
-	Brokers      []string `yaml:"brokers"`
-	Compression  string   `yaml:"compression"`
-	RetryMax     int      `yaml:"retry-max"`
-	RetryBackoff int      `yaml:"retry-backoff"`
-	TLSCertFile  string   `yaml:"tls-cert"`
-	TLSKeyFile   string   `yaml:"tls-key"`
-	CAFile       string   `yaml:"ca-file"`
-	VerifySSL    bool     `yaml:"verify-ssl"`
+	Brokers      []string `yaml:"brokers" env:"BROKERS"`
+	Compression  string   `yaml:"compression" env:"COMPRESSION"`
+	RetryMax     int      `yaml:"retry-max" env:"RETRY_MAX"`
+	RetryBackoff int      `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
+	TLSCertFile  string   `yaml:"tls-cert" env:"TLS_CERT"`
+	TLSKeyFile   string   `yaml:"tls-key" env:"TLS_KEY"`
+	CAFile       string   `yaml:"ca-file" env:"CA_FILE"`
+	VerifySSL    bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
@@ -100,9 +100,7 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	}
 
 	// get env config
-	if err = k.loadEnv(config); err != nil {
-		logger.Println(err)
-	}
+	k.loadEnv("VFLOW_KAFKA")
 
 	if err = config.Validate(); err != nil {
 		logger.Fatal(err)
@@ -186,38 +184,42 @@ func (k Kafka) tlsConfig() *tls.Config {
 	return t
 }
 
-func (k *Kafka) loadEnv(config *sarama.Config) error {
-	var err error
+func (k *Kafka) loadEnv(prefix string) {
+	v := reflect.ValueOf(&k.config).Elem()
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		env := t.Field(i).Tag.Get("env")
+		if env == "" {
+			continue
+		}
 
-	env := "VFLOW_KAFKA_BROKERS"
-	val, ok := os.LookupEnv(env)
-	if ok {
-		k.config.Brokers = strings.Split(val, ";")
-	}
+		val, ok := os.LookupEnv(prefix + "_" + env)
+		if !ok {
+			continue
+		}
 
-	env = "VFLOW_KAFKA_COMPRESSION"
-	val, ok = os.LookupEnv(env)
-	if ok {
-		k.config.Compression = val
-	}
-
-	env = "VFLOW_KAFKA_RETRY_MAX"
-	val, ok = os.LookupEnv(env)
-	if ok {
-		k.config.RetryMax, err = strconv.Atoi(val)
-		if err != nil {
-			return fmt.Errorf("%s: %s", env, err)
+		switch f.Kind() {
+		case reflect.Int:
+			valInt, err := strconv.Atoi(val)
+			if err != nil {
+				k.logger.Println(err)
+				continue
+			}
+			f.SetInt(int64(valInt))
+		case reflect.String:
+			f.SetString(val)
+		case reflect.Slice:
+			for _, elm := range strings.Split(val, ";") {
+				f.Index(0).SetString(elm)
+			}
+		case reflect.Bool:
+			valBool, err := strconv.ParseBool(val)
+			if err != nil {
+				k.logger.Println(err)
+				continue
+			}
+			f.SetBool(valBool)
 		}
 	}
-
-	env = "VFLOW_KAFKA_RETRY_BACKOFF"
-	val, ok = os.LookupEnv(env)
-	if ok {
-		k.config.RetryBackoff, err = strconv.Atoi(val)
-		if err != nil {
-			return fmt.Errorf("%s: %s", env, err)
-		}
-	}
-
-	return nil
 }

@@ -86,10 +86,10 @@ The Kafka configuration contains the following key
 |compression          | none    | VFLOW_KAFKA_COMPRESSION  | compression codecs: gzip, snappy, lz4                            |
 |retry-max            | 2       | VFLOW_KAFKA_RETRY_MAX    | the total number of times to retry                               |
 |retry-backoff        | 10      | VFLOW_KAFKA_RETRY_BACKOFF| wait for leader election to occur before retrying in milliseconds|
-|tls-cert             | none    | NA                       | certificate file for client authentication                       |
-|tls-key              | none    | NA                       | key file for client authentication                               |
-|ca-file              | none    | NA                       | certificate authority file for TLS client authentication         |
-|verify-ssl           | true    | NA                       | verify ssl certificates chain                                    |
+|tls-cert             | none    | VFLOW_KAFKA_TLS_CERT     | certificate file for client authentication                       |
+|tls-key              | none    | VFLOW_KAFKA_TLS_KEY      | key file for client authentication                               |
+|ca-file              | none    | VFLOW_KAFKA_CA_FILE      | certificate authority file for TLS client authentication         |
+|verify-ssl           | true    | VFLOW_KAFKA_VERIFY_SSL   | verify ssl certificates chain                                    |
 
 ## Example
 ```
