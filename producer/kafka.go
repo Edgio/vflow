@@ -23,6 +23,8 @@
 package producer
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -48,6 +50,10 @@ type KafkaConfig struct {
 	Compression  string   `yaml:"compression"`
 	RetryMax     int      `yaml:"retry-max"`
 	RetryBackoff int      `yaml:"retry-backoff"`
+	TLSCertFile  string   `yaml:"tls-cert"`
+	TLSKeyFile   string   `yaml:"tls-key"`
+	CAFile       string   `yaml:"ca-file"`
+	VerifySSL    bool     `yaml:"verify-ssl"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
@@ -61,7 +67,10 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 		Brokers:      []string{"localhost:9092"},
 		RetryMax:     2,
 		RetryBackoff: 10,
+		VerifySSL:    true,
 	}
+
+	k.logger = logger
 
 	// load configuration if available
 	if err = k.load(configFile); err != nil {
@@ -84,6 +93,12 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 		config.Producer.Compression = sarama.CompressionNone
 	}
 
+	if tlsConfig := k.tlsConfig(); tlsConfig != nil {
+		config.Net.TLS.Config = tlsConfig
+		config.Net.TLS.Enable = true
+		k.logger.Println("Kafka client TLS enabled")
+	}
+
 	// get env config
 	if err = k.loadEnv(config); err != nil {
 		logger.Println(err)
@@ -94,7 +109,6 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	}
 
 	k.producer, err = sarama.NewAsyncProducer(k.config.Brokers, config)
-	k.logger = logger
 	if err != nil {
 		return err
 	}
@@ -143,6 +157,33 @@ func (k *Kafka) load(f string) error {
 	}
 
 	return nil
+}
+
+func (k Kafka) tlsConfig() *tls.Config {
+	var t *tls.Config
+
+	if k.config.TLSCertFile != "" && k.config.TLSKeyFile != "" && k.config.CAFile != "" {
+		cert, err := tls.LoadX509KeyPair(k.config.TLSCertFile, k.config.TLSKeyFile)
+		if err != nil {
+			k.logger.Fatal("Kafka TLS error: ", err)
+		}
+
+		caCert, err := ioutil.ReadFile(k.config.CAFile)
+		if err != nil {
+			k.logger.Fatal("Kafka TLS error: ", err)
+		}
+
+		caCertPool := x509.NewCertPool()
+		caCertPool.AppendCertsFromPEM(caCert)
+
+		t = &tls.Config{
+			Certificates:       []tls.Certificate{cert},
+			RootCAs:            caCertPool,
+			InsecureSkipVerify: k.config.VerifySSL,
+		}
+	}
+
+	return t
 }
 
 func (k *Kafka) loadEnv(config *sarama.Config) error {

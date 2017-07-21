@@ -80,17 +80,21 @@ The default configuration file is /etc/vflow/mq.conf, you can be able to change 
 ## Configuration Keys
 The Kafka configuration contains the following key
 
-|Key                  | Default |  Environment variable    | Description                                                    |
-|---------------------| --------|--------------------------|----------------------------------------------------------------|
-|brokers              | -       | VFLOW_KAFKA_BROKERS      | kafka broker addresses                                         |
-|compression          | none    | VFLOW_KAFKA_COMPRESSION  | compression codecs: gzip, snappy, lz4                          |
-|retry-max            | 0       | VFLOW_KAFKA_RETRY_MAX    | the total number of times to retry                             |
-|retry-backoff        | 0       | VFLOW_KAFKA_RETRY_BACKOFF| wait for leader election to occur before retrying in milliseconds|
+|Key                  | Default |  Environment variable    | Description                                                      |
+|---------------------| --------|--------------------------|------------------------------------------------------------------|
+|brokers              | -       | VFLOW_KAFKA_BROKERS      | kafka broker addresses                                           |
+|compression          | none    | VFLOW_KAFKA_COMPRESSION  | compression codecs: gzip, snappy, lz4                            |
+|retry-max            | 2       | VFLOW_KAFKA_RETRY_MAX    | the total number of times to retry                               |
+|retry-backoff        | 10      | VFLOW_KAFKA_RETRY_BACKOFF| wait for leader election to occur before retrying in milliseconds|
+|tls-cert             | none    | NA                       | certificate file for client authentication                       |
+|tls-key              | none    | NA                       | key file for client authentication                               |
+|ca-file              | none    | NA                       | certificate authority file for TLS client authentication         |
+|verify-ssl           | true    | NA                       | verify ssl certificates chain                                    |
 
 ## Example
 ```
 brokers: 
     - 192.16.1.25:9092
-retry-max: 2
-retry-backoff: 10
+retry-max: 1
+retry-backoff: 30
 ```
