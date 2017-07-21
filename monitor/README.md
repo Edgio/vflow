@@ -67,6 +67,7 @@ System API : http://localhost:8081/sys
    "NumGoroutine" : 237,
    "GoVersion" : "go1.7.4",
    "NumLogicalCPU" : 4,
+   "MaxProcs" : 4, 
    "GCLast" : "2017-03-21 22:17:50.923246779 +0000 UTC",
    "MemHeapAlloc" : 4151416,
    "MemAlloc" : 4151416,

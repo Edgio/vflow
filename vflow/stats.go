@@ -49,6 +49,7 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 		GCLast          string
 		NumLogicalCPU   int
 		NumGoroutine    int
+		MaxProcs        int
 		GoVersion       string
 		StartTime       int64
 	}{
@@ -63,6 +64,7 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 		time.Unix(0, int64(mem.LastGC)).String(),
 		runtime.NumCPU(),
 		runtime.NumGoroutine(),
+		runtime.GOMAXPROCS(-1),
 		runtime.Version(),
 		startTime,
 	}
