@@ -224,7 +224,10 @@ LOOP:
 		d := ipfix.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCache); err != nil {
 			logger.Println(err)
-			continue
+			// in case ipfix message header couldn't decode
+			if decodedMsg == nil {
+				continue
+			}
 		}
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
