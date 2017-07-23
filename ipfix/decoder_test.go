@@ -205,8 +205,8 @@ func TestUnknownDatasetsMessage(t *testing.T) {
 		t.Error("Did not expect any result datasets, but got", l)
 	}
 	expectedErrorStr := `Multiple errors:
-- 127.0.0.1 unknown ipfix template id# 264. Known ids: []
-- 127.0.0.1 unknown ipfix template id# 264. Known ids: []`
+- 127.0.0.1 unknown ipfix template id# 264
+- 127.0.0.1 unknown ipfix template id# 264`
 	if err == nil || err.Error() != expectedErrorStr {
 		t.Error("Received unexpected erorr:", err)
 	}
