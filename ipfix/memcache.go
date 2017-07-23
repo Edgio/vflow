@@ -28,6 +28,7 @@ import (
 	"hash/fnv"
 	"io/ioutil"
 	"net"
+	"sort"
 	"sync"
 	"time"
 )
@@ -90,20 +91,38 @@ func (m MemCache) getShard(id uint16, addr net.IP) (*TemplatesShard, uint32) {
 	return m[uint(hSum32)%uint(shardNo)], hSum32
 }
 
-func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecord) {
+func (m MemCache) insert(id uint16, addr net.IP, tr TemplateRecord) {
 	shard, key := m.getShard(id, addr)
 	shard.Lock()
 	defer shard.Unlock()
 	shard.Templates[key] = Data{tr, time.Now().Unix()}
 }
 
-func (m *MemCache) retrieve(id uint16, addr net.IP) (TemplateRecord, bool) {
+func (m MemCache) retrieve(id uint16, addr net.IP) (TemplateRecord, bool) {
 	shard, key := m.getShard(id, addr)
 	shard.RLock()
 	defer shard.RUnlock()
 	v, ok := shard.Templates[key]
 
 	return v.Template, ok
+}
+
+// Fill a slice with all known set ids. This is inefficient and is only used for error reporting or debugging.
+func (m MemCache) allSetIds() []int {
+	num := 0
+	for _, shard := range m {
+		num += len(shard.Templates)
+	}
+	result := make([]int, 0, num)
+	for _, shard := range m {
+		shard.RLock()
+		for _, set := range shard.Templates {
+			result = append(result, int(set.Template.TemplateID))
+		}
+		shard.RUnlock()
+	}
+	sort.Ints(result)
+	return result
 }
 
 // Dump saves the current templates to hard disk

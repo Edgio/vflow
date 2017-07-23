@@ -30,7 +30,8 @@ import (
 
 // Reader represents the data bytes for reading
 type Reader struct {
-	data []byte
+	data  []byte
+	count int
 }
 
 var errReader = errors.New("can not read the data")
@@ -49,7 +50,7 @@ func (r *Reader) Uint8() (uint8, error) {
 	}
 
 	d := r.data[0]
-	r.data = r.data[1:]
+	r.advance(1)
 
 	return d, nil
 }
@@ -61,7 +62,7 @@ func (r *Reader) Uint16() (uint16, error) {
 	}
 
 	d := binary.BigEndian.Uint16(r.data)
-	r.data = r.data[2:]
+	r.advance(2)
 
 	return d, nil
 }
@@ -73,7 +74,7 @@ func (r *Reader) Uint32() (uint32, error) {
 	}
 
 	d := binary.BigEndian.Uint32(r.data)
-	r.data = r.data[4:]
+	r.advance(4)
 
 	return d, nil
 }
@@ -85,7 +86,7 @@ func (r *Reader) Uint64() (uint64, error) {
 	}
 
 	d := binary.BigEndian.Uint64(r.data)
-	r.data = r.data[8:]
+	r.advance(8)
 
 	return d, nil
 }
@@ -97,12 +98,39 @@ func (r *Reader) Read(n int) ([]byte, error) {
 	}
 
 	d := r.data[:n]
-	r.data = r.data[n:]
+	r.advance(n)
 
 	return d, nil
+}
+
+// PeekUint16 peeks the next two bytes interpreted as big-endian two-byte integer
+func (r *Reader) PeekUint16() (res uint16, err error) {
+	var b []byte
+	if b, err = r.Peek(2); err == nil {
+		res = binary.BigEndian.Uint16(b)
+	}
+	return
+}
+
+// Peek returns the next n bytes in the reader without advancing in the stream
+func (r *Reader) Peek(n int) ([]byte, error) {
+	if len(r.data) < n {
+		return []byte{}, errReader
+	}
+	return r.data[:n], nil
 }
 
 // Len returns the current length of the reader's data
 func (r *Reader) Len() int {
 	return len(r.data)
+}
+
+func (r *Reader) advance(num int) {
+	r.data = r.data[num:]
+	r.count += num
+}
+
+// ReadCount returns the number of bytes that have been read from this Reader in total
+func (r *Reader) ReadCount() int {
+	return r.count
 }
