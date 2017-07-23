@@ -157,10 +157,9 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			}:
 			default:
 			}
-			err = nonfatalError(fmt.Errorf("%s unknown ipfix template id# %d. Known ids: %v",
+			err = nonfatalError(fmt.Errorf("%s unknown ipfix template id# %d",
 				d.raddr.String(),
 				setHeader.SetID,
-				mem.allSetIds(),
 			))
 		}
 	}
