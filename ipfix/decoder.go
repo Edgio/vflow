@@ -164,7 +164,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		}
 	}
 
-	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) {
+	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 2 {
 		if setId := setHeader.SetID; setId == 2 || setId == 3 {
 			// Template record or template option record
 
