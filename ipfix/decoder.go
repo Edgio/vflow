@@ -89,6 +89,8 @@ type SetHeader struct {
 	Length uint16
 }
 
+type nonfatalError error
+
 var rpcChan = make(chan RPCRequest, 1)
 
 // NewDecoder constructs a decoder
@@ -130,7 +132,18 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 	return msg, combineErrors(decodeErrors...)
 }
 
-type nonfatalError error
+// RFC 7011 - part 3.B IPFIX Message Format
+// +----------------------------------------------------+
+// | Message Header                                     |
+// +----------------------------------------------------+
+// | Set                                                |
+// +----------------------------------------------------+
+// | Set                                                |
+// +----------------------------------------------------+
+//   ...
+// +----------------------------------------------------+
+// | Set                                                |
+// +----------------------------------------------------+
 
 func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	startCount := d.reader.ReadCount()
@@ -164,7 +177,8 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		}
 	}
 
-	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 2 {
+	// the next set should be greater than 4 bytes otherwise that's padding
+	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 4 {
 		if setId := setHeader.SetID; setId == 2 || setId == 3 {
 			// Template record or template option record
 
