@@ -9,9 +9,9 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector.
 ## Features
 - IPFIX RFC7011 collector
 - sFLow v5 raw header packet collector
-- Netflow v9 (Beta)
+- Netflow v9
 - Decoding sFlow raw header L2/L3/L4 
-- Produce to Apache Kafka, NSQ
+- Produce to Apache Kafka, NSQ, NATS
 - Replicate IPFIX to 3rd party collector
 - Supports IPv4 and IPv6
 - Monitoring with InfluxDB and OpenTSDB backend
