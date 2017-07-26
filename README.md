@@ -9,7 +9,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector.
 ## Features
 - IPFIX RFC7011 collector
 - sFLow v5 raw header packet collector
-- Netflow v9
+- Netflow v9 collector
 - Decoding sFlow raw header L2/L3/L4 
 - Produce to Apache Kafka, NSQ, NATS
 - Replicate IPFIX to 3rd party collector
@@ -21,6 +21,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector.
 ## Documentation
 - [Architecture](/docs/design.md).
 - [Configuration](/docs/config.md).
+- [Quick Start](/docs/quick_start_nsq.md).
 - [JUNOS Integration](/docs/junos_integration.md).
 - [Monitoring](/monitor/README.md).
 - [Stress / Load Generator](/stress/README.md).
@@ -57,9 +58,9 @@ cd vflow; go build
 ```
 ## Installation
 You can download and install pre-built debian package. 
-```
-dpkg -i vflow0.3.3.deb
-```
+
+dpkg -i [vflow-0.4.1-amd64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.4.1/vflow-0.4.1-amd64.deb)
+
 Once you installed you need to configure the below files, for more information check [configuration guide](/docs/config.md):
 ```
 /etc/vflow/vflow.conf
