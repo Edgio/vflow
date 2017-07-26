@@ -111,7 +111,7 @@ func (i *IPFIX) run() {
 		}()
 	}
 
-	logger.Printf("ipfix is running (workers#: %d)", i.workers)
+	logger.Printf("ipfix is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 
 	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
 	go ipfix.RPC(mCache, &ipfix.RPCConfig{
