@@ -55,6 +55,7 @@ dpkg: build
 	cp scripts/vflow.conf ${DEBPATH}/etc/vflow/vflow.conf
 	cp scripts/kafka.conf ${DEBPATH}/etc/vflow/mq.conf
 	cp ${DEBPATH}/DEBIAN/copyright ${DEBPATH}/usr/share/doc/vflow/
+	cp LICENSE ${DEBPATH}/usr/share/doc/vflow/license
 	dpkg-deb -b ${DEBPATH}
 	mv ${DEBPATH}.deb scripts/vflow-${VERSION}-${ARCH}.deb
 	sed -i 's/${VERSION}/%VERSION%/' ${DEBPATH}/DEBIAN/control
@@ -65,5 +66,9 @@ rpm: build
 	cp stress/stress ${RPMPATH}/SOURCES/vflow_stress
 	cp scripts/vflow.conf ${RPMPATH}/SOURCES/
 	cp scripts/vflow.service ${RPMPATH}/SOURCES/
+	cp scripts/vflow.logrotate ${RPMPATH}/SOURCES/
+	cp scripts/kafka.conf ${RPMPATH}/SOURCES/mq.conf
+	cp LICENSE ${RPMPATH}/SOURCES/license
+	cp NOTICE ${RPMPATH}/SOURCES/notice
 	rpmbuild -ba ${RPMPATH}/SPECS/vflow.spec --define "_topdir `pwd`/scripts/rpmbuild"
 	sed -i 's/${VERSION}/%VERSION%/' ${RPMPATH}/SPECS/vflow.spec
