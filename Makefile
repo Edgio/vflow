@@ -1,4 +1,4 @@
-VERSION= 0.3.2
+VERSION= 0.4.1
 PACKAGES= $(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --unique)
 LDFLAGS= -ldflags "-X main.version=${VERSION}"
 DEBPATH= scripts/dpkg
