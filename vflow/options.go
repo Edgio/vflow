@@ -160,6 +160,9 @@ func GetOptions() *Options {
 
 	opts.vFlowPIDWrite()
 
+	opts.Logger.Printf("Welcome to vFlow v.%s Apache License 2.0", version)
+	opts.Logger.Printf("Copyright (C) 2017 Verizon. github.com/VerizonDigital/vflow")
+
 	return opts
 }
 
