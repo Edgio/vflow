@@ -2,8 +2,8 @@
 
 ## Download vFlow
 ``` 
-wget https://github.com/VerizonDigital/vflow/archive/vflow0.3.3.deb
-dpkg -i vflow0.3.3.deb
+wget https://github.com/VerizonDigital/vflow/releases/download/v0.4.1/vflow-0.4.1-amd64.deb
+dpkg -i vflow-0.4.1-amd64.deb
 ```
 
 ## Download NSQ
