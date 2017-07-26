@@ -43,7 +43,8 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 ```
 
 ## Supported platform
-- Linux 
+- Linux
+- Windows
 
 ## Build
 Given that the Go Language compiler (version 1.8 preferred) is installed, you can build it with:
