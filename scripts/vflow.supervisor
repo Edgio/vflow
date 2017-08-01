@@ -1,4 +1,4 @@
 [program:vflow]
-command=/usr/local/bin/vflow
+command=/usr/bin/vflow
 autostart=true
 autorestart=true
