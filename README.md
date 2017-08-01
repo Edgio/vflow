@@ -82,7 +82,7 @@ docker pull spotify/kafka
 3. You can run them like below:
 ```
 docker run -d -p 2181:2181 -p 9092:9092 spotify/kafka
-docker run -d -p 4739:4739 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow
+docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow
 ```
 
 ## License
