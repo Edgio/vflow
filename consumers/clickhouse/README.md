@@ -36,7 +36,7 @@ CREATE DATABASE vflow
 
 ### Create Table
 ```
-CREATE TABLE samples
+CREATE TABLE vflow.samples
 (
     date Date,
     time DateTime,
