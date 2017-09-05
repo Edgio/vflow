@@ -65,7 +65,31 @@ func TestDecodeTCP(t *testing.T) {
 		t.Error("expected dst port:8443, got", tcp.DstPort)
 	}
 
-	if tcp.Flags != 80 {
-		t.Error("expected flags:80, got", tcp.Flags)
+	if tcp.Flags != 16 {
+		t.Error("expected flags:16, got", tcp.Flags)
+	}
+}
+
+func TestDecodeTCP2(t *testing.T) {
+	b := []byte{
+		0xa5, 0x8e, 0x20, 0xfb, 0x54,
+		0x1, 0x4f, 0x1c, 0x52, 0x7f,
+		0x0, 0xf9, 0x51, 0x10, 0x1,
+		0x2a, 0xbb, 0xde, 0x0, 0x0,
+	}
+
+	tcp, err := decodeTCP(b)
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+
+	// NS flag
+	if tcp.Flags != 272 {
+		t.Error("expected flags:272, got", tcp.Flags)
+	}
+
+	// check dataoffset
+	if tcp.DataOffset != 5 {
+		t.Error("expected dataoffset:5, got", tcp.DataOffset)
 	}
 }

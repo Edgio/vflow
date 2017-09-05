@@ -60,14 +60,12 @@ func decodeTCP(b []byte) (TCPHeader, error) {
 		return TCPHeader{}, errShortTCPHeaderLength
 	}
 
-	tmp := int(b[12])
-
 	return TCPHeader{
 		SrcPort:    int(b[0])<<8 | int(b[1]),
 		DstPort:    int(b[2])<<8 | int(b[3]),
-		DataOffset: (tmp & 0xf000) >> 12,
-		Reserved:   (tmp & 0x0e00) >> 8,
-		Flags:      (tmp & 0x01ff),
+		DataOffset: int(b[12]) >> 4,
+		Reserved:   0,
+		Flags:      ((int(b[12])<<8 | int(b[13])) & 0x01ff),
 	}, nil
 }
 
