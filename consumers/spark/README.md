@@ -6,5 +6,8 @@ Spark consumer for Vflow data has the floowing components. We assume users have 
 
 Vflow data from Kafka will be processed using the spark component and stored in HDFS component as Hive tables. Spark consumer is highly scalable and reliable. Consumer is tested against Spark 2.1. It uses scala 2.11.8. This consumer serves as the skeleton for processing vflow data using spark. Complex processing and analysis can be built on top of this code. With Presto (https://prestodb.io), billions of entries can be queried/joined in few minutes or seconds depending on the cluster configuration. Superset can be used for visualization (https://superset.incubator.apache.org). Consumer can also be easily modified to use other storage frameworks.
 
+# Build
+`sbt assembly` 
+
 # Spark Submit  
 `spark-submit --master <master> --class com.oath.vdms.vflow.consumer.spark.driver.IngestStream vflow_spark_consumer-assembly-1.0.jar <kafka_topic> <bootstrap_server> <consumer_group> <storage_format> <table_name>` 
