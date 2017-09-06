@@ -11,3 +11,6 @@ Vflow data from Kafka will be processed using the spark component and stored in 
 
 # Spark Submit  
 `spark-submit --master <master> --class com.oath.vdms.vflow.consumer.spark.driver.IngestStream vflow_spark_consumer-assembly-1.0.jar <kafka_topic> <bootstrap_server> <consumer_group> <storage_format> <table_name>` 
+
+# Example
+`spark-submit --master spark://master:7077 --driver-memory 8G --executor-memory 4G --executor-cores 2 --conf "spark.driver.extraJavaOptions=-Dspark.hadoop.dfs.replication=1" --class com.oath.vdms.vflow.consumer.spark.driver.IngestStream vflow_spark_consumer-assembly-1.0.jar vflow.ipfix 12.16.61.19:9092 consumer-group ORC ipfix-table` 
