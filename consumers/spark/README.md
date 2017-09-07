@@ -1,4 +1,4 @@
-Spark consumer for Vflow data has the floowing components. We assume users have basic knowledge about spark and hadoop insfrasture
+Spark consumer for vFlow data has the following components. This document assume users have basic knowledge about spark and hadoop insfrastructure
 
 1. Spark Component (Yarn or Standalone cluster. Works with Pseudo mode also)
 2. HDFS & Hive Component
