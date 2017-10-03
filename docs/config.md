@@ -98,3 +98,38 @@ brokers:
 retry-max: 1
 retry-backoff: 30
 ```
+# NSQ Configuration
+
+## Format
+A config file is a plain text file in [YAML](https://en.wikipedia.org/wiki/YAML) format.
+
+```
+key: value
+```
+
+The default configuration file is /etc/vflow/mq.conf, you can be able to change it through vFlow configuration.
+
+## Configuration Keys
+The NSQ configuration contains the following key
+
+|Key                  | Default        |  Environment variable    | Description                                                      |
+|---------------------| ---------------|--------------------------|------------------------------------------------------------------|
+|server               | localhost:4150 | NA                       | NSQ server addresse and port     
+
+# NATS Configuration
+
+## Format
+A config file is a plain text file in [YAML](https://en.wikipedia.org/wiki/YAML) format.
+
+```
+key: value
+```
+
+The default configuration file is /etc/vflow/mq.conf, you can be able to change it through vFlow configuration.
+
+## Configuration Keys
+The NATS configuration contains the following key
+
+|Key                  | Default               |  Environment variable    | Description                                                      |
+|---------------------| ----------------------|--------------------------|------------------------------------------------------------------|
+|url                  | nats://localhost:4222 | NA                       | URL addresse     
