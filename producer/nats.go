@@ -39,7 +39,7 @@ type NATS struct {
 
 // NATSConfig is the struct that holds all configuation for NATS connections
 type NATSConfig struct {
-	URL string `json:"endpoint"`
+	URL string `yaml:"url"`
 }
 
 func (n *NATS) setup(configFile string, logger *log.Logger) error {
