@@ -39,7 +39,7 @@ type NSQ struct {
 
 // NSQConfig represents NSQ configuration
 type NSQConfig struct {
-	Server string `json:"server"`
+	Server string `yaml:"server"`
 }
 
 func (n *NSQ) setup(configFile string, logger *log.Logger) error {
