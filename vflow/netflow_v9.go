@@ -203,7 +203,9 @@ LOOP:
 		d := netflow9.NewDecoder(msg.raddr.IP, msg.body)
 		if decodedMsg, err = d.Decode(mCacheNF9); err != nil {
 			logger.Println(err)
-			continue
+			if decodedMsg == nil {
+				continue
+			}
 		}
 
 		atomic.AddUint64(&i.stats.DecodedCount, 1)
