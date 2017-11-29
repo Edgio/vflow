@@ -14,17 +14,19 @@ or
 yum localinstall vflow-0.4.1.amd64.rpm
 ```
 ## Download Kafka
-
+```
 wget https://www.apache.org/dyn/closer.cgi?path=/kafka/0.11.0.0/kafka_2.11-0.11.0.0.tgz
 tar -xzf kafka_2.11-0.11.0.0.tgz
 cd kafka_2.11-0.11.0.0
-
+```
 Kafka uses ZooKeeper so you need to first start a ZooKeeper server if already you don't have one
+```
 bin/zookeeper-server-start.sh config/zookeeper.properties
-
+```
 start the Kafka server
+```
 bin/kafka-server-start.sh config/server.properties
-
+```
 ## vFlow - start service
 ```
 service vflow start
