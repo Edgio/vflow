@@ -51,6 +51,7 @@ func NewProducer(mqName string) *Producer {
 		"kafka": new(Kafka),
 		"nsq":   new(NSQ),
 		"nats":  new(NATS),
+		"rawSocket":  new(RawSocket),
 	}
 
 	return &Producer{
