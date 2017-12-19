@@ -1,0 +1,10 @@
+stress/
+vflow/
+.DS_Store
+
+# Intellij
+.idea/
+*.iml
+*.iws
+*~
+
