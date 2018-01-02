@@ -46,14 +46,15 @@ type Kafka struct {
 
 // KafkaConfig represents kafka configuration
 type KafkaConfig struct {
-	Brokers      []string `yaml:"brokers" env:"BROKERS"`
-	Compression  string   `yaml:"compression" env:"COMPRESSION"`
-	RetryMax     int      `yaml:"retry-max" env:"RETRY_MAX"`
-	RetryBackoff int      `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
-	TLSCertFile  string   `yaml:"tls-cert" env:"TLS_CERT"`
-	TLSKeyFile   string   `yaml:"tls-key" env:"TLS_KEY"`
-	CAFile       string   `yaml:"ca-file" env:"CA_FILE"`
-	VerifySSL    bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
+	Brokers      	[]string `yaml:"brokers" env:"BROKERS"`
+	Compression  	string   `yaml:"compression" env:"COMPRESSION"`
+	RetryMax     	int      `yaml:"retry-max" env:"RETRY_MAX"`
+	RequestSizeMax  int32    `yaml:"request-size-max" env:"NA"`
+	RetryBackoff 	int      `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
+	TLSCertFile  	string   `yaml:"tls-cert" env:"TLS_CERT"`
+	TLSKeyFile   	string   `yaml:"tls-key" env:"TLS_KEY"`
+	CAFile       	string   `yaml:"ca-file" env:"CA_FILE"`
+	VerifySSL    	bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
@@ -64,10 +65,11 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 
 	// set default values
 	k.config = KafkaConfig{
-		Brokers:      []string{"localhost:9092"},
-		RetryMax:     2,
-		RetryBackoff: 10,
-		VerifySSL:    true,
+		Brokers:      	[]string{"localhost:9092"},
+		RetryMax:     	2,
+		RequestSizeMax: 104857600,
+		RetryBackoff: 	10,
+		VerifySSL:    	true,
 	}
 
 	k.logger = logger
@@ -81,6 +83,8 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	config.ClientID = "vFlow.Kafka"
 	config.Producer.Retry.Max = k.config.RetryMax
 	config.Producer.Retry.Backoff = time.Duration(k.config.RetryBackoff) * time.Millisecond
+
+	sarama.MaxRequestSize = k.config.RequestSizeMax
 
 	switch k.config.Compression {
 	case "gzip":
