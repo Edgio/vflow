@@ -37,11 +37,11 @@ func TestDecodeIEEE802(t *testing.T) {
 		t.Error("unexpected error", err)
 	}
 
-	if d.SrcMAC != "d4:04:ff:01:1d:9e" {
+	if d.DstMAC != "d4:04:ff:01:1d:9e" {
 		t.Error("expected d4:04:ff:01:1d:9e, got", d.SrcMAC)
 	}
 
-	if d.DstMAC != "30:7c:5e:e5:59:ef" {
+	if d.SrcMAC != "30:7c:5e:e5:59:ef" {
 		t.Error("expected 30:7c:5e:e5:59:ef, got", d.DstMAC)
 	}
 
