@@ -108,8 +108,8 @@ func decodeIEEE802(b []byte) (Datalink, error) {
 	hwAddrFmt := "%0.2x:%0.2x:%0.2x:%0.2x:%0.2x:%0.2x"
 
 	if d.EtherType != EtherTypeIEEE8021Q {
-		d.SrcMAC = fmt.Sprintf(hwAddrFmt, b[0], b[1], b[2], b[3], b[4], b[5])
-		d.DstMAC = fmt.Sprintf(hwAddrFmt, b[6], b[7], b[8], b[9], b[10], b[11])
+		d.DstMAC = fmt.Sprintf(hwAddrFmt, b[0], b[1], b[2], b[3], b[4], b[5])
+		d.SrcMAC = fmt.Sprintf(hwAddrFmt, b[6], b[7], b[8], b[9], b[10], b[11])
 	}
 
 	return d, nil
