@@ -134,3 +134,26 @@ The NATS configuration contains the following key
 |Key                  | Default               |  Environment variable    | Description                                                      |
 |---------------------| ----------------------|--------------------------|------------------------------------------------------------------|
 |url                  | nats://localhost:4222 | NA                       | URL addresse     
+
+# Raw Socket Configuration
+
+Note that for messages sent over TCP and UDP using this producer, the message deliminator is a new line character ("\n").
+
+## Format
+A config file is a plain text file in [YAML](https://en.wikipedia.org/wiki/YAML) format.
+
+```
+key: value
+```
+
+The default configuration file is /etc/vflow/mq.conf, you can be able to change it through vFlow configuration.
+
+
+## Configuration Keys
+The NATS configuration contains the following key
+
+|Key                  | Default               |  Environment variable    | Description                                                          |
+|---------------------| ----------------------|--------------------------|----------------------------------------------------------------------|
+|url                  | localhost:9555        | NA                       | URL address to send to. Includes the hostname and port.              |     
+|protocol             | tcp                   | NA                       | Protocol to use to send. Can be either "tcp" or "udp"                |
+|retry-max            | 2                     | NA                       | The number of times a message will be retried before giving up on it |     
