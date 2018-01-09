@@ -27,9 +27,9 @@ import (
 	"log"
 	"strings"
 
-	"net"
 	"fmt"
 	"gopkg.in/yaml.v2"
+	"net"
 )
 
 // RawSocket represents RawSocket producer
@@ -41,15 +41,15 @@ type RawSocket struct {
 
 // RawSocketConfig is the struct that holds all configuation for RawSocketConfig connections
 type RawSocketConfig struct {
-	URL string `yaml:"url"`
+	URL      string `yaml:"url"`
 	Protocol string `yaml:"protocol"`
-	MaxRetry int `yaml:"retry-max"`
+	MaxRetry int    `yaml:"retry-max"`
 }
 
 func (rs *RawSocket) setup(configFile string, logger *log.Logger) error {
 	var err error
 	rs.config = RawSocketConfig{
-		URL: "localhost:9555",
+		URL:      "localhost:9555",
 		Protocol: "tcp",
 		MaxRetry: 2,
 	}
@@ -86,10 +86,10 @@ func (rs *RawSocket) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			break
 		}
 
-		for i:= 0; ; i++ {
-			_, err = fmt.Fprintf(rs.connection, string(msg) + "\n")
+		for i := 0; ; i++ {
+			_, err = fmt.Fprintf(rs.connection, string(msg)+"\n")
 			if err == nil {
-				break;
+				break
 			}
 
 			*ec++
