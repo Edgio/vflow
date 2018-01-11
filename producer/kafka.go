@@ -49,7 +49,7 @@ type KafkaConfig struct {
 	Brokers        []string `yaml:"brokers" env:"BROKERS"`
 	Compression    string   `yaml:"compression" env:"COMPRESSION"`
 	RetryMax       int      `yaml:"retry-max" env:"RETRY_MAX"`
-	RequestSizeMax int32    `yaml:"request-size-max" env:"NA"`
+	RequestSizeMax int32    `yaml:"request-size-max" env:"REQUEST_SIZE_MAX"`
 	RetryBackoff   int      `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
 	TLSCertFile    string   `yaml:"tls-cert" env:"TLS_CERT"`
 	TLSKeyFile     string   `yaml:"tls-key" env:"TLS_KEY"`
