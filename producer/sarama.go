@@ -85,6 +85,7 @@ func (k *KafkaSarama) setup(configFile string, logger *log.Logger) error {
 	config.ClientID = "vFlow.Kafka"
 	config.Producer.Retry.Max = k.config.RetryMax
 	config.Producer.Retry.Backoff = time.Duration(k.config.RetryBackoff) * time.Millisecond
+	config.Version = sarama.V0_10_0_0
 
 	sarama.MaxRequestSize = k.config.RequestSizeMax
 
