@@ -44,7 +44,7 @@ const (
 // FlowSample represents single flow sample
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
-	SourceID     byte   // sfSourceID
+	SourceID     uint32 // sfSourceID
 	SamplingRate uint32 // sfPacketSamplingRate
 	SamplePool   uint32 // Total number of packets that could have been sampled
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
@@ -92,8 +92,6 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 	if err = read(r, &fs.SourceID); err != nil {
 		return err
 	}
-
-	r.Seek(3, 1) // skip counter sample decoding
 
 	if err = read(r, &fs.SamplingRate); err != nil {
 		return err
