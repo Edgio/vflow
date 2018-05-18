@@ -68,6 +68,7 @@ type Options struct {
 	IPFIXEnabled       bool   `yaml:"ipfix-enabled"`
 	IPFIXRPCEnabled    bool   `yaml:"ipfix-rpc-enabled"`
 	IPFIXPort          int    `yaml:"ipfix-port"`
+	IPFIXAddr          string `yaml:"ipfix-addr"`
 	IPFIXUDPSize       int    `yaml:"ipfix-udp-size"`
 	IPFIXWorkers       int    `yaml:"ipfix-workers"`
 	IPFIXTopic         string `yaml:"ipfix-topic"`
@@ -274,6 +275,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable/disable IPFIX listener")
 	flag.BoolVar(&opts.IPFIXRPCEnabled, "ipfix-rpc-enabled", opts.IPFIXRPCEnabled, "enable/disable RPC IPFIX")
 	flag.IntVar(&opts.IPFIXPort, "ipfix-port", opts.IPFIXPort, "IPFIX port number")
+	flag.StringVar(&opts.IPFIXAddr, "ipfix-addr", opts.IPFIXAddr, "IPFIX IP address to bind to")
 	flag.IntVar(&opts.IPFIXUDPSize, "ipfix-max-udp-size", opts.IPFIXUDPSize, "IPFIX maximum UDP size")
 	flag.IntVar(&opts.IPFIXWorkers, "ipfix-workers", opts.IPFIXWorkers, "IPFIX workers number")
 	flag.StringVar(&opts.IPFIXTopic, "ipfix-topic", opts.IPFIXTopic, "ipfix topic name")
