@@ -30,6 +30,9 @@ import (
 	"fmt"
 	"gopkg.in/yaml.v2"
 	"net"
+	"os"
+	"reflect"
+	"strconv"
 )
 
 // RawSocket represents RawSocket producer
@@ -40,10 +43,13 @@ type RawSocket struct {
 }
 
 // RawSocketConfig is the struct that holds all configuation for RawSocketConfig connections
+// Hostname/Port is an alternative way to specify the URL
 type RawSocketConfig struct {
-	URL      string `yaml:"url"`
-	Protocol string `yaml:"protocol"`
-	MaxRetry int    `yaml:"retry-max"`
+	URL      string `yaml:"url" env:"URL"`
+	Hostname string `yaml:"hostname" env:"HOSTNAME"`
+	Port     int `yaml:"port" env:"PORT"`
+	Protocol string `yaml:"protocol" env:"PROTOCOL"`
+	MaxRetry int    `yaml:"retry-max" env:"RETRY_MAX"`
 }
 
 func (rs *RawSocket) setup(configFile string, logger *log.Logger) error {
@@ -57,6 +63,14 @@ func (rs *RawSocket) setup(configFile string, logger *log.Logger) error {
 	if err = rs.load(configFile); err != nil {
 		logger.Println(err)
 		return err
+	}
+
+	// get env config
+	rs.loadEnv("VFLOW_RAW_SOCKET")
+
+	// If both Port and hostname are set, then use that over the URL
+	if rs.config.Port != 0 && rs.config.Hostname != "" {
+		rs.config.URL = rs.config.Hostname + ":" + strconv.Itoa(rs.config.Port)
 	}
 
 	rs.connection, err = net.Dial(rs.config.Protocol, rs.config.URL)
@@ -126,4 +140,44 @@ func (rs *RawSocket) load(f string) error {
 	}
 
 	return nil
+}
+
+func (k *RawSocket) loadEnv(prefix string) {
+	v := reflect.ValueOf(&k.config).Elem()
+	t := v.Type()
+	for i := 0; i < v.NumField(); i++ {
+		f := v.Field(i)
+		env := t.Field(i).Tag.Get("env")
+		if env == "" {
+			continue
+		}
+
+		val, ok := os.LookupEnv(prefix + "_" + env)
+		if !ok {
+			continue
+		}
+
+		switch f.Kind() {
+		case reflect.Int:
+			valInt, err := strconv.Atoi(val)
+			if err != nil {
+				k.logger.Println(err)
+				continue
+			}
+			f.SetInt(int64(valInt))
+		case reflect.String:
+			f.SetString(val)
+		case reflect.Slice:
+			for _, elm := range strings.Split(val, ";") {
+				f.Index(0).SetString(elm)
+			}
+		case reflect.Bool:
+			valBool, err := strconv.ParseBool(val)
+			if err != nil {
+				k.logger.Println(err)
+				continue
+			}
+			f.SetBool(valBool)
+		}
+	}
 }

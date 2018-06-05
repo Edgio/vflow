@@ -152,8 +152,10 @@ The default configuration file is /etc/vflow/mq.conf, you can be able to change 
 ## Configuration Keys
 The NATS configuration contains the following key
 
-|Key                  | Default               |  Environment variable    | Description                                                          |
-|---------------------| ----------------------|--------------------------|----------------------------------------------------------------------|
-|url                  | localhost:9555        | NA                       | URL address to send to. Includes the hostname and port.              |     
-|protocol             | tcp                   | NA                       | Protocol to use to send. Can be either "tcp" or "udp"                |
-|retry-max            | 2                     | NA                       | The number of times a message will be retried before giving up on it |     
+|Key                  | Default               |  Environment variable       | Description                                                                                               |
+|---------------------| ----------------------|-----------------------------|-----------------------------------------------------------------------------------------------------------|
+|url                  | localhost:9555        | VFLOW_RAW_SOCKET_URL        | URL address to send to. Includes the hostname and port.                                                   |     
+|hostname             | NA                    | VFLOW_RAW_SOCKET_HOSTNAME   | Alternative way to specify the hostname of the URL. If both hostname and port are set, will override URL. |     
+|port                 | NA                    | VFLOW_RAW_SOCKET_PORT       | Alternative way to specify the port of the URL. If both hostname and port are set, will override URL.     |     
+|protocol             | tcp                   | VFLOW_RAW_SOCKET_PROTOCOL   | Protocol to use to send. Can be either "tcp" or "udp"                                                     |
+|retry-max            | 2                     | VFLOW_RAW_SOCKET_RETRY_MAX  | The number of times a message will be retried before giving up on it                                      |     

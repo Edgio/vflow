@@ -7,3 +7,5 @@ vflow/
 *.iml
 *.iws
 *~
+
+vendor/
