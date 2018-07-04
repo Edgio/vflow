@@ -4,6 +4,7 @@
 //:
 //: file:    ipfix.go
 //: details: IP Flow Information Export (IPFIX) entities model - https://www.iana.org/assignments/ipfix/ipfix.xhtml
+//:          VMware Custom Parameters - https://docs.vmware.com/en/VMware-NSX-for-vSphere/6.4/com.vmware.nsx.admin.doc/GUID-40805D0E-8A97-4011-B85C-CBF37812DBB5.html
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -550,4 +551,10 @@ var InfoModel = IANAInfoModel{
 	ElementKey{0, 431}: InfoElementEntry{FieldID: 431, Name: "layer2FrameTotalCount", Type: FieldTypes["unsigned64"]},
 	ElementKey{0, 432}: InfoElementEntry{FieldID: 432, Name: "pseudoWireDestinationIPv4Address", Type: FieldTypes["ipv4Address"]},
 	ElementKey{0, 433}: InfoElementEntry{FieldID: 433, Name: "ignoredLayer2FrameTotalCount", Type: FieldTypes["unsigned64"]},
+	//vmWare elements 
+        ElementKey{6876, 210}: InfoElementEntry{FieldID: 210, Name: "paddingOctets", Type: FieldTypes["octetArray"]},
+        ElementKey{6876, 888}: InfoElementEntry{FieldID: 888, Name: "egressInterfaceAttr", Type: FieldTypes["unsigned16"]},
+        ElementKey{6876, 889}: InfoElementEntry{FieldID: 889, Name: "vxlanExportRole", Type: FieldTypes["unsigned8"]},
+        ElementKey{6876, 890}: InfoElementEntry{FieldID: 890, Name: "ingressInterfaceAttr", Type: FieldTypes["unsigned16"]},
+
 }
