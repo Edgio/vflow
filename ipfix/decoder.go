@@ -489,8 +489,8 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID))
+			return nil, nonfatalError(fmt.Errorf("IPFIX element key: ID (%d), EnterpriseNo (%d) does not exist",
+				tr.FieldSpecifiers[i].ElementID,tr.FieldSpecifiers[i].EnterpriseNo))
 		}
 
 		fields = append(fields, DecodedField{
