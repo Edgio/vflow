@@ -24,6 +24,7 @@ The vFlow configuration contains the following keys
 |cpu-cap                 | the number of available CPUs   | sets the maximum number of CPUs                  |
 |ipfix-enabled           | true                           | enable/disable IPFIX decoders                    |
 |ipfix-port              | 4739                           | server IPFIX UDP port                            |
+|ipfix-addr              | -                              | server IPFIX UDP IP address to bind to           |
 |ipfix-workers           | 200                            | IPFIX concurrent decoders                        |
 |ipfix-topic             | vflow.ipfix                    | ipfix message queue topic name                   |
 |ipfix-udp-size          | 1500                           | maximum IPFIX UDP packet size                    |
@@ -94,7 +95,7 @@ The Kafka configuration contains the following key
 
 ## Example
 ```
-brokers: 
+brokers:
     - 192.16.1.25:9092
 retry-max: 1
 retry-backoff: 30
@@ -115,7 +116,7 @@ The NSQ configuration contains the following key
 
 |Key                  | Default        |  Environment variable    | Description                                                      |
 |---------------------| ---------------|--------------------------|------------------------------------------------------------------|
-|server               | localhost:4150 | NA                       | NSQ server addresse and port     
+|server               | localhost:4150 | NA                       | NSQ server addresse and port
 
 # NATS Configuration
 
@@ -133,7 +134,7 @@ The NATS configuration contains the following key
 
 |Key                  | Default               |  Environment variable    | Description                                                      |
 |---------------------| ----------------------|--------------------------|------------------------------------------------------------------|
-|url                  | nats://localhost:4222 | NA                       | URL addresse     
+|url                  | nats://localhost:4222 | NA                       | URL addresse
 
 # Raw Socket Configuration
 
@@ -154,6 +155,6 @@ The NATS configuration contains the following key
 
 |Key                  | Default               |  Environment variable    | Description                                                          |
 |---------------------| ----------------------|--------------------------|----------------------------------------------------------------------|
-|url                  | localhost:9555        | NA                       | URL address to send to. Includes the hostname and port.              |     
+|url                  | localhost:9555        | NA                       | URL address to send to. Includes the hostname and port.              |
 |protocol             | tcp                   | NA                       | Protocol to use to send. Can be either "tcp" or "udp"                |
-|retry-max            | 2                     | NA                       | The number of times a message will be retried before giving up on it |     
+|retry-max            | 2                     | NA                       | The number of times a message will be retried before giving up on it |

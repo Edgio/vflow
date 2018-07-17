@@ -82,6 +82,7 @@ var (
 func NewIPFIX() *IPFIX {
 	return &IPFIX{
 		port:    opts.IPFIXPort,
+		addr:    opts.IPFIXAddr,
 		workers: opts.IPFIXWorkers,
 		pool:    make(chan chan struct{}, maxWorkers),
 	}
