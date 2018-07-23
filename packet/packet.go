@@ -24,6 +24,13 @@ package packet
 
 import "errors"
 
+// The header protocol describes the format of the sampled header
+const (
+	headerProtocolEthernet uint32 = 1
+	headerProtocolIPv4     uint32 = 11
+	headerProtocolIPv6     uint32 = 12
+)
+
 // Packet represents layer 2,3,4 available info
 type Packet struct {
 	L2   Datalink
@@ -33,7 +40,8 @@ type Packet struct {
 }
 
 var (
-	errUnknownEtherType = errors.New("unknown ether type")
+	errUnknownEtherType      = errors.New("unknown ether type")
+	errUnknownHeaderProtocol = errors.New("unknown header protocol")
 )
 
 // NewPacket constructs a packet object
@@ -42,15 +50,47 @@ func NewPacket() Packet {
 }
 
 // Decoder decodes packet's layers
-func (p *Packet) Decoder(data []byte) (*Packet, error) {
+func (p *Packet) Decoder(data []byte, protocol uint32) (*Packet, error) {
 	var (
 		err error
 	)
 
 	p.data = data
-	err = p.decodeEthernet()
+
+	switch protocol {
+	case headerProtocolEthernet:
+		err = p.decodeEthernetHeader()
+		return p, err
+	case headerProtocolIPv4:
+		err = p.decodeIPv4Header()
+		if err != nil {
+			return p, err
+		}
+	case headerProtocolIPv6:
+		err = p.decodeIPv6Header()
+		if err != nil {
+			return p, err
+		}
+	default:
+		return p, errUnknownHeaderProtocol
+	}
+
+	err = p.decodeNextLayer()
 	if err != nil {
 		return p, err
+	}
+
+	return p, nil
+}
+
+func (p *Packet) decodeEthernetHeader() error {
+	var (
+		err error
+	)
+
+	err = p.decodeEthernet()
+	if err != nil {
+		return err
 	}
 
 	switch p.L2.EtherType {
@@ -58,29 +98,29 @@ func (p *Packet) Decoder(data []byte) (*Packet, error) {
 
 		err = p.decodeIPv4Header()
 		if err != nil {
-			return p, err
+			return err
 		}
 
 		err = p.decodeNextLayer()
 		if err != nil {
-			return p, err
+			return err
 		}
 
 	case EtherTypeIPv6:
 
 		err = p.decodeIPv6Header()
 		if err != nil {
-			return p, err
+			return err
 		}
 
 		err = p.decodeNextLayer()
 		if err != nil {
-			return p, err
+			return err
 		}
 
 	default:
-		return p, errUnknownEtherType
+		return errUnknownEtherType
 	}
 
-	return p, nil
+	return nil
 }

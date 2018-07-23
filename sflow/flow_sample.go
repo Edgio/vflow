@@ -226,7 +226,7 @@ func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
 	}
 
 	p := packet.NewPacket()
-	d, err := p.Decoder(h.Header)
+	d, err := p.Decoder(h.Header, h.Protocol)
 	if err != nil {
 		return nil, err
 	}
