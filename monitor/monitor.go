@@ -25,6 +25,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 
 	"github.com/VerizonDigital/vflow/monitor/store"
 )
@@ -35,6 +36,7 @@ type options struct {
 	InfluxDBAPI  string
 	InfluxDBName string
 	TSDBAPI      string
+	Hostname     string
 }
 
 var opts = options{
@@ -43,6 +45,7 @@ var opts = options{
 	InfluxDBAPI:  "http://localhost:8086",
 	TSDBAPI:      "http://localhost:4242",
 	InfluxDBName: "vflow",
+	Hostname:     "na",
 }
 
 func init() {
@@ -52,12 +55,14 @@ func init() {
 	flag.StringVar(&opts.InfluxDBAPI, "influxdb-api-addr", opts.InfluxDBAPI, "influxdb api address")
 	flag.StringVar(&opts.InfluxDBName, "influxdb-db-name", opts.InfluxDBName, "influxdb database name")
 	flag.StringVar(&opts.TSDBAPI, "tsdb-api-addr", opts.TSDBAPI, "tsdb api address")
+	flag.StringVar(&opts.Hostname, "hostname", opts.Hostname, "overwrite hostname")
 
 	flag.Parse()
 }
 
 func main() {
 	var m = make(map[string]store.Monitor)
+	var err error
 
 	m["influxdb"] = store.InfluxDB{
 		API:   opts.InfluxDBAPI,
@@ -74,10 +79,16 @@ func main() {
 		log.Fatalf("the storage: %s is not available", opts.DBType)
 	}
 
-	if err := m[opts.DBType].Netflow(); err != nil {
+	if opts.Hostname == "na" {
+		if opts.Hostname, err = os.Hostname(); err != nil {
+			log.Println("unknown hostname")
+		}
+	}
+
+	if err := m[opts.DBType].Netflow(opts.Hostname); err != nil {
 		log.Println(err)
 	}
-	if err := m[opts.DBType].System(); err != nil {
+	if err := m[opts.DBType].System(opts.Hostname); err != nil {
 		log.Println(err)
 	}
 }

@@ -34,8 +34,8 @@ import (
 // Monitor is an interface to store system
 // and netflow statistics
 type Monitor interface {
-	System() error
-	Netflow() error
+	System(string) error
+	Netflow(string) error
 }
 
 // IPFIX represents IPFIX metrics

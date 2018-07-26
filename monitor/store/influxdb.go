@@ -36,17 +36,13 @@ type InfluxDB struct {
 }
 
 // Netflow ingests flow's stats to InfluxDB
-func (i InfluxDB) Netflow() error {
+func (i InfluxDB) Netflow(hostname string) error {
 	flow, lastFlow, err := getFlow(i.VHost)
 	if err != nil {
 		return err
 	}
 
 	delta := flow.Timestamp - lastFlow.Timestamp
-	hostname, err := os.Hostname()
-	if err != nil {
-		return err
-	}
 
 	value := abs((flow.IPFIX.UDPCount - lastFlow.IPFIX.UDPCount) / delta)
 	query := fmt.Sprintf("udp.rate,type=ipfix,host=%s value=%d\n", hostname, value)
@@ -98,15 +94,10 @@ func (i InfluxDB) Netflow() error {
 }
 
 // System ingests system's stats to InfluxDB
-func (i InfluxDB) System() error {
+func (i InfluxDB) System(hostname string) error {
 	sys := new(Sys)
 	client := NewHTTP()
 	err := client.Get(i.VHost+"/sys", sys)
-	if err != nil {
-		return err
-	}
-
-	hostname, err := os.Hostname()
 	if err != nil {
 		return err
 	}
