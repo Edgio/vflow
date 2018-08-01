@@ -143,14 +143,14 @@ func (c *Client) Post(url string, cType, query string) ([]byte, error) {
 	return body, nil
 }
 
-func getFlow(host string) (*Flow, *Flow, error) {
-	lastFlowFile := "/tmp/vflow.mon.lastflow"
+func getFlow(vhost, host string) (*Flow, *Flow, error) {
+	lastFlowFile := "/tmp/vflow.mon.lastflow." + host
 
 	flow := new(Flow)
 	lastFlow := new(Flow)
 
 	client := NewHTTP()
-	err := client.Get(host+"/flow", flow)
+	err := client.Get(vhost+"/flow", flow)
 	if err != nil {
 		return nil, nil, err
 	}

@@ -59,7 +59,7 @@ func (t TSDB) Netflow(hostname string) error {
 		values []int64
 	)
 
-	flow, lastFlow, err := getFlow(t.VHost)
+	flow, lastFlow, err := getFlow(t.VHost, hostname)
 	if err != nil {
 		return err
 	}
