@@ -90,3 +90,20 @@ System API : http://localhost:8081/sys
    "MemHeapSys" : 5734400
 }
 ```
+
+## Configuration Keys - Command line
+The monitor command line configuration contains the following keys
+
+|Key                | Default         | 
+|-------------------| ----------------|
+|db-type            | influxdb        |     
+|vflow-host         | localhost:8081  | 
+|influxdb-api-addr  | localhost:8086  |
+|influxdb-db-name   | vflow           |
+|tsdb-api-addr      | localhost:4242  |
+|hostname           | na              |
+
+crontab every 1 minute example:
+```
+* * * * * monitor -vflow-host 192.168.0.7 -influxdb-api-addr 192.168.0.15
+```
