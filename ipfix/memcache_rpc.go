@@ -141,7 +141,9 @@ func RPC(m MemCache, config *RPCConfig) {
 
 	disc, err := vFlowDiscovery()
 	if err != nil {
-		log.Fatal(err)
+		config.Logger.Println(err)
+		config.Logger.Println("RPC has been disabled")
+		return
 	}
 
 	go RPCServer(m, config)
