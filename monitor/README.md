@@ -101,7 +101,7 @@ The monitor command line configuration contains the following keys
 |influxdb-api-addr  | localhost:8086  |
 |influxdb-db-name   | vflow           |
 |tsdb-api-addr      | localhost:4242  |
-|hostname           | na              |
+|hostname           | system hostname |
 
 crontab every 1 minute example:
 ```
