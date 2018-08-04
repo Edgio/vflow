@@ -146,6 +146,11 @@ func GetOptions() *Options {
 	opts.vFlowFlagSet()
 	opts.vFlowVersion()
 
+	if opts.Verbose {
+		opts.Logger.Printf("the full logging enabled")
+		opts.Logger.SetFlags(log.LstdFlags | log.Lshortfile)
+	}
+
 	if opts.LogFile != "" {
 		f, err := os.OpenFile(opts.LogFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
