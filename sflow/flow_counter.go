@@ -26,6 +26,7 @@ import (
 	"io"
 )
 
+// GenericInterfaceCounters represents Generic Interface Counters RFC2233
 type GenericInterfaceCounters struct {
 	Index               uint32
 	Type                uint32
@@ -46,6 +47,42 @@ type GenericInterfaceCounters struct {
 	OutDiscards         uint32
 	OutErrors           uint32
 	PromiscuousMode     uint32
+}
+
+// EthernetInterfaceCounters represents Ethernet Interface Counters RFC2358
+type EthernetInterfaceCounters struct {
+	AlignmentErrors           uint32
+	FCSErrors                 uint32
+	SingleCollisionFrames     uint32
+	MultipleCollisionFrames   uint32
+	SQETestErrors             uint32
+	DeferredTransmissions     uint32
+	LateCollisions            uint32
+	ExcessiveCollisions       uint32
+	InternalMACTransmitErrors uint32
+	CarrierSenseErrors        uint32
+	FrameTooLongs             uint32
+	InternalMACReceiveErrors  uint32
+	SymbolErrors              uint32
+}
+
+// VlanCounters represents VLAN Counters
+type VlanCounters struct {
+	ID               uint32
+	Octets           uint64
+	UnicastPackets   uint32
+	MulticastPackets uint32
+	BroadcastPackets uint32
+	Discards         uint32
+}
+
+// ProcessorCounters represents Processor Information
+type ProcessorCounters struct {
+	CPU5s       uint32
+	CPU1m       uint32
+	CPU5m       uint32
+	TotalMemory uint64
+	FreeMemory  uint64
 }
 
 func (gic *GenericInterfaceCounters) unmarshal(r io.ReadSeeker) error {
@@ -71,6 +108,73 @@ func (gic *GenericInterfaceCounters) unmarshal(r io.ReadSeeker) error {
 		&gic.OutDiscards,
 		&gic.OutErrors,
 		&gic.PromiscuousMode,
+	}
+
+	for _, field := range fields {
+		if err = read(r, field); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (eic *EthernetInterfaceCounters) unmarshal(r io.ReadSeeker) error {
+	var err error
+
+	fields := []interface{}{
+		&eic.AlignmentErrors,
+		&eic.FCSErrors,
+		&eic.SingleCollisionFrames,
+		&eic.MultipleCollisionFrames,
+		&eic.SQETestErrors,
+		&eic.DeferredTransmissions,
+		&eic.LateCollisions,
+		&eic.ExcessiveCollisions,
+		&eic.InternalMACTransmitErrors,
+		&eic.CarrierSenseErrors,
+		&eic.FrameTooLongs,
+		&eic.InternalMACReceiveErrors,
+		&eic.SymbolErrors,
+	}
+
+	for _, field := range fields {
+		if err = read(r, field); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (vc *VlanCounters) unmarshal(r io.ReadSeeker) error {
+	var err error
+	fields := []interface{}{
+		&vc.ID,
+		&vc.Octets,
+		&vc.UnicastPackets,
+		&vc.MulticastPackets,
+		&vc.BroadcastPackets,
+		&vc.Discards,
+	}
+
+	for _, field := range fields {
+		if err = read(r, field); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (pc *ProcessorCounters) unmarshal(r io.ReadSeeker) error {
+	var err error
+	fields := []interface{}{
+		&pc.CPU5s,
+		&pc.CPU1m,
+		&pc.CPU5m,
+		&pc.TotalMemory,
+		&pc.FreeMemory,
 	}
 
 	for _, field := range fields {
