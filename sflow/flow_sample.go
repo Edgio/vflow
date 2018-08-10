@@ -185,11 +185,11 @@ func (es *ExtSwitchData) unmarshal(r io.Reader) error {
 func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
 	var err error
 
-	buff := make([]byte, l-12)
+	buff := make([]byte, l-8)
 	if err = read(r, &buff); err != nil {
 		return err
 	}
-	er.NextHop = buff
+	er.NextHop = buff[4:]
 
 	if err = read(r, &er.SrcMask); err != nil {
 		return err
