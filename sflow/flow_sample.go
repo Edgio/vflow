@@ -25,6 +25,7 @@ package sflow
 import (
 	"errors"
 	"io"
+	"net"
 
 	"github.com/VerizonDigital/vflow/packet"
 )
@@ -35,6 +36,9 @@ const (
 
 	// SFDataExtSwitch is sFlow Extended Switch Data number
 	SFDataExtSwitch = 1001
+
+	// SFDataExtRouter is sFlow Extended Router Data number
+	SFDataExtRouter = 1002
 )
 
 // FlowSample represents single flow sample
@@ -47,6 +51,7 @@ type FlowSample struct {
 	Input        uint32 // SNMP ifIndex of input interface
 	Output       uint32 // SNMP ifIndex of input interface
 	RecordsNo    uint32 // Number of records to follow
+	Records      []Record
 }
 
 // SampledHeader represents sampled header
@@ -64,6 +69,12 @@ type ExtSwitchData struct {
 	SrcPriority uint32 // The 802.1p priority of incoming frame
 	DstVlan     uint32 // The 802.1Q VLAN id of outgoing frame
 	DstPriority uint32 // The 802.1p priority of outgoing frame
+}
+
+type ExtRouterData struct {
+	NextHop net.IP
+	SrcMask uint32
+	DstMask uint32
 }
 
 var (
@@ -171,10 +182,29 @@ func (es *ExtSwitchData) unmarshal(r io.Reader) error {
 	return nil
 }
 
-func decodeFlowSample(r io.ReadSeeker) ([]interface{}, error) {
+func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
+	var err error
+
+	buff := make([]byte, l-12)
+	if err = read(r, &buff); err != nil {
+		return err
+	}
+	er.NextHop = buff
+
+	if err = read(r, &er.SrcMask); err != nil {
+		return err
+	}
+
+	if err = read(r, &er.DstMask); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 	var (
 		fs          = new(FlowSample)
-		data        []interface{}
 		rTypeFormat uint32
 		rTypeLength uint32
 		err         error
@@ -183,8 +213,6 @@ func decodeFlowSample(r io.ReadSeeker) ([]interface{}, error) {
 	if err = fs.unmarshal(r); err != nil {
 		return nil, err
 	}
-
-	data = append(data, fs)
 
 	for i := uint32(0); i < fs.RecordsNo; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
@@ -196,23 +224,29 @@ func decodeFlowSample(r io.ReadSeeker) ([]interface{}, error) {
 
 		switch rTypeFormat {
 		case SFDataRawHeader:
-			h, err := decodeSampledHeader(r)
+			d, err := decodeSampledHeader(r)
 			if err != nil {
-				return data, err
+				return fs, err
 			}
-			data = append(data, h)
+			fs.Records = append(fs.Records, d)
 		case SFDataExtSwitch:
 			d, err := decodeExtSwitchData(r)
 			if err != nil {
-				return data, err
+				return fs, err
 			}
-			data = append(data, d)
+			fs.Records = append(fs.Records, d)
+		case SFDataExtRouter:
+			d, err := decodeExtRouterData(r, rTypeLength)
+			if err != nil {
+				return fs, err
+			}
+			fs.Records = append(fs.Records, d)
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}
 
-	return data, nil
+	return fs, nil
 }
 
 func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
@@ -242,4 +276,14 @@ func decodeExtSwitchData(r io.Reader) (*ExtSwitchData, error) {
 	}
 
 	return es, nil
+}
+
+func decodeExtRouterData(r io.Reader, l uint32) (*ExtRouterData, error) {
+	var er = new(ExtRouterData)
+
+	if err := er.unmarshal(r, l); err != nil {
+		return nil, err
+	}
+
+	return er, nil
 }

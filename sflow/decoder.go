@@ -27,8 +27,6 @@ import (
 	"errors"
 	"io"
 	"net"
-
-	"github.com/VerizonDigital/vflow/packet"
 )
 
 const (
@@ -53,6 +51,7 @@ type SFDatagram struct {
 	SequenceNo uint32 // Sequence of sFlow Datagrams
 	SysUpTime  uint32 // Current time (in milliseconds since device last booted
 	SamplesNo  uint32 // Number of samples
+	Samples    []Sample
 
 	IPAddress net.IP // Agent IP address
 }
@@ -66,13 +65,11 @@ type SFSampledHeader struct {
 	HeaderBytes    []byte // Header bytes
 }
 
-// Message represents flow sample decoded packet
-type Message struct {
-	Header    *SFDatagram
-	ExtSWData *ExtSwitchData
-	Sample    *FlowSample
-	Packet    *packet.Packet
-}
+// Sample represents sFlow sample flow
+type Sample interface{}
+
+// Record represents sFlow sample record record
+type Record interface{}
 
 var (
 	errNoneEnterpriseStandard = errors.New("the enterprise is not standard sflow data")
@@ -89,7 +86,7 @@ func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
 }
 
 // SFDecode decodes sFlow data
-func (d *SFDecoder) SFDecode() ([]interface{}, error) {
+func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 	datagram, err := d.sfHeaderDecode()
 	if err != nil {
 		return nil, err
@@ -109,8 +106,10 @@ func (d *SFDecoder) SFDecode() ([]interface{}, error) {
 		switch sfTypeFormat {
 		case DataFlowSample:
 			h, err := decodeFlowSample(d.reader)
-			h = append(h, datagram)
-			return h, err
+			if err != nil {
+				return datagram, err
+			}
+			datagram.Samples = append(datagram.Samples, h)
 		case DataCounterSample:
 			d.reader.Seek(int64(sfDataLength), 1)
 		default:
@@ -120,7 +119,7 @@ func (d *SFDecoder) SFDecode() ([]interface{}, error) {
 
 	}
 
-	return nil, nil
+	return datagram, nil
 }
 
 func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
