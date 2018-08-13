@@ -51,7 +51,7 @@ type FlowSample struct {
 	Input        uint32 // SNMP ifIndex of input interface
 	Output       uint32 // SNMP ifIndex of input interface
 	RecordsNo    uint32 // Number of records to follow
-	Records      []Record
+	Records      map[string]Record
 }
 
 // SampledHeader represents sampled header
@@ -214,6 +214,8 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 		return nil, err
 	}
 
+	fs.Records = make(map[string]Record)
+
 	for i := uint32(0); i < fs.RecordsNo; i++ {
 		if err = read(r, &rTypeFormat); err != nil {
 			return nil, err
@@ -228,19 +230,21 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 			if err != nil {
 				return fs, err
 			}
-			fs.Records = append(fs.Records, d)
+			fs.Records["RawHeader"] = d
 		case SFDataExtSwitch:
 			d, err := decodeExtSwitchData(r)
 			if err != nil {
 				return fs, err
 			}
-			fs.Records = append(fs.Records, d)
+
+			fs.Records["ExtSwitch"] = d
 		case SFDataExtRouter:
 			d, err := decodeExtRouterData(r, rTypeLength)
 			if err != nil {
 				return fs, err
 			}
-			fs.Records = append(fs.Records, d)
+
+			fs.Records["ExtRouter"] = d
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}
