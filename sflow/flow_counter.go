@@ -23,7 +23,25 @@
 package sflow
 
 import (
+	"encoding/binary"
 	"io"
+)
+
+const (
+	// GenericInterfaceCounters is Generic interface counters - see RFC 2233
+	SFGenericInterfaceCounters = 1
+
+	// EthernetInterfaceCounters is Ethernet interface counters - see RFC 2358
+	SFEthernetInterfaceCounters = 2
+
+	// SFTokenRingInterfaceCounters is Token ring counters - see RFC 1748
+	SFTokenRingInterfaceCounters = 3
+
+	// SF100BaseVGInterfaceCounters is 100 BaseVG interface counters - see RFC 2020
+	SF100BaseVGInterfaceCounters = 4
+
+	// SFVLANCounters is VLAN counters
+	SFVLANCounters = 5
 )
 
 // GenericInterfaceCounters represents Generic Interface Counters RFC2233
@@ -85,7 +103,15 @@ type ProcessorCounters struct {
 	FreeMemory  uint64
 }
 
-func (gic *GenericInterfaceCounters) unmarshal(r io.ReadSeeker) error {
+type CounterSample struct {
+	SequenceNo   uint32
+	SourceIdType byte
+	SourceIdIdx  uint32
+	RecordsNo    uint32
+	Records      []Record
+}
+
+func (gic *GenericInterfaceCounters) unmarshal(r io.Reader) error {
 	var err error
 
 	fields := []interface{}{
@@ -119,7 +145,7 @@ func (gic *GenericInterfaceCounters) unmarshal(r io.ReadSeeker) error {
 	return nil
 }
 
-func (eic *EthernetInterfaceCounters) unmarshal(r io.ReadSeeker) error {
+func (eic *EthernetInterfaceCounters) unmarshal(r io.Reader) error {
 	var err error
 
 	fields := []interface{}{
@@ -147,7 +173,7 @@ func (eic *EthernetInterfaceCounters) unmarshal(r io.ReadSeeker) error {
 	return nil
 }
 
-func (vc *VlanCounters) unmarshal(r io.ReadSeeker) error {
+func (vc *VlanCounters) unmarshal(r io.Reader) error {
 	var err error
 	fields := []interface{}{
 		&vc.ID,
@@ -167,7 +193,7 @@ func (vc *VlanCounters) unmarshal(r io.ReadSeeker) error {
 	return nil
 }
 
-func (pc *ProcessorCounters) unmarshal(r io.ReadSeeker) error {
+func (pc *ProcessorCounters) unmarshal(r io.Reader) error {
 	var err error
 	fields := []interface{}{
 		&pc.CPU5s,
@@ -181,6 +207,31 @@ func (pc *ProcessorCounters) unmarshal(r io.ReadSeeker) error {
 		if err = read(r, field); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (cs *CounterSample) unmarshal(r io.Reader) error {
+
+	var err error
+
+	if err = read(r, &cs.SequenceNo); err != nil {
+		return err
+	}
+
+	if err = read(r, &cs.SourceIdType); err != nil {
+		return err
+	}
+
+	buf := make([]byte, 3)
+	if err = read(r, &buf); err != nil {
+		return err
+	}
+	cs.SourceIdIdx = binary.BigEndian.Uint32(buf)
+
+	if err = read(r, &cs.RecordsNo); err != nil {
+		return err
 	}
 
 	return nil
