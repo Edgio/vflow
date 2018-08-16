@@ -62,6 +62,7 @@ dpkg: build
 
 rpm: build
 	sed -i 's/%VERSION%/${VERSION}/' ${RPMPATH}/SPECS/vflow.spec
+	mkdir ${RPMPATH}/SOURCES/
 	cp vflow/vflow ${RPMPATH}/SOURCES/
 	cp stress/stress ${RPMPATH}/SOURCES/vflow_stress
 	cp scripts/vflow.conf ${RPMPATH}/SOURCES/
@@ -70,5 +71,6 @@ rpm: build
 	cp scripts/kafka.conf ${RPMPATH}/SOURCES/mq.conf
 	cp LICENSE ${RPMPATH}/SOURCES/license
 	cp NOTICE ${RPMPATH}/SOURCES/notice
+	apt-get install rpm
 	rpmbuild -ba ${RPMPATH}/SPECS/vflow.spec --define "_topdir `pwd`/scripts/rpmbuild"
 	sed -i 's/${VERSION}/%VERSION%/' ${RPMPATH}/SPECS/vflow.spec
