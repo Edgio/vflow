@@ -157,7 +157,6 @@ func (s *SFlow) shutdown() {
 
 func (s *SFlow) sFlowWorker(wQuit chan struct{}) {
 	var (
-		filter = []uint32{sflow.DataCounterSample}
 		reader *bytes.Reader
 		msg    SFUDPMsg
 		ok     bool
@@ -182,7 +181,7 @@ LOOP:
 		}
 
 		reader = bytes.NewReader(msg.body)
-		d := sflow.NewSFDecoder(reader, filter)
+		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter)
 		datagram, err := d.SFDecode()
 		if err != nil || len(datagram.Samples) < 1 {
 			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])

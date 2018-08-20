@@ -41,6 +41,8 @@ var (
 	maxWorkers = runtime.NumCPU() * 1e4
 )
 
+type arrUInt32Flags []uint32
+
 // Options represents options
 type Options struct {
 	// global options
@@ -58,11 +60,12 @@ type Options struct {
 	StatsHTTPPort string `yaml:"stats-http-port"`
 
 	// sFlow options
-	SFlowEnabled bool   `yaml:"sflow-enabled"`
-	SFlowPort    int    `yaml:"sflow-port"`
-	SFlowUDPSize int    `yaml:"sflow-udp-size"`
-	SFlowWorkers int    `yaml:"sflow-workers"`
-	SFlowTopic   string `yaml:"sflow-topic"`
+	SFlowEnabled    bool           `yaml:"sflow-enabled"`
+	SFlowPort       int            `yaml:"sflow-port"`
+	SFlowUDPSize    int            `yaml:"sflow-udp-size"`
+	SFlowWorkers    int            `yaml:"sflow-workers"`
+	SFlowTopic      string         `yaml:"sflow-topic"`
+	SFlowTypeFilter arrUInt32Flags `yaml:"sflow-type-filter"`
 
 	// IPFIX options
 	IPFIXEnabled       bool   `yaml:"ipfix-enabled"`
@@ -96,6 +99,23 @@ func init() {
 	}
 }
 
+func (a *arrUInt32Flags) String() string {
+	return "SFlow Type string"
+}
+
+func (a *arrUInt32Flags) Set(value string) error {
+	arr := strings.Split(value, ",")
+	for _, v := range arr {
+		v64, err := strconv.ParseUint(v, 10, 32)
+		if err != nil {
+			return err
+		}
+		*a = append(*a, uint32(v64))
+	}
+
+	return nil
+}
+
 // NewOptions constructs new options
 func NewOptions() *Options {
 	return &Options{
@@ -110,11 +130,12 @@ func NewOptions() *Options {
 		StatsHTTPPort: "8081",
 		StatsHTTPAddr: "",
 
-		SFlowEnabled: true,
-		SFlowPort:    6343,
-		SFlowUDPSize: 1500,
-		SFlowWorkers: 200,
-		SFlowTopic:   "vflow.sflow",
+		SFlowEnabled:    true,
+		SFlowPort:       6343,
+		SFlowUDPSize:    1500,
+		SFlowWorkers:    200,
+		SFlowTopic:      "vflow.sflow",
+		SFlowTypeFilter: []uint32{},
 
 		IPFIXEnabled:       true,
 		IPFIXRPCEnabled:    true,
@@ -275,6 +296,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
 	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers number")
 	flag.StringVar(&opts.SFlowTopic, "sflow-topic", opts.SFlowTopic, "sflow topic name")
+	flag.Var(&opts.SFlowTypeFilter, "sflow-type-filter", "sflow type filter")
 
 	// ipfix options
 	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable/disable IPFIX listener")

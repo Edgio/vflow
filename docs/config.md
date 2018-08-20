@@ -38,6 +38,7 @@ The vFlow configuration contains the following keys
 |sflow-workers           | 200                            | sFlow concurrent decoders                        |
 |sflow-udp-size          | 1500                           | maximum sFlow UDP packet size                    |
 |sflow-topic             | vflow.sflow                    | sFlow message queue topic name                   |
+|sflow-type-filter       | -                              | filter sflow type(s)                             |
 |netflow9-enabled        | true                           | enable/disable netflow v9 decoders               |
 |netflow9-port           | 4729                           | server netflow v9 UDP port                       |
 |netflow9-workers        | 50                             | netflow v9 concurrent decoders                   |
