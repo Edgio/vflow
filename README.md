@@ -8,7 +8,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (writ
 
 ## Features
 - IPFIX RFC7011 collector
-- sFLow v5 raw header packet collector
+- sFLow v5 raw header / counters collector
 - Netflow v9 collector
 - Decoding sFlow raw header L2/L3/L4 
 - Produce to Apache Kafka, NSQ, NATS
