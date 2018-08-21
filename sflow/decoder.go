@@ -52,6 +52,7 @@ type SFDatagram struct {
 	SysUpTime  uint32 // Current time (in milliseconds since device last booted
 	SamplesNo  uint32 // Number of samples
 	Samples    []Sample
+	Counters   []Counter
 
 	IPAddress net.IP // Agent IP address
 }
@@ -67,6 +68,9 @@ type SFSampledHeader struct {
 
 // Sample represents sFlow sample flow
 type Sample interface{}
+
+// Counter represents sFlow counters
+type Counter interface{}
 
 // Record represents sFlow sample record record
 type Record interface{}
@@ -92,6 +96,9 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		return nil, err
 	}
 
+	datagram.Samples = []Sample{}
+	datagram.Counters = []Counter{}
+
 	for i := uint32(0); i < datagram.SamplesNo; i++ {
 		sfTypeFormat, sfDataLength, err := d.getSampleInfo()
 		if err != nil {
@@ -105,16 +112,19 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 		switch sfTypeFormat {
 		case DataFlowSample:
-			h, err := decodeFlowSample(d.reader)
+			d, err := decodeFlowSample(d.reader)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.Samples = append(datagram.Samples, h)
+			datagram.Samples = append(datagram.Samples, d)
 		case DataCounterSample:
-			d.reader.Seek(int64(sfDataLength), 1)
+			d, err := decodeFlowCounter(d.reader)
+			if err != nil {
+				return datagram, err
+			}
+			datagram.Counters = append(datagram.Counters, d)
 		default:
 			d.reader.Seek(int64(sfDataLength), 1)
-
 		}
 
 	}
