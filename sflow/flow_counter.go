@@ -187,6 +187,18 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 				return cs, err
 			}
 			cs.Records["EthInt"] = d
+		case SFTokenRingInterfaceCounters:
+			d, err := decodeTokenRingCounters(r)
+			if err != nil {
+				return cs, err
+			}
+			cs.Records["TRInt"] = d
+		case SF100BaseVGInterfaceCounters:
+			d, err := decodeVGCounters(r)
+			if err != nil {
+				return cs, err
+			}
+			cs.Records["VGInt"] = d
 		case SFVLANCounters:
 			d, err := decodeVlanCounters(r)
 			if err != nil {
