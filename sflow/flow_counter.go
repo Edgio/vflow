@@ -22,10 +22,7 @@
 
 package sflow
 
-import (
-	"encoding/binary"
-	"io"
-)
+import "io"
 
 const (
 	// GenericInterfaceCounters is Generic interface counters - see RFC 2233
@@ -326,7 +323,7 @@ func (cs *CounterSample) unmarshal(r io.Reader) error {
 	if err = read(r, &buf); err != nil {
 		return err
 	}
-	cs.SourceIdIdx = binary.BigEndian.Uint32(buf)
+	cs.SourceIdIdx = uint32(buf[2]) | uint32(buf[1])<<8 | uint32(buf[0])<<16
 
 	if err = read(r, &cs.RecordsNo); err != nil {
 		return err
