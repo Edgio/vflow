@@ -84,6 +84,46 @@ type EthernetInterfaceCounters struct {
 	SymbolErrors              uint32
 }
 
+// TokenRingCounters represents Token Ring Counters - see RFC 1748
+type TokenRingCounters struct {
+	LineErrors         uint32
+	BurstErrors        uint32
+	ACErrors           uint32
+	AbortTransErrors   uint32
+	InternalErrors     uint32
+	LostFrameErrors    uint32
+	ReceiveCongestions uint32
+	FrameCopiedErrors  uint32
+	TokenErrors        uint32
+	SoftErrors         uint32
+	HardErrors         uint32
+	SignalLoss         uint32
+	TransmitBeacons    uint32
+	Recoverys          uint32
+	LobeWires          uint32
+	Removes            uint32
+	Singles            uint32
+	FreqErrors         uint32
+}
+
+// VGCounters represents 100 BaseVG interface counters - see RFC 2020
+type VGCounters struct {
+	InHighPriorityFrames    uint32
+	InHighPriorityOctets    uint64
+	InNormPriorityFrames    uint32
+	InNormPriorityOctets    uint64
+	InIPMErrors             uint32
+	InOversizeFrameErrors   uint32
+	InDataErrors            uint32
+	InNullAddressedFrames   uint32
+	OutHighPriorityFrames   uint32
+	OutHighPriorityOctets   uint64
+	TransitionIntoTrainings uint32
+	HCInHighPriorityOctets  uint64
+	HCInNormPriorityOctets  uint64
+	HCOutHighPriorityOctets uint64
+}
+
 // VlanCounters represents VLAN Counters
 type VlanCounters struct {
 	ID               uint32
@@ -140,25 +180,25 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["GenIntCntrs"] = d
+			cs.Records["GenInt"] = d
 		case SFEthernetInterfaceCounters:
 			d, err := decodeEthIntCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["EthIntCntrs"] = d
+			cs.Records["EthInt"] = d
 		case SFVLANCounters:
 			d, err := decodeVlanCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["VlanCntrs"] = d
+			cs.Records["Vlan"] = d
 		case SFProcessorCounters:
 			d, err := decodedProcessorCounters(r)
 			if err != nil {
 				return cs, err
 			}
-			cs.Records["ProcCntrs"] = d
+			cs.Records["Proc"] = d
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}
@@ -237,6 +277,87 @@ func (eic *EthernetInterfaceCounters) unmarshal(r io.Reader) error {
 		&eic.FrameTooLongs,
 		&eic.InternalMACReceiveErrors,
 		&eic.SymbolErrors,
+	}
+
+	for _, field := range fields {
+		if err = read(r, field); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+func decodeTokenRingCounters(r io.Reader) (*TokenRingCounters, error) {
+	var tr = new(TokenRingCounters)
+
+	if err := tr.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return tr, nil
+}
+
+func (tr *TokenRingCounters) unmarshal(r io.Reader) error {
+	var err error
+
+	fields := []interface{}{
+		&tr.LineErrors,
+		&tr.BurstErrors,
+		&tr.ACErrors,
+		&tr.AbortTransErrors,
+		&tr.InternalErrors,
+		&tr.LostFrameErrors,
+		&tr.ReceiveCongestions,
+		&tr.FrameCopiedErrors,
+		&tr.TokenErrors,
+		&tr.SoftErrors,
+		&tr.HardErrors,
+		&tr.SignalLoss,
+		&tr.TransmitBeacons,
+		&tr.Recoverys,
+		&tr.LobeWires,
+		&tr.Removes,
+		&tr.Singles,
+		&tr.FreqErrors,
+	}
+
+	for _, field := range fields {
+		if err = read(r, field); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func decodeVGCounters(r io.Reader) (*VGCounters, error) {
+	var vg = new(VGCounters)
+
+	if err := vg.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return vg, nil
+}
+
+func (vg *VGCounters) unmarshal(r io.Reader) error {
+	var err error
+
+	fields := []interface{}{
+		&vg.InHighPriorityFrames,
+		&vg.InHighPriorityOctets,
+		&vg.InNormPriorityFrames,
+		&vg.InNormPriorityOctets,
+		&vg.InIPMErrors,
+		&vg.InOversizeFrameErrors,
+		&vg.InDataErrors,
+		&vg.InNullAddressedFrames,
+		&vg.OutHighPriorityFrames,
+		&vg.OutHighPriorityOctets,
+		&vg.TransitionIntoTrainings,
+		&vg.HCInHighPriorityOctets,
+		&vg.HCInNormPriorityOctets,
+		&vg.HCOutHighPriorityOctets,
 	}
 
 	for _, field := range fields {
