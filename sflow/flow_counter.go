@@ -42,6 +42,9 @@ const (
 
 	// SFVLANCounters is VLAN counters
 	SFVLANCounters = 5
+
+	// SFProcessorCounters is processor counters
+	SFProcessorCounters = 1001
 )
 
 // GenericInterfaceCounters represents Generic Interface Counters RFC2233
@@ -108,7 +111,73 @@ type CounterSample struct {
 	SourceIdType byte
 	SourceIdIdx  uint32
 	RecordsNo    uint32
-	Records      []Record
+	Records      map[string]Record
+}
+
+func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
+	var (
+		cs          = new(CounterSample)
+		rTypeFormat uint32
+		rTypeLength uint32
+		err         error
+	)
+
+	if err = cs.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	cs.Records = make(map[string]Record)
+
+	for i := uint32(0); i < cs.RecordsNo; i++ {
+		if err = read(r, &rTypeFormat); err != nil {
+			return nil, err
+		}
+		if err = read(r, &rTypeLength); err != nil {
+			return nil, err
+		}
+
+		switch rTypeFormat {
+
+		case SFGenericInterfaceCounters:
+			d, err := decodeGenericIntCounters(r)
+			if err != nil {
+				return cs, err
+			}
+			cs.Records["GenIntCntrs"] = d
+		case SFEthernetInterfaceCounters:
+			d, err := decodeEthIntCounters(r)
+			if err != nil {
+				return cs, err
+			}
+			cs.Records["EthIntCntrs"] = d
+		case SFVLANCounters:
+			d, err := decodeVlanCounters(r)
+			if err != nil {
+				return cs, err
+			}
+			cs.Records["VlanCntrs"] = d
+		case SFProcessorCounters:
+			d, err := decodedProcessorCounters(r)
+			if err != nil {
+				return cs, err
+			}
+			cs.Records["ProcCntrs"] = d
+		default:
+			r.Seek(int64(rTypeLength), 1)
+		}
+	}
+
+	return cs, nil
+}
+
+func decodeGenericIntCounters(r io.Reader) (*GenericInterfaceCounters, error) {
+	var gic = new(GenericInterfaceCounters)
+
+	if err := gic.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return gic, nil
 }
 
 func (gic *GenericInterfaceCounters) unmarshal(r io.Reader) error {
@@ -144,6 +213,15 @@ func (gic *GenericInterfaceCounters) unmarshal(r io.Reader) error {
 
 	return nil
 }
+func decodeEthIntCounters(r io.Reader) (*EthernetInterfaceCounters, error) {
+	var eic = new(EthernetInterfaceCounters)
+
+	if err := eic.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return eic, nil
+}
 
 func (eic *EthernetInterfaceCounters) unmarshal(r io.Reader) error {
 	var err error
@@ -173,6 +251,16 @@ func (eic *EthernetInterfaceCounters) unmarshal(r io.Reader) error {
 	return nil
 }
 
+func decodeVlanCounters(r io.Reader) (*VlanCounters, error) {
+	var vc = new(VlanCounters)
+
+	if err := vc.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return vc, nil
+}
+
 func (vc *VlanCounters) unmarshal(r io.Reader) error {
 	var err error
 	fields := []interface{}{
@@ -191,6 +279,16 @@ func (vc *VlanCounters) unmarshal(r io.Reader) error {
 	}
 
 	return nil
+}
+
+func decodedProcessorCounters(r io.Reader) (*ProcessorCounters, error) {
+	var pc = new(ProcessorCounters)
+
+	if err := pc.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return pc, nil
 }
 
 func (pc *ProcessorCounters) unmarshal(r io.Reader) error {
