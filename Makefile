@@ -54,6 +54,7 @@ dpkg: build
 	cp scripts/vflow.logrotate ${DEBPATH}/etc/logrotate.d/vflow
 	cp scripts/vflow.conf ${DEBPATH}/etc/vflow/vflow.conf
 	cp scripts/kafka.conf ${DEBPATH}/etc/vflow/mq.conf
+	cp scripts/ipfix.elements ${DEBPATH}/etc/vflow/
 	cp ${DEBPATH}/DEBIAN/copyright ${DEBPATH}/usr/share/doc/vflow/
 	cp LICENSE ${DEBPATH}/usr/share/doc/vflow/license
 	dpkg-deb -b ${DEBPATH}
@@ -62,6 +63,7 @@ dpkg: build
 
 rpm: build
 	sed -i 's/%VERSION%/${VERSION}/' ${RPMPATH}/SPECS/vflow.spec
+	rm -rf ${RPMPATH}/SOURCES/
 	mkdir ${RPMPATH}/SOURCES/
 	cp vflow/vflow ${RPMPATH}/SOURCES/
 	cp stress/stress ${RPMPATH}/SOURCES/vflow_stress
@@ -69,6 +71,7 @@ rpm: build
 	cp scripts/vflow.service ${RPMPATH}/SOURCES/
 	cp scripts/vflow.logrotate ${RPMPATH}/SOURCES/
 	cp scripts/kafka.conf ${RPMPATH}/SOURCES/mq.conf
+	cp scripts/ipfix.elements ${RPMPATH}/SOURCES/
 	cp LICENSE ${RPMPATH}/SOURCES/license
 	cp NOTICE ${RPMPATH}/SOURCES/notice
 	apt-get install rpm
