@@ -25,6 +25,7 @@ package main
 import (
 	"bytes"
 	"net"
+	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -114,6 +115,8 @@ func (i *IPFIX) run() {
 
 	logger.Printf("ipfix is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 
+	ipfix.LoadExtElements(opts.VFlowConfigPath)
+
 	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
 	go ipfix.RPC(mCache, &ipfix.RPCConfig{
 		Enabled: opts.IPFIXRPCEnabled,
@@ -125,7 +128,7 @@ func (i *IPFIX) run() {
 	go func() {
 		p := producer.NewProducer(opts.MQName)
 
-		p.MQConfigFile = opts.MQConfigFile
+		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 		p.MQErrorCount = &i.stats.MQErrorCount
 		p.Logger = logger
 		p.Chan = ipfixMQCh

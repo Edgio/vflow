@@ -26,6 +26,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"net"
+	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -113,7 +114,7 @@ func (s *SFlow) run() {
 	go func() {
 		p := producer.NewProducer(opts.MQName)
 
-		p.MQConfigFile = opts.MQConfigFile
+		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 		p.MQErrorCount = &s.stats.MQErrorCount
 		p.Logger = logger
 		p.Chan = sFlowMQCh

@@ -22,6 +22,14 @@
 
 package ipfix
 
+import (
+	"io/ioutil"
+	"os"
+	"path"
+
+	"gopkg.in/yaml.v2"
+)
+
 // FieldType is IPFIX Abstract Data Types RFC5102#section-3.1
 type FieldType int
 
@@ -550,4 +558,34 @@ var InfoModel = IANAInfoModel{
 	ElementKey{0, 431}: InfoElementEntry{FieldID: 431, Name: "layer2FrameTotalCount", Type: FieldTypes["unsigned64"]},
 	ElementKey{0, 432}: InfoElementEntry{FieldID: 432, Name: "pseudoWireDestinationIPv4Address", Type: FieldTypes["ipv4Address"]},
 	ElementKey{0, 433}: InfoElementEntry{FieldID: 433, Name: "ignoredLayer2FrameTotalCount", Type: FieldTypes["unsigned64"]},
+}
+
+func LoadExtElements(cfgPath string) {
+	var (
+		file          = path.Join(cfgPath, "ipfix.elements")
+		ipfixElements map[uint32]map[uint16][]string
+	)
+
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		return
+	}
+
+	b, err := ioutil.ReadFile(file)
+	if err != nil {
+		return
+	}
+	err = yaml.Unmarshal(b, &ipfixElements)
+	if err != nil {
+	}
+
+	InfoModel = make(map[ElementKey]InfoElementEntry)
+
+	for PEN, elements := range ipfixElements {
+		for elementID, prop := range elements {
+			if len(prop) > 1 {
+				InfoModel[ElementKey{PEN, elementID}] =
+					InfoElementEntry{FieldID: elementID, Name: prop[0], Type: FieldTypes[prop[1]]}
+			}
+		}
+	}
 }

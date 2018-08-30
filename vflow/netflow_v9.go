@@ -25,6 +25,7 @@ package main
 import (
 	"bytes"
 	"net"
+	"path"
 	"strconv"
 	"sync"
 	"sync/atomic"
@@ -115,7 +116,7 @@ func (i *NetflowV9) run() {
 	go func() {
 		p := producer.NewProducer(opts.MQName)
 
-		p.MQConfigFile = opts.MQConfigFile
+		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 		p.MQErrorCount = &i.stats.MQErrorCount
 		p.Logger = logger
 		p.Chan = netflowV9MQCh

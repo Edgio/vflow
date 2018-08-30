@@ -29,6 +29,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path"
 	"runtime"
 	"strconv"
 	"strings"
@@ -91,6 +92,8 @@ type Options struct {
 	// producer
 	MQName       string `yaml:"mq-name"`
 	MQConfigFile string `yaml:"mq-config-file"`
+
+	VFlowConfigPath string
 }
 
 func init() {
@@ -156,7 +159,9 @@ func NewOptions() *Options {
 		NetflowV9TplCacheFile: "/tmp/netflowv9.templates",
 
 		MQName:       "kafka",
-		MQConfigFile: "/etc/vflow/mq.conf",
+		MQConfigFile: "mq.conf",
+
+		VFlowConfigPath: "/etc/vflow",
 	}
 }
 
@@ -347,11 +352,12 @@ func (opts *Options) vFlowFlagSet() {
 }
 
 func vFlowLoadCfg(opts *Options) {
-	var file = "/etc/vflow/vflow.conf"
+	var file = path.Join(opts.VFlowConfigPath, "vflow.conf")
 
 	for i, flag := range os.Args {
 		if flag == "-config" {
 			file = os.Args[i+1]
+			opts.VFlowConfigPath, _ = path.Split(file)
 			break
 		}
 	}
