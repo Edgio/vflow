@@ -74,6 +74,11 @@ func (m *Message) encodeDataSet(b *bytes.Buffer) error {
 			b.WriteString(",\"V\":")
 			err = m.writeValue(b, i, j)
 
+			if m.DataSets[i][j].EnterpriseNo != 0 {
+				b.WriteString(",\"E\":")
+				b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].EnterpriseNo), 10))
+			}
+
 			if j < length-1 {
 				b.WriteString("},")
 			} else {

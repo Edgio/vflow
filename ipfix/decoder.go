@@ -79,8 +79,9 @@ type Message struct {
 
 // DecodedField represents a decoded field
 type DecodedField struct {
-	ID    uint16
-	Value interface{}
+	ID           uint16
+	Value        interface{}
+	EnterpriseNo uint32
 }
 
 // SetHeader represents set header fields
@@ -516,8 +517,9 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}
 
 		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: Interpret(&b, m.Type),
+			ID:           m.FieldID,
+			Value:        Interpret(&b, m.Type),
+			EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
 		})
 	}
 
