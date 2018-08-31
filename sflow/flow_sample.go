@@ -71,6 +71,7 @@ type ExtSwitchData struct {
 	DstPriority uint32 // The 802.1p priority of outgoing frame
 }
 
+// ExtRouterData represents extended router data
 type ExtRouterData struct {
 	NextHop net.IP
 	SrcMask uint32
@@ -114,11 +115,9 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	if err = read(r, &fs.RecordsNo); err != nil {
-		return err
-	}
+	err = read(r, &fs.RecordsNo)
 
-	return nil
+	return err
 }
 
 func (sh *SampledHeader) unmarshal(r io.Reader) error {
@@ -175,11 +174,9 @@ func (es *ExtSwitchData) unmarshal(r io.Reader) error {
 		return err
 	}
 
-	if err = read(r, &es.SrcPriority); err != nil {
-		return err
-	}
+	err = read(r, &es.SrcPriority)
 
-	return nil
+	return err
 }
 
 func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
@@ -195,11 +192,9 @@ func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
 		return err
 	}
 
-	if err = read(r, &er.DstMask); err != nil {
-		return err
-	}
+	err = read(r, &er.DstMask)
 
-	return nil
+	return err
 }
 
 func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {

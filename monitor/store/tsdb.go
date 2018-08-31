@@ -102,11 +102,9 @@ func (t TSDB) Netflow(hostname string) error {
 
 	}
 
-	if err = t.put(dps); err != nil {
-		return err
-	}
+	err = t.put(dps)
 
-	return nil
+	return err
 }
 
 // System ingests system's stats to TSDB
@@ -153,11 +151,9 @@ func (t TSDB) System(hostname string) error {
 
 	}
 
-	if err = t.put(dps); err != nil {
-		return err
-	}
+	err = t.put(dps)
 
-	return nil
+	return err
 }
 
 func (t TSDB) put(dps []TSDBDataPoint) error {

@@ -25,10 +25,10 @@ package sflow
 import "io"
 
 const (
-	// GenericInterfaceCounters is Generic interface counters - see RFC 2233
+	// SFGenericInterfaceCounters is Generic interface counters - see RFC 2233
 	SFGenericInterfaceCounters = 1
 
-	// EthernetInterfaceCounters is Ethernet interface counters - see RFC 2358
+	// SFEthernetInterfaceCounters is Ethernet interface counters - see RFC 2358
 	SFEthernetInterfaceCounters = 2
 
 	// SFTokenRingInterfaceCounters is Token ring counters - see RFC 1748
@@ -143,10 +143,11 @@ type ProcessorCounters struct {
 	FreeMemory  uint64
 }
 
+// CounterSample represents the periodic sampling or polling of counters associated with a Data Source
 type CounterSample struct {
 	SequenceNo   uint32
-	SourceIdType byte
-	SourceIdIdx  uint32
+	SourceIDType byte
+	SourceIDIdx  uint32
 	RecordsNo    uint32
 	Records      map[string]Record
 }
@@ -448,7 +449,7 @@ func (cs *CounterSample) unmarshal(r io.Reader) error {
 		return err
 	}
 
-	if err = read(r, &cs.SourceIdType); err != nil {
+	if err = read(r, &cs.SourceIDType); err != nil {
 		return err
 	}
 
@@ -456,7 +457,7 @@ func (cs *CounterSample) unmarshal(r io.Reader) error {
 	if err = read(r, &buf); err != nil {
 		return err
 	}
-	cs.SourceIdIdx = uint32(buf[2]) | uint32(buf[1])<<8 | uint32(buf[0])<<16
+	cs.SourceIDIdx = uint32(buf[2]) | uint32(buf[1])<<8 | uint32(buf[0])<<16
 
 	if err = read(r, &cs.RecordsNo); err != nil {
 		return err

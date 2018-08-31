@@ -59,7 +59,7 @@ type SFlow struct {
 	Workers      int64
 }
 
-// Netflow9 represents Netflow9 metrics
+// NetflowV9 represents Netflow v9 metrics
 type NetflowV9 struct {
 	UDPQueue     int64
 	MessageQueue int64

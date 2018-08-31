@@ -560,6 +560,7 @@ var InfoModel = IANAInfoModel{
 	ElementKey{0, 433}: InfoElementEntry{FieldID: 433, Name: "ignoredLayer2FrameTotalCount", Type: FieldTypes["unsigned64"]},
 }
 
+// LoadExtElements loads ipfix elements information through ipfix.elemets file
 func LoadExtElements(cfgPath string) {
 	var (
 		file          = path.Join(cfgPath, "ipfix.elements")

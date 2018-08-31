@@ -376,6 +376,7 @@ func NewDecoder(raddr net.IP, b []byte) *Decoder {
 	return &Decoder{raddr, reader.NewReader(b)}
 }
 
+// Decode decodes the flow records
 func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 	var msg = new(Message)
 
