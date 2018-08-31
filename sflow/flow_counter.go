@@ -459,9 +459,7 @@ func (cs *CounterSample) unmarshal(r io.Reader) error {
 	}
 	cs.SourceIDIdx = uint32(buf[2]) | uint32(buf[1])<<8 | uint32(buf[0])<<16
 
-	if err = read(r, &cs.RecordsNo); err != nil {
-		return err
-	}
+	err = read(r, &cs.RecordsNo)
 
-	return nil
+	return err
 }
