@@ -54,6 +54,31 @@ func TestSFHeaderDecode(t *testing.T) {
 		t.Error("unexpected error", err)
 	}
 
+	if datagram.Version != 5 {
+		t.Error("expected version: 5, got",
+			datagram.Version)
+	}
+
+	if datagram.SysUpTime != 0x61115735 {
+		t.Error("expected SysUpTime: 0x61115735, got",
+			datagram.SysUpTime)
+	}
+
+	if datagram.SamplesNo != 1 {
+		t.Error("expected SamplesNo: 1, got",
+			datagram.SamplesNo)
+	}
+
+	if datagram.SequenceNo != 0x6d3f {
+		t.Error("expected SequenceNo: 0x6d3f, got",
+			datagram.SequenceNo)
+	}
+
+	if datagram.IPVersion != 1 {
+		t.Error("expected IPVersion: 1, got",
+			datagram.IPVersion)
+	}
+
 	if datagram.IPAddress.String() != "192.229.214.0" {
 		t.Error("expected agent ip address: 192.229.214.0, got",
 			datagram.IPAddress.String())
