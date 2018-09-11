@@ -27,6 +27,7 @@ import (
 	"errors"
 	"io"
 	"net"
+	"time"
 )
 
 const (
@@ -55,6 +56,7 @@ type SFDatagram struct {
 	Counters   []Counter
 
 	IPAddress net.IP // Agent IP address
+	ColTime   int64  // Collected time
 }
 
 // SFSampledHeader represents sFlow sample header
@@ -173,6 +175,8 @@ func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
 	if err = read(d.reader, &datagram.SamplesNo); err != nil {
 		return nil, err
 	}
+
+	datagram.ColTime = time.Now().Unix()
 
 	return datagram, nil
 }
