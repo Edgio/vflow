@@ -371,6 +371,8 @@ func (f *TemplateFieldSpecifier) unmarshal(r *reader.Reader) error {
 		if f.EnterpriseNo, err = r.Uint32(); err != nil {
 			return err
 		}
+	} else {
+		f.EnterpriseNo = 0
 	}
 
 	return nil
