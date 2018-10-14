@@ -25,23 +25,34 @@ package packet
 import "errors"
 
 // ICMP represents ICMP header
+//    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   |     Type      |     Code      |          Checksum             |
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+//   |                          Rest of Header                       |
+//   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
 type ICMP struct {
 	// Type is ICMP type
 	Type int
 
 	// Code is ICMP subtype
 	Code int
+
+	// Rest of Header
+	RestHeader []byte
 }
 
 var errICMPHLenTooSHort = errors.New("ICMP header length is too short")
 
 func decodeICMP(b []byte) (ICMP, error) {
-	if len(b) < 4 {
+	if len(b) < 5 {
 		return ICMP{}, errICMPHLenTooSHort
 	}
 
 	return ICMP{
-		Type: int(b[0]),
-		Code: int(b[1]),
+		Type:       int(b[0]),
+		Code:       int(b[1]),
+		RestHeader: b[4:],
 	}, nil
 }
