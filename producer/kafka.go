@@ -2,7 +2,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    kafka.go.no
+//: file:    kafka.go
 //: details: vflow kafka producer plugin
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
@@ -32,6 +32,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 
 	"gopkg.in/segmentio/kafka-go.v0"
 	"gopkg.in/segmentio/kafka-go.v0/gzip"
@@ -43,41 +44,42 @@ import (
 // Kafka represents kafka producer
 type Kafka struct {
 	producer *kafka.Writer
-	config   kafka.WriterConfig
-	fileconf FileConfig
+	config   Config
 	logger   *log.Logger
 }
 
-// KafkaConfig represents kafka configuration
-type FileConfig struct {
-	Brokers         []string `yaml:"brokers" env:"BROKERS"`
-	BootstrapServer string   `yaml:"bootstrap_server" env:"BOOTSTRAP_SERVER"`
-	Compression     string   `yaml:"compression" env:"COMPRESSION"`
-
-	ConnectTimeout int   `yaml:"connect-timeout" env:"CONNECT_TIMEOUT"`
-	RetryMax       int   `yaml:"retry-max" env:"RETRY_MAX"`
-	RequestSizeMax int32 `yaml:"request-size-max" env:"REQUEST_SIZE_MAX"`
-	RetryBackoff   int   `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
-	RequiredAcks   int   `yaml:"required-acks" env:"REQUIRED_ACKS"`
-
-	TLSCertFile string `yaml:"tls-cert" env:"TLS_CERT"`
-	TLSKeyFile  string `yaml:"tls-key" env:"TLS_KEY"`
-	CAFile      string `yaml:"ca-file" env:"CA_FILE"`
-	VerifySSL   bool   `yaml:"verify-ssl" env:"VERIFY_SSL"`
+// Config represents kafka configuration
+type Config struct {
+	run          kafka.WriterConfig
+	Brokers      []string `yaml:"brokers" env:"BROKERS"`
+	ClientID     string   `yaml:"client_id" env:"CLIENT_ID"`
+	Compression  string   `yaml:"compression" env:"COMPRESSION"`
+	MaxAttempts  int      `yaml:"max_attempts" env:"MAX_ATTEMPTS"`
+	QueueSize    int      `yaml:"queue_size" env:"QUEUE_SIZE"`
+	BatchSize    int      `yaml:"batch_size" env:"BATCH_SIZE"`
+	Keepalive    int      `yaml:"keepalive" env:"KEEPALIVE"`
+	IOTimeout    int      `yaml:"connect-timeout" env:"CONNECT_TIMEOUT"`
+	RequiredAcks int      `yaml:"required-acks" env:"REQUIRED_ACKS"`
+	TLSCertFile  string   `yaml:"tls-cert" env:"TLS_CERT"`
+	TLSKeyFile   string   `yaml:"tls-key" env:"TLS_KEY"`
+	CAFile       string   `yaml:"ca-file" env:"CA_FILE"`
+	VerifySSL    bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	var err error
 
 	// set default values
-	k.fileconf = FileConfig{
-		Brokers:        []string{"localhost:9092"},
-		ConnectTimeout: 10,
-		RequiredAcks:   1,
-		RetryMax:       2,
-		RequestSizeMax: 104857600,
-		RetryBackoff:   10,
-		VerifySSL:      true,
+	k.config = Config{
+		Brokers:      []string{"localhost:9092"},
+		ClientID:     "vFlow.Kafka",
+		MaxAttempts:  10,
+		QueueSize:    10e3,
+		BatchSize:    10e2,
+		Keepalive:    180,
+		IOTimeout:    10,
+		RequiredAcks: -1,
+		VerifySSL:    true,
 	}
 
 	// setup logger
@@ -92,33 +94,35 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	k.loadEnv("VFLOW_KAFKA")
 
 	// init kafka configuration
-	k.config = kafka.WriterConfig{
-		Brokers: []string{"localhost:9092"},
+	k.config.run = kafka.WriterConfig{
+		Brokers: k.config.Brokers,
 		Dialer: &kafka.Dialer{
-			ClientID:  "vFlow.Kafka",
-			Timeout:   10,
+			ClientID:  k.config.ClientID,
+			Timeout:   time.Second * time.Duration(k.config.IOTimeout),
 			DualStack: true,
 		},
-		Balancer:          &kafka.Hash{},
-		MaxAttempts:       2,
-		QueueCapacity:     1024,
-		BatchSize:         512,
-		RebalanceInterval: 10,
-		RequiredAcks:      1,
+		Balancer:      &kafka.Hash{},
+		MaxAttempts:   k.config.MaxAttempts,
+		QueueCapacity: k.config.QueueSize,
+		BatchSize:     k.config.BatchSize,
+		ReadTimeout:   time.Second * time.Duration(k.config.IOTimeout),
+		WriteTimeout:  time.Second * time.Duration(k.config.IOTimeout),
+		RequiredAcks:  k.config.RequiredAcks,
+		Async:         false,
 	}
 
 	if tlsConfig := k.tlsConfig(); tlsConfig != nil {
-		k.config.Dialer.TLS = tlsConfig
+		k.config.run.Dialer.TLS = tlsConfig
 		k.logger.Println("Kafka client TLS enabled")
 	}
 
-	switch k.fileconf.Compression {
+	switch k.config.Compression {
 	case "gzip":
-		k.config.CompressionCodec = gzip.NewCompressionCodec()
+		k.config.run.CompressionCodec = gzip.NewCompressionCodec()
 	case "lz4":
-		k.config.CompressionCodec = lz4.NewCompressionCodec()
+		k.config.run.CompressionCodec = lz4.NewCompressionCodec()
 	case "snappy":
-		k.config.CompressionCodec = snappy.NewCompressionCodec()
+		k.config.run.CompressionCodec = snappy.NewCompressionCodec()
 	}
 
 	return err
@@ -130,10 +134,10 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 		ok  bool
 	)
 
+	k.config.run.Topic = topic
 	k.logger.Printf("start producer: Kafka, brokers: %+v, topic: %s\n",
-		k.config.Brokers, topic)
-	k.config.Topic = topic
-	k.producer = kafka.NewWriter(k.config)
+		k.config.run.Brokers, k.config.run.Topic)
+	k.producer = kafka.NewWriter(k.config.run)
 
 	for {
 		msg, ok = <-mCh
@@ -157,7 +161,7 @@ func (k *Kafka) load(f string) error {
 		return err
 	}
 
-	err = yaml.Unmarshal(b, &k.fileconf)
+	err = yaml.Unmarshal(b, &k.config)
 	if err != nil {
 		return err
 	}
@@ -168,13 +172,13 @@ func (k *Kafka) load(f string) error {
 func (k Kafka) tlsConfig() *tls.Config {
 	var t *tls.Config
 
-	if k.fileconf.TLSCertFile != "" && k.fileconf.TLSKeyFile != "" && k.fileconf.CAFile != "" {
-		cert, err := tls.LoadX509KeyPair(k.fileconf.TLSCertFile, k.fileconf.TLSKeyFile)
+	if k.config.TLSCertFile != "" && k.config.TLSKeyFile != "" && k.config.CAFile != "" {
+		cert, err := tls.LoadX509KeyPair(k.config.TLSCertFile, k.config.TLSKeyFile)
 		if err != nil {
 			k.logger.Fatal("Kafka TLS error: ", err)
 		}
 
-		caCert, err := ioutil.ReadFile(k.fileconf.CAFile)
+		caCert, err := ioutil.ReadFile(k.config.CAFile)
 		if err != nil {
 			k.logger.Fatal("Kafka TLS error: ", err)
 		}
@@ -185,7 +189,7 @@ func (k Kafka) tlsConfig() *tls.Config {
 		t = &tls.Config{
 			Certificates:       []tls.Certificate{cert},
 			RootCAs:            caCertPool,
-			InsecureSkipVerify: k.fileconf.VerifySSL,
+			InsecureSkipVerify: !k.config.VerifySSL,
 		}
 	}
 
