@@ -2,7 +2,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    kafka.go
+//: file:    kafka.go.no
 //: details: vflow kafka producer plugin
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
@@ -23,6 +23,7 @@
 package producer
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"io/ioutil"
@@ -31,91 +32,96 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
-	"github.com/Shopify/sarama"
+	"gopkg.in/segmentio/kafka-go.v0"
+	"gopkg.in/segmentio/kafka-go.v0/gzip"
+	"gopkg.in/segmentio/kafka-go.v0/lz4"
+	"gopkg.in/segmentio/kafka-go.v0/snappy"
 	"gopkg.in/yaml.v2"
 )
 
 // Kafka represents kafka producer
 type Kafka struct {
-	producer sarama.AsyncProducer
-	config   KafkaConfig
+	producer *kafka.Writer
+	config   kafka.WriterConfig
+	fileconf FileConfig
 	logger   *log.Logger
 }
 
 // KafkaConfig represents kafka configuration
-type KafkaConfig struct {
-	Brokers        []string `yaml:"brokers" env:"BROKERS"`
-	Compression    string   `yaml:"compression" env:"COMPRESSION"`
-	RetryMax       int      `yaml:"retry-max" env:"RETRY_MAX"`
-	RequestSizeMax int32    `yaml:"request-size-max" env:"REQUEST_SIZE_MAX"`
-	RetryBackoff   int      `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
-	TLSCertFile    string   `yaml:"tls-cert" env:"TLS_CERT"`
-	TLSKeyFile     string   `yaml:"tls-key" env:"TLS_KEY"`
-	CAFile         string   `yaml:"ca-file" env:"CA_FILE"`
-	VerifySSL      bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
+type FileConfig struct {
+	Brokers         []string `yaml:"brokers" env:"BROKERS"`
+	BootstrapServer string   `yaml:"bootstrap_server" env:"BOOTSTRAP_SERVER"`
+	Compression     string   `yaml:"compression" env:"COMPRESSION"`
+
+	ConnectTimeout int   `yaml:"connect-timeout" env:"CONNECT_TIMEOUT"`
+	RetryMax       int   `yaml:"retry-max" env:"RETRY_MAX"`
+	RequestSizeMax int32 `yaml:"request-size-max" env:"REQUEST_SIZE_MAX"`
+	RetryBackoff   int   `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
+	RequiredAcks   int   `yaml:"required-acks" env:"REQUIRED_ACKS"`
+
+	TLSCertFile string `yaml:"tls-cert" env:"TLS_CERT"`
+	TLSKeyFile  string `yaml:"tls-key" env:"TLS_KEY"`
+	CAFile      string `yaml:"ca-file" env:"CA_FILE"`
+	VerifySSL   bool   `yaml:"verify-ssl" env:"VERIFY_SSL"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
-	var (
-		config = sarama.NewConfig()
-		err    error
-	)
+	var err error
 
 	// set default values
-	k.config = KafkaConfig{
+	k.fileconf = FileConfig{
 		Brokers:        []string{"localhost:9092"},
+		ConnectTimeout: 10,
+		RequiredAcks:   1,
 		RetryMax:       2,
 		RequestSizeMax: 104857600,
 		RetryBackoff:   10,
 		VerifySSL:      true,
 	}
 
+	// setup logger
 	k.logger = logger
 
-	// load configuration if available
+	// load configuration file if available
 	if err = k.load(configFile); err != nil {
 		logger.Println(err)
-	}
-
-	// init kafka configuration
-	config.ClientID = "vFlow.Kafka"
-	config.Producer.Retry.Max = k.config.RetryMax
-	config.Producer.Retry.Backoff = time.Duration(k.config.RetryBackoff) * time.Millisecond
-
-	sarama.MaxRequestSize = k.config.RequestSizeMax
-
-	switch k.config.Compression {
-	case "gzip":
-		config.Producer.Compression = sarama.CompressionGZIP
-	case "lz4":
-		config.Producer.Compression = sarama.CompressionLZ4
-	case "snappy":
-		config.Producer.Compression = sarama.CompressionSnappy
-	default:
-		config.Producer.Compression = sarama.CompressionNone
-	}
-
-	if tlsConfig := k.tlsConfig(); tlsConfig != nil {
-		config.Net.TLS.Config = tlsConfig
-		config.Net.TLS.Enable = true
-		k.logger.Println("Kafka client TLS enabled")
 	}
 
 	// get env config
 	k.loadEnv("VFLOW_KAFKA")
 
-	if err = config.Validate(); err != nil {
-		logger.Fatal(err)
+	// init kafka configuration
+	k.config = kafka.WriterConfig{
+		Brokers: []string{"localhost:9092"},
+		Dialer: &kafka.Dialer{
+			ClientID:  "vFlow.Kafka",
+			Timeout:   10,
+			DualStack: true,
+		},
+		Balancer:          &kafka.Hash{},
+		MaxAttempts:       2,
+		QueueCapacity:     1024,
+		BatchSize:         512,
+		RebalanceInterval: 10,
+		RequiredAcks:      1,
 	}
 
-	k.producer, err = sarama.NewAsyncProducer(k.config.Brokers, config)
-	if err != nil {
-		return err
+	if tlsConfig := k.tlsConfig(); tlsConfig != nil {
+		k.config.Dialer.TLS = tlsConfig
+		k.logger.Println("Kafka client TLS enabled")
 	}
 
-	return nil
+	switch k.fileconf.Compression {
+	case "gzip":
+		k.config.CompressionCodec = gzip.NewCompressionCodec()
+	case "lz4":
+		k.config.CompressionCodec = lz4.NewCompressionCodec()
+	case "snappy":
+		k.config.CompressionCodec = snappy.NewCompressionCodec()
+	}
+
+	return err
 }
 
 func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
@@ -126,6 +132,8 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 
 	k.logger.Printf("start producer: Kafka, brokers: %+v, topic: %s\n",
 		k.config.Brokers, topic)
+	k.config.Topic = topic
+	k.producer = kafka.NewWriter(k.config)
 
 	for {
 		msg, ok = <-mCh
@@ -133,15 +141,11 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 			break
 		}
 
-		select {
-		case k.producer.Input() <- &sarama.ProducerMessage{
-			Topic: topic,
-			Value: sarama.ByteEncoder(msg),
-		}:
-		case err := <-k.producer.Errors():
-			k.logger.Println(err)
-			*ec++
-		}
+		err := k.producer.WriteMessages(context.Background(), kafka.Message{
+			Value: msg,
+		})
+
+		k.logger.Println(err.Error())
 	}
 
 	k.producer.Close()
@@ -153,7 +157,7 @@ func (k *Kafka) load(f string) error {
 		return err
 	}
 
-	err = yaml.Unmarshal(b, &k.config)
+	err = yaml.Unmarshal(b, &k.fileconf)
 	if err != nil {
 		return err
 	}
@@ -164,13 +168,13 @@ func (k *Kafka) load(f string) error {
 func (k Kafka) tlsConfig() *tls.Config {
 	var t *tls.Config
 
-	if k.config.TLSCertFile != "" && k.config.TLSKeyFile != "" && k.config.CAFile != "" {
-		cert, err := tls.LoadX509KeyPair(k.config.TLSCertFile, k.config.TLSKeyFile)
+	if k.fileconf.TLSCertFile != "" && k.fileconf.TLSKeyFile != "" && k.fileconf.CAFile != "" {
+		cert, err := tls.LoadX509KeyPair(k.fileconf.TLSCertFile, k.fileconf.TLSKeyFile)
 		if err != nil {
 			k.logger.Fatal("Kafka TLS error: ", err)
 		}
 
-		caCert, err := ioutil.ReadFile(k.config.CAFile)
+		caCert, err := ioutil.ReadFile(k.fileconf.CAFile)
 		if err != nil {
 			k.logger.Fatal("Kafka TLS error: ", err)
 		}
@@ -181,7 +185,7 @@ func (k Kafka) tlsConfig() *tls.Config {
 		t = &tls.Config{
 			Certificates:       []tls.Certificate{cert},
 			RootCAs:            caCertPool,
-			InsecureSkipVerify: k.config.VerifySSL,
+			InsecureSkipVerify: k.fileconf.VerifySSL,
 		}
 	}
 
