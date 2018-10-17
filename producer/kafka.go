@@ -35,10 +35,10 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/segmentio/kafka-go.v0"
-	"gopkg.in/segmentio/kafka-go.v0/gzip"
-	"gopkg.in/segmentio/kafka-go.v0/lz4"
-	"gopkg.in/segmentio/kafka-go.v0/snappy"
+	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/gzip"
+	"github.com/segmentio/kafka-go/lz4"
+	"github.com/segmentio/kafka-go/snappy"
 	"gopkg.in/yaml.v2"
 )
 
