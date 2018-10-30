@@ -28,6 +28,7 @@ import (
 	"crypto/x509"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"reflect"
 	"strconv"
@@ -50,20 +51,21 @@ type Kafka struct {
 
 // Config represents kafka configuration
 type Config struct {
-	run          kafka.WriterConfig
-	Brokers      []string `yaml:"brokers" env:"BROKERS"`
-	ClientID     string   `yaml:"client_id" env:"CLIENT_ID"`
-	Compression  string   `yaml:"compression" env:"COMPRESSION"`
-	MaxAttempts  int      `yaml:"max_attempts" env:"MAX_ATTEMPTS"`
-	QueueSize    int      `yaml:"queue_size" env:"QUEUE_SIZE"`
-	BatchSize    int      `yaml:"batch_size" env:"BATCH_SIZE"`
-	Keepalive    int      `yaml:"keepalive" env:"KEEPALIVE"`
-	IOTimeout    int      `yaml:"connect-timeout" env:"CONNECT_TIMEOUT"`
-	RequiredAcks int      `yaml:"required-acks" env:"REQUIRED_ACKS"`
-	TLSCertFile  string   `yaml:"tls-cert" env:"TLS_CERT"`
-	TLSKeyFile   string   `yaml:"tls-key" env:"TLS_KEY"`
-	CAFile       string   `yaml:"ca-file" env:"CA_FILE"`
-	VerifySSL    bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
+	run             kafka.WriterConfig
+	BootstrapServer string   `yaml:"bootstrap_server" env:"BOOTSTRAP_SERVER"`
+	Brokers         []string `yaml:"brokers" env:"BROKERS"`
+	ClientID        string   `yaml:"client_id" env:"CLIENT_ID"`
+	Compression     string   `yaml:"compression" env:"COMPRESSION"`
+	MaxAttempts     int      `yaml:"max_attempts" env:"MAX_ATTEMPTS"`
+	QueueSize       int      `yaml:"queue_size" env:"QUEUE_SIZE"`
+	BatchSize       int      `yaml:"batch_size" env:"BATCH_SIZE"`
+	Keepalive       int      `yaml:"keepalive" env:"KEEPALIVE"`
+	IOTimeout       int      `yaml:"connect-timeout" env:"CONNECT_TIMEOUT"`
+	RequiredAcks    int      `yaml:"required-acks" env:"REQUIRED_ACKS"`
+	TLSCertFile     string   `yaml:"tls-cert" env:"TLS_CERT"`
+	TLSKeyFile      string   `yaml:"tls-key" env:"TLS_KEY"`
+	CAFile          string   `yaml:"ca-file" env:"CA_FILE"`
+	VerifySSL       bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
 }
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
@@ -92,6 +94,18 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 
 	// get env config
 	k.loadEnv("VFLOW_KAFKA")
+
+	// lookup bootstrap server
+	if k.config.BootstrapServer != "" {
+		brokers, err := bootstrapLookup(k.config.BootstrapServer)
+		if err != nil {
+			k.logger.Printf("error getting bootstrap servers: %v", err)
+		} else {
+			k.config.Brokers = brokers
+		}
+	}
+
+	k.logger.Printf("using kafka brokers %v", k.config.Brokers)
 
 	// init kafka configuration
 	k.config.run = kafka.WriterConfig{
@@ -234,4 +248,27 @@ func (k *Kafka) loadEnv(prefix string) {
 			f.SetBool(valBool)
 		}
 	}
+}
+
+func bootstrapLookup(endpoint string) ([]string, error) {
+
+	var err error
+	var brokers []string
+
+	host, port, err := net.SplitHostPort(endpoint)
+	if err != nil {
+		return brokers, err
+	}
+
+	addrs, err := net.LookupHost(host)
+
+	if err != nil {
+		return brokers, err
+	}
+
+	for _, ip := range addrs {
+		brokers = append(brokers, strings.Join([]string{ip, port}, ":"))
+	}
+
+	return brokers, err
 }
