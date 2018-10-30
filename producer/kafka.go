@@ -35,10 +35,10 @@ import (
 	"strings"
 	"time"
 
-	"gopkg.in/segmentio/kafka-go.v0"
-	"gopkg.in/segmentio/kafka-go.v0/gzip"
-	"gopkg.in/segmentio/kafka-go.v0/lz4"
-	"gopkg.in/segmentio/kafka-go.v0/snappy"
+	"github.com/segmentio/kafka-go"
+	"github.com/segmentio/kafka-go/gzip"
+	"github.com/segmentio/kafka-go/lz4"
+	"github.com/segmentio/kafka-go/snappy"
 	"gopkg.in/yaml.v2"
 )
 
@@ -52,8 +52,8 @@ type Kafka struct {
 // Config represents kafka configuration
 type Config struct {
 	run             kafka.WriterConfig
-	BootstrapServer string   `yaml:"bootstrap_server" env:"BOOTSTRAP_SERVER"`
 	Brokers         []string `yaml:"brokers" env:"BROKERS"`
+	BootstrapServer string   `yaml:"bootstrap_server" env:"BOOTSTRAP_SERVER"`
 	ClientID        string   `yaml:"client_id" env:"CLIENT_ID"`
 	Compression     string   `yaml:"compression" env:"COMPRESSION"`
 	MaxAttempts     int      `yaml:"max_attempts" env:"MAX_ATTEMPTS"`
