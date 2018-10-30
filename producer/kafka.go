@@ -53,12 +53,12 @@ type Kafka struct {
 type Config struct {
 	run             kafka.WriterConfig
 	Brokers         []string `yaml:"brokers" env:"BROKERS"`
-	BootstrapServer string   `yaml:"bootstrap_server" env:"BOOTSTRAP_SERVER"`
-	ClientID        string   `yaml:"client_id" env:"CLIENT_ID"`
+	BootstrapServer string   `yaml:"bootstrap-server" env:"BOOTSTRAP_SERVER"`
+	ClientID        string   `yaml:"client-id" env:"CLIENT_ID"`
 	Compression     string   `yaml:"compression" env:"COMPRESSION"`
-	MaxAttempts     int      `yaml:"max_attempts" env:"MAX_ATTEMPTS"`
-	QueueSize       int      `yaml:"queue_size" env:"QUEUE_SIZE"`
-	BatchSize       int      `yaml:"batch_size" env:"BATCH_SIZE"`
+	MaxAttempts     int      `yaml:"max-attempts" env:"MAX_ATTEMPTS"`
+	QueueSize       int      `yaml:"queue-size" env:"QUEUE_SIZE"`
+	BatchSize       int      `yaml:"batch-size" env:"BATCH_SIZE"`
 	Keepalive       int      `yaml:"keepalive" env:"KEEPALIVE"`
 	IOTimeout       int      `yaml:"connect-timeout" env:"CONNECT_TIMEOUT"`
 	RequiredAcks    int      `yaml:"required-acks" env:"REQUIRED_ACKS"`
