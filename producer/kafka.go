@@ -105,8 +105,6 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 		}
 	}
 
-	k.logger.Printf("using kafka brokers %v", k.config.Brokers)
-
 	// init kafka configuration
 	k.config.run = kafka.WriterConfig{
 		Brokers: k.config.Brokers,
