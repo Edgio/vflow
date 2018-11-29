@@ -473,8 +473,8 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 }
 
 func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, error) {
-	var(
-		err error
+	var (
+		err        error
 		readLength uint16
 	)
 	r := d.reader
@@ -494,14 +494,14 @@ func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, 
 	} else {
 		readLength = fieldSpecifierLen
 	}
-	return readLength,err
+	return readLength, err
 }
 
 func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 	var (
-		fields []DecodedField
-		err    error
-		b      []byte
+		fields     []DecodedField
+		err        error
+		b          []byte
 		readLength uint16
 	)
 	r := d.reader
@@ -512,7 +512,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			tr.FieldSpecifiers[i].ElementID,
 		}]
 
-		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length,m.Type)
+		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -539,7 +539,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			tr.ScopeFieldSpecifiers[i].ElementID,
 		}]
 
-		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length,m.Type)
+		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type)
 		if err != nil {
 			return nil, err
 		}
