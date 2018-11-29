@@ -539,7 +539,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			tr.ScopeFieldSpecifiers[i].ElementID,
 		}]
 
-		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length,m.Type)
+		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length,m.Type)
 		if err != nil {
 			return nil, err
 		}
