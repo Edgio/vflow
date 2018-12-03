@@ -1,8 +1,8 @@
 language: go
 sudo: required
 go:
-  - "1.8"
-  - tip
+  - "1.11.2"
+  - master
 
 notifications:
   email: false
