@@ -480,28 +480,6 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 	)
 	r := d.reader
 
-	for i := 0; i < len(tr.FieldSpecifiers); i++ {
-		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
-		if err != nil {
-			return nil, err
-		}
-
-		m, ok := InfoModel[ElementKey{
-			tr.FieldSpecifiers[i].EnterpriseNo,
-			tr.FieldSpecifiers[i].ElementID,
-		}]
-
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID))
-		}
-
-		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: Interpret(&b, m.Type),
-		})
-	}
-
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
 		if err != nil {
@@ -522,6 +500,28 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			ID:           m.FieldID,
 			Value:        Interpret(&b, m.Type),
 			EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+		})
+	}
+
+	for i := 0; i < len(tr.FieldSpecifiers); i++ {
+		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
+		if err != nil {
+			return nil, err
+		}
+
+		m, ok := InfoModel[ElementKey{
+			tr.FieldSpecifiers[i].EnterpriseNo,
+			tr.FieldSpecifiers[i].ElementID,
+		}]
+
+		if !ok {
+			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist",
+				tr.FieldSpecifiers[i].ElementID))
+		}
+
+		fields = append(fields, DecodedField{
+			ID:    m.FieldID,
+			Value: Interpret(&b, m.Type),
 		})
 	}
 
