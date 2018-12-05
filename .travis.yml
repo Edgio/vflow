@@ -11,5 +11,5 @@ before_install:
     - go get -tags sarama -t -v ./...
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
-  - go test -v ./... -timeout 1m
+  - go test -tags sarama -v ./... -timeout 1m
   - make build
