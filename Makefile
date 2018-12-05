@@ -1,6 +1,7 @@
 VERSION= 0.6.5
 PACKAGES= $(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --unique)
 LDFLAGS= -ldflags "-X main.version=${VERSION}"
+KAFKATAG?= sarama
 DEBPATH= scripts/dpkg
 RPMPATH= scripts/rpmbuild
 ARCH=`uname -m`
@@ -40,7 +41,7 @@ depends:
 	go get -d ./...
 
 build: depends
-	cd vflow; go build $(LDFLAGS)
+	cd vflow; go build $(LDFLAGS) -tags $(KAFKATAG)
 	cd stress; go build
 
 dpkg: build

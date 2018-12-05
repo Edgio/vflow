@@ -2,7 +2,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    kafka.go
+//: file:    kafka_sarama.go
 //: details: vflow kafka producer plugin
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
@@ -19,6 +19,7 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
+// +build sarama
 
 package producer
 
