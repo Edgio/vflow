@@ -49,7 +49,7 @@ The vFlow configuration contains the following keys
 |stats-enabled           | true                           | enable/disable web stats listener                |
 |stats-http-addr         | *                              | web stats address option at server startup       |
 |stats-http-port         | 8081                           | web stats TCP port                               |
-|mq-name                 | kafka                          | message queueing name (kafka, nsq or nats)       |
+|mq-name                 | kafka                          | [message queues](#message-queues)        |
 |mq-config-file          | /etc/vflow/mq.conf             | message queue config file                        |
 
 The default configuration path is /etc/vflow/vflow.conf but you can change it as below:
@@ -67,6 +67,12 @@ ipfix-workers: 600
 sflow-workers: 300
 log-file: /var/log/vflow.log
 ```
+## Message Queues 
+The vFlow supports these message queuing 
+- kafka
+- nsq
+- nat
+- rawSocket
 
 # Kafka Configuration
 
@@ -152,7 +158,7 @@ The default configuration file is /etc/vflow/mq.conf, you can be able to change 
 
 
 ## Configuration Keys
-The NATS configuration contains the following key
+The rawSocket configuration contains the following key
 
 |Key                  | Default               |  Environment variable    | Description                                                          |
 |---------------------| ----------------------|--------------------------|----------------------------------------------------------------------|
