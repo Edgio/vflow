@@ -8,8 +8,8 @@ notifications:
   email: false
 
 before_install:
-    - go get -tags sarama -t -v ./...
+    - go get -tags kafkav1 -t -v ./...
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
-  - go test -tags sarama -v ./... -timeout 1m
+  - go test -tags kafkav1 -v ./... -timeout 1m
   - make build

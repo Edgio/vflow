@@ -2,7 +2,7 @@
 //: Copyright (C) 2018 Alan Willis.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    kafka_segmentio.go
+//: file:    segmentio.go
 //: details: vflow kafka producer plugin
 //: author:  Alan Willis
 //: date:    12/05/2018
@@ -19,7 +19,7 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
-// +build segmentio
+// +build kafkav2
 
 package producer
 
@@ -34,7 +34,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/segmentio/kafka-go"
@@ -48,8 +47,6 @@ import (
 type Kafka struct {
 	producer *kafka.Writer
 	config   Config
-	msgq     chan []byte
-	wg       *sync.WaitGroup
 	logger   *log.Logger
 }
 
@@ -75,9 +72,6 @@ type Config struct {
 
 func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	var err error
-
-	k.msgq = make(chan []byte)
-	k.wg = new(sync.WaitGroup)
 
 	// set default values
 	k.config = Config{
@@ -147,74 +141,57 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 		k.config.run.CompressionCodec = snappy.NewCompressionCodec()
 	}
 
-	go func(k *Kafka) {
-
-		batch := make([]kafka.Message, 0, k.config.BatchSize)
-		var shutdown = false
-		var pflush = false
-		var pftimer = time.NewTimer(time.Second * time.Duration(k.config.PeriodicFlush))
-		k.wg.Add(1)
-
-		for {
-			select {
-			case message, ok := <-k.msgq:
-				if ok {
-					batch = append(batch, kafka.Message{Value: message})
-				} else {
-					shutdown = true
-				}
-			case <-pftimer.C:
-				pflush = true
-			}
-
-			if len(batch) == k.config.BatchSize || shutdown == true || pflush == true {
-
-				if !pftimer.Stop() {
-					pflush = false
-				}
-
-				err = k.producer.WriteMessages(context.Background(), batch...)
-
-				if err != nil {
-					k.logger.Printf("error writing to kafka: %v", err)
-				}
-
-				if shutdown {
-					k.logger.Printf("shutting down kafka writer, flushed %d records", len(batch))
-					k.wg.Done()
-					break
-				}
-
-				pftimer.Reset(time.Second * time.Duration(k.config.PeriodicFlush))
-				batch = nil
-			}
-		}
-	}(k)
-
 	return err
 }
 
 func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
-	var (
-		msg []byte
-		ok  bool
-	)
 
 	k.config.run.Topic = topic
 	k.logger.Printf("start producer: Kafka, brokers: %+v, topic: %s\n",
 		k.config.run.Brokers, k.config.run.Topic)
 	k.producer = kafka.NewWriter(k.config.run)
 
+	batch := make([]kafka.Message, 0, k.config.BatchSize)
+
+	var shutdown = false
+	var pflush = false
+	var pftimer = time.NewTimer(time.Second * time.Duration(k.config.PeriodicFlush))
+
 	for {
-		msg, ok = <-mCh
-		if !ok {
-			break
+		select {
+		case message, ok := <-mCh:
+			if ok {
+				batch = append(batch, kafka.Message{Value: message})
+			} else {
+				shutdown = true
+			}
+		case <-pftimer.C:
+			pflush = true
 		}
-		k.msgq <- msg
+
+		if len(batch) == k.config.BatchSize || shutdown || pflush {
+
+			if !pftimer.Stop() {
+				pflush = false
+			}
+
+			err := k.producer.WriteMessages(context.Background(), batch...)
+
+			if err != nil {
+				k.logger.Printf("error writing to kafka: %v", err)
+				*ec++
+			}
+
+			if shutdown {
+				k.logger.Printf("shutting down kafka writer, flushed %d records", len(batch))
+				break
+			}
+
+			pftimer.Reset(time.Second * time.Duration(k.config.PeriodicFlush))
+			batch = nil
+		}
 	}
 
-	close(k.msgq)
-	k.wg.Wait()
 	k.producer.Close()
 }
 
