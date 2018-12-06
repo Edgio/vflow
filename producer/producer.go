@@ -47,6 +47,7 @@ type MQueue interface {
 
 // NewProducer constructs new Messaging Queue
 func NewProducer(mqName string) *Producer {
+	//noinspection GoUnresolvedReference,GoInvalidCompositeLiteral
 	var mqRegistered = map[string]MQueue{
 		"kafka":     new(Kafka),
 		"nsq":       new(NSQ),
