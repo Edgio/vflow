@@ -192,7 +192,9 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 		}
 	}
 
-	k.producer.Close()
+	if err := k.producer.Close(); err != nil {
+		k.logger.Printf("error shutting down kafka writer: %v", err)
+	}
 }
 
 func (k *Kafka) load(f string) error {
