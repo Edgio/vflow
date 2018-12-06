@@ -1,14 +1,14 @@
 language: go
 sudo: required
 go:
-  - 1.8
-  - tip
+  - "1.11.2"
+  - master
 
 notifications:
   email: false
 
 before_install:
-    - go get -d ./...
+    - go get -t -v ./...
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
   - go test -v ./... -timeout 1m
