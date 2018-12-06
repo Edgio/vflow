@@ -4,12 +4,16 @@ go:
   - "1.11.2"
   - master
 
+env:
+  - KAFKATAG=kafkav1
+  - KAFKATAG=kafkav2
+
 notifications:
   email: false
 
 before_install:
-    - go get -tags kafkav1 -t -v ./...
+    - go get -tags $KAFKATAG -t -v ./...
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
-  - go test -tags kafkav1 -v ./... -timeout 1m
+  - go test -tags $KAFKATAG -v ./... -timeout 1m
   - make build
