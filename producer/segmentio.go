@@ -46,12 +46,12 @@ import (
 // Kafka represents kafka producer
 type Kafka struct {
 	producer *kafka.Writer
-	config   Config
+	config   KafkaConfig
 	logger   *log.Logger
 }
 
 // Config represents kafka configuration
-type Config struct {
+type KafkaConfig struct {
 	run             kafka.WriterConfig
 	Brokers         []string `yaml:"brokers" env:"BROKERS"`
 	BootstrapServer string   `yaml:"bootstrap-server" env:"BOOTSTRAP_SERVER"`
@@ -74,7 +74,7 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	var err error
 
 	// set default values
-	k.config = Config{
+	k.config = KafkaConfig{
 		Brokers:       []string{"localhost:9092"},
 		ClientID:      "vFlow.Kafka",
 		MaxAttempts:   10,
