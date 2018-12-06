@@ -5,8 +5,11 @@ go:
   - master
 
 env:
-  - KAFKATAG=kafkav1
-  - KAFKATAG=kafkav2
+  global:
+    - GO111MODULE=on
+  matrix:
+    - KAFKATAG=kafkav1
+    - KAFKATAG=kafkav2
 
 notifications:
   email: false
