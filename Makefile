@@ -1,7 +1,6 @@
 VERSION= 0.6.5
 PACKAGES= $(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --unique)
 LDFLAGS= -ldflags "-X main.version=${VERSION}"
-KAFKATAG?= kafkav1
 DEBPATH= scripts/dpkg
 RPMPATH= scripts/rpmbuild
 ARCH=`uname -m`
@@ -9,10 +8,10 @@ ARCH=`uname -m`
 default: test
 
 test:
-	go test -tags $(KAFKATAG) -v ./... -timeout 1m
+	go test -v ./... -timeout 1m
 
 bench:
-	go test -tags $(KAFKATAG) -v ./... -bench=. -timeout 2m
+	go test -v ./... -bench=. -timeout 2m
 
 run: build
 	cd vflow; ./vflow -sflow-workers 100 -ipfix-workers 100
@@ -41,7 +40,7 @@ depends:
 	go get -d ./...
 
 build: depends
-	cd vflow; go build $(LDFLAGS) -tags $(KAFKATAG)
+	cd vflow; go build $(LDFLAGS)
 	cd stress; go build
 
 dpkg: build

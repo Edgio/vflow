@@ -1,5 +1,5 @@
 //: ----------------------------------------------------------------------------
-//: Copyright (C) 2018 Alan Willis.  All Rights Reserved.
+//: Copyright (C) 2018 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
 //: file:    segmentio.go
@@ -19,7 +19,6 @@
 //: See the License for the specific language governing permissions and
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
-// +build kafkav2
 
 package producer
 
@@ -43,15 +42,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Kafka represents kafka producer
-type Kafka struct {
+// KafkaSegmentio represents kafka producer
+type KafkaSegmentio struct {
 	producer *kafka.Writer
-	config   KafkaConfig
+	config   KafkaSegmentioConfig
 	logger   *log.Logger
 }
 
-// Config represents kafka configuration
-type KafkaConfig struct {
+// KafkaSegmentioConfig represents kafka configuration
+type KafkaSegmentioConfig struct {
 	run             kafka.WriterConfig
 	Brokers         []string `yaml:"brokers" env:"BROKERS"`
 	BootstrapServer string   `yaml:"bootstrap-server" env:"BOOTSTRAP_SERVER"`
@@ -70,11 +69,11 @@ type KafkaConfig struct {
 	VerifySSL       bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
 }
 
-func (k *Kafka) setup(configFile string, logger *log.Logger) error {
+func (k *KafkaSegmentio) setup(configFile string, logger *log.Logger) error {
 	var err error
 
 	// set default values
-	k.config = KafkaConfig{
+	k.config = KafkaSegmentioConfig{
 		Brokers:       []string{"localhost:9092"},
 		ClientID:      "vFlow.Kafka",
 		MaxAttempts:   10,
@@ -144,7 +143,7 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	return err
 }
 
-func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
+func (k *KafkaSegmentio) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 
 	k.config.run.Topic = topic
 	k.logger.Printf("start producer: Kafka, brokers: %+v, topic: %s\n",
@@ -197,7 +196,7 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 	}
 }
 
-func (k *Kafka) load(f string) error {
+func (k *KafkaSegmentio) load(f string) error {
 	b, err := ioutil.ReadFile(f)
 	if err != nil {
 		return err
@@ -211,7 +210,7 @@ func (k *Kafka) load(f string) error {
 	return nil
 }
 
-func (k Kafka) tlsConfig() *tls.Config {
+func (k KafkaSegmentio) tlsConfig() *tls.Config {
 	var t *tls.Config
 
 	if k.config.TLSCertFile != "" && k.config.TLSKeyFile != "" && k.config.CAFile != "" {
@@ -238,7 +237,7 @@ func (k Kafka) tlsConfig() *tls.Config {
 	return t
 }
 
-func (k *Kafka) loadEnv(prefix string) {
+func (k *KafkaSegmentio) loadEnv(prefix string) {
 	v := reflect.ValueOf(&k.config).Elem()
 	t := v.Type()
 	for i := 0; i < v.NumField(); i++ {
