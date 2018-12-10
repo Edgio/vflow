@@ -70,9 +70,13 @@ log-file: /var/log/vflow.log
 ## Message Queues 
 The vFlow supports these message queuing 
 - kafka
+- kafka.segmentio
 - nsq
 - nat
 - rawSocket
+
+Note: there are two kafka drivers: [Kafka Sarama](https://github.com/Shopify/sarama) (Default) and [Kafka Segmentio](https://github.com/segmentio/kafka-go) (Kafka-Go)
+
 
 # Kafka Configuration
 
