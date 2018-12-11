@@ -31,8 +31,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/VerizonDigital/vflow/netflow/v5"
-	"github.com/VerizonDigital/vflow/producer"
+	"github.com/ChrisNoel/vflow/netflow/v5"
+	"github.com/ChrisNoel/vflow/producer"
 )
 
 // NetflowV5 represents netflow v5 collector
