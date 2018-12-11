@@ -80,17 +80,19 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // StatsFlowHandler handles /flow endpoint
-func StatsFlowHandler(i *IPFIX, s *SFlow, n *NetflowV9) http.HandlerFunc {
+func StatsFlowHandler(i *IPFIX, s *SFlow, n5 *NetflowV5, n *NetflowV9) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var data = &struct {
 			StartTime int64
 			IPFIX     *IPFIXStats
 			SFlow     *SFlowStats
+			NetflowV5 *NetflowV5Stats
 			NetflowV9 *NetflowV9Stats
 		}{
 			startTime,
 			i.status(),
 			s.status(),
+			n5.status(),
 			n.status(),
 		}
 
@@ -105,14 +107,14 @@ func StatsFlowHandler(i *IPFIX, s *SFlow, n *NetflowV9) http.HandlerFunc {
 	}
 }
 
-func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow9 *NetflowV9) {
+func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow5 *NetflowV5, netflow9 *NetflowV9) {
 	if !opts.StatsEnabled {
 		return
 	}
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sys", StatsSysHandler)
-	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow, netflow9))
+	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow, netflow5, netflow9))
 
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
 

@@ -55,9 +55,10 @@ func main() {
 
 	sFlow := NewSFlow()
 	ipfix := NewIPFIX()
+	netflow5 := NewNetflowV5()
 	netflow9 := NewNetflowV9()
 
-	protos := []proto{sFlow, ipfix, netflow9}
+	protos := []proto{sFlow, ipfix, netflow5, netflow9}
 
 	for _, p := range protos {
 		wg.Add(1)
@@ -67,7 +68,7 @@ func main() {
 		}(p)
 	}
 
-	go statsHTTPServer(ipfix, sFlow, netflow9)
+	go statsHTTPServer(ipfix, sFlow, netflow5, netflow9)
 
 	<-signalCh
 

@@ -81,6 +81,14 @@ type Options struct {
 	IPFIXMirrorWorkers int    `yaml:"ipfix-mirror-workers"`
 	IPFIXTplCacheFile  string `yaml:"ipfix-tpl-cache-file"`
 
+	// Netflow V5
+	NetflowV5Enabled      bool   `yaml:"netflow5-enabled"`
+	NetflowV5Port         int    `yaml:"netflow5-port"`
+	NetflowV5UDPSize      int    `yaml:"netflow5-udp-size"`
+	NetflowV5Workers      int    `yaml:"netflow5-workers"`
+	NetflowV5Topic        string `yaml:"netflow5-topic"`
+
+
 	// Netflow
 	NetflowV9Enabled      bool   `yaml:"netflow9-enabled"`
 	NetflowV9Port         int    `yaml:"netflow9-port"`
@@ -150,6 +158,12 @@ func NewOptions() *Options {
 		IPFIXMirrorPort:    4172,
 		IPFIXMirrorWorkers: 5,
 		IPFIXTplCacheFile:  "/tmp/vflow.templates",
+
+		NetflowV5Enabled:      true,
+		NetflowV5Port:         9996,
+		NetflowV5UDPSize:      1500,
+		NetflowV5Workers:      200,
+		NetflowV5Topic:        "vflow.netflow5",
 
 		NetflowV9Enabled:      true,
 		NetflowV9Port:         4729,
@@ -315,6 +329,13 @@ func (opts *Options) vFlowFlagSet() {
 	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
 	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
 	flag.IntVar(&opts.IPFIXMirrorWorkers, "ipfix-mirror-workers", opts.IPFIXMirrorWorkers, "IPFIX mirror workers number")
+
+	// netflow version 5
+	flag.BoolVar(&opts.NetflowV5Enabled, "netflow5-enabled", opts.NetflowV5Enabled, "enable/disable netflow version 5 listener")
+	flag.IntVar(&opts.NetflowV5Port, "netflow5-port", opts.NetflowV5Port, "Netflow Version 5 port number")
+	flag.IntVar(&opts.NetflowV5UDPSize, "netflow5-max-udp-size", opts.NetflowV5UDPSize, "Netflow version 5 maximum UDP size")
+	flag.IntVar(&opts.NetflowV5Workers, "netflow5-workers", opts.NetflowV5Workers, "Netflow version 5 workers number")
+	flag.StringVar(&opts.NetflowV5Topic, "netflow5-topic", opts.NetflowV5Topic, "Netflow version 5 topic name")
 
 	// netflow version 9
 	flag.BoolVar(&opts.NetflowV9Enabled, "netflow9-enabled", opts.NetflowV9Enabled, "enable/disable netflow version 9 listener")
