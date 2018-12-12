@@ -2,7 +2,7 @@
 //: Copyright (C) 2017 Verizon.  All Rights Reserved.
 //: All Rights Reserved
 //:
-//: file:    kafka.go
+//: file:    sarama.go
 //: details: vflow kafka producer plugin
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
@@ -37,15 +37,15 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
-// Kafka represents kafka producer
-type Kafka struct {
+// KafkaSarama represents kafka producer
+type KafkaSarama struct {
 	producer sarama.AsyncProducer
-	config   KafkaConfig
+	config   KafkaSaramaConfig
 	logger   *log.Logger
 }
 
-// KafkaConfig represents kafka configuration
-type KafkaConfig struct {
+// KafkaSaramaConfig represents kafka configuration
+type KafkaSaramaConfig struct {
 	Brokers        []string `yaml:"brokers" env:"BROKERS"`
 	Compression    string   `yaml:"compression" env:"COMPRESSION"`
 	RetryMax       int      `yaml:"retry-max" env:"RETRY_MAX"`
@@ -57,14 +57,14 @@ type KafkaConfig struct {
 	VerifySSL      bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
 }
 
-func (k *Kafka) setup(configFile string, logger *log.Logger) error {
+func (k *KafkaSarama) setup(configFile string, logger *log.Logger) error {
 	var (
 		config = sarama.NewConfig()
 		err    error
 	)
 
 	// set default values
-	k.config = KafkaConfig{
+	k.config = KafkaSaramaConfig{
 		Brokers:        []string{"localhost:9092"},
 		RetryMax:       2,
 		RequestSizeMax: 104857600,
@@ -118,7 +118,7 @@ func (k *Kafka) setup(configFile string, logger *log.Logger) error {
 	return nil
 }
 
-func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
+func (k *KafkaSarama) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 	var (
 		msg []byte
 		ok  bool
@@ -147,7 +147,7 @@ func (k *Kafka) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 	k.producer.Close()
 }
 
-func (k *Kafka) load(f string) error {
+func (k *KafkaSarama) load(f string) error {
 	b, err := ioutil.ReadFile(f)
 	if err != nil {
 		return err
@@ -161,7 +161,7 @@ func (k *Kafka) load(f string) error {
 	return nil
 }
 
-func (k Kafka) tlsConfig() *tls.Config {
+func (k KafkaSarama) tlsConfig() *tls.Config {
 	var t *tls.Config
 
 	if k.config.TLSCertFile != "" && k.config.TLSKeyFile != "" && k.config.CAFile != "" {
@@ -188,7 +188,7 @@ func (k Kafka) tlsConfig() *tls.Config {
 	return t
 }
 
-func (k *Kafka) loadEnv(prefix string) {
+func (k *KafkaSarama) loadEnv(prefix string) {
 	v := reflect.ValueOf(&k.config).Elem()
 	t := v.Type()
 	for i := 0; i < v.NumField(); i++ {

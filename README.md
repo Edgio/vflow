@@ -3,6 +3,7 @@
 [![Build Status](https://travis-ci.org/VerizonDigital/vflow.svg?branch=master)](https://travis-ci.org/VerizonDigital/vflow) 
 [![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow)
 [![GoDoc](https://godoc.org/github.com/VerizonDigital/vflow?status.svg)](https://godoc.org/github.com/VerizonDigital/vflow)
+[![Join Slack](https://img.shields.io/badge/join-slack-9B69A0.svg)](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNTAwNjMyNzg0MDY5LWJlNGExZDNiYThmYjkyNmM1NDAyZGY4NmMyZjYwYmE0ZjAzZjA2MTZlZjRkYjY3Njc1MDJjYTlhZDU2OTk2MGE)
 
 High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (written in pure Golang).
 
@@ -47,7 +48,7 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 - Windows
 
 ## Build
-Given that the Go Language compiler (version 1.10 preferred) is installed, you can build it with:
+Given that the Go Language compiler (version 1.11 preferred) is installed, you can build it with:
 ```
 go get github.com/VerizonDigital/vflow/vflow
 cd $GOPATH/src/github.com/VerizonDigital/vflow
@@ -84,6 +85,10 @@ docker pull spotify/kafka
 docker run -d -p 2181:2181 -p 9092:9092 spotify/kafka
 docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow
 ```
+
+## Slack
+
+You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNTAwNjMyNzg0MDY5LWJlNGExZDNiYThmYjkyNmM1NDAyZGY4NmMyZjYwYmE0ZjAzZjA2MTZlZjRkYjY3Njc1MDJjYTlhZDU2OTk2MGE) and chat with developers.
 
 ## License
 Licensed under the Apache License, Version 2.0 (the "License")

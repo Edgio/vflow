@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    producer.go
-//: details: TODO
+//: details: vflow kafka producer engine
 //: author:  Mehrdad Arshad Rad
 //: date:    02/01/2017
 //:
@@ -48,10 +48,12 @@ type MQueue interface {
 // NewProducer constructs new Messaging Queue
 func NewProducer(mqName string) *Producer {
 	var mqRegistered = map[string]MQueue{
-		"kafka":     new(Kafka),
-		"nsq":       new(NSQ),
-		"nats":      new(NATS),
-		"rawSocket": new(RawSocket),
+		"kafka":           new(KafkaSarama),
+		"kafka.sarama":    new(KafkaSarama),
+		"kafka.segmentio": new(KafkaSegmentio),
+		"nsq":             new(NSQ),
+		"nats":            new(NATS),
+		"rawSocket":       new(RawSocket),
 	}
 
 	return &Producer{
