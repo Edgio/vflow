@@ -134,9 +134,7 @@ func (m *Message) encodeFlows(b *bytes.Buffer) error {
 	b.WriteByte('[')
 
 	for i := range m.Flows {
-
-		b.WriteString(strconv.Itoa(i))
-		b.WriteString(":{")
+		b.WriteString("{")
 		m.encodeFlow(m.Flows[i], b)
 		b.WriteString("}")
 		if i < fLength-1 {
