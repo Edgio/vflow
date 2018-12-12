@@ -197,9 +197,11 @@ LOOP:
 			if decodedMsg == nil {
 				continue
 			}
+		}
 
-			atomic.AddUint64(&i.stats.DecodedCount, 1)
+		atomic.AddUint64(&i.stats.DecodedCount, 1)
 
+		if decodedMsg.Flows != nil {
 			b, err = decodedMsg.JSONMarshal(buf)
 			if err != nil {
 				logger.Println(err)
@@ -210,12 +212,12 @@ LOOP:
 			case netflowV5MQCh <- append([]byte{}, b...):
 			default:
 			}
-
-			if opts.Verbose {
-				logger.Println(string(b))
-			}
 		}
 
+		if opts.Verbose {
+			logger.Println(string(b))
+		}
+		
 	}
 
 }
