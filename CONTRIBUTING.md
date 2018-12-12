@@ -1,6 +1,5 @@
 # Contributing to vFlow
 
-
 vFlow is an open source project. We appreciate your help!
 
 - Fork the project on github.com.
