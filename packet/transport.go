@@ -24,17 +24,6 @@ package packet
 
 import "errors"
 
-const (
-	// IANAProtoICMP is IANA Internet Control Message number
-	IANAProtoICMP = 1
-
-	// IANAProtoTCP is IANA Transmission Control number
-	IANAProtoTCP = 6
-
-	// IANAProtoUDP is IANA User Datagram number
-	IANAProtoUDP = 17
-)
-
 // TCPHeader represents TCP header
 type TCPHeader struct {
 	SrcPort    int
