@@ -506,34 +506,6 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 	)
 	r := d.reader
 
-	for i := 0; i < len(tr.FieldSpecifiers); i++ {
-		m, ok := InfoModel[ElementKey{
-			tr.FieldSpecifiers[i].EnterpriseNo,
-			tr.FieldSpecifiers[i].ElementID,
-		}]
-
-		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)
-		if err != nil {
-			return nil, err
-		}
-
-		b, err = r.Read(int(readLength))
-		if err != nil {
-			return nil, err
-		}
-
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
-				tr.FieldSpecifiers[i].ElementID))
-		}
-
-		fields = append(fields, DecodedField{
-			ID:           m.FieldID,
-			Value:        Interpret(&b, m.Type),
-			EnterpriseNo: tr.FieldSpecifiers[i].EnterpriseNo,
-		})
-	}
-
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
 		m, ok := InfoModel[ElementKey{
 			tr.ScopeFieldSpecifiers[i].EnterpriseNo,
@@ -545,14 +517,42 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			return nil, err
 		}
 
-		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
+		b, err = r.Read(int(readLength))
+		if err != nil {
+			return nil, err
+		}
+
+		if !ok {
+			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
+				tr.ScopeFieldSpecifiers[i].ElementID))
+		}
+
+		fields = append(fields, DecodedField{
+			ID:           m.FieldID,
+			Value:        Interpret(&b, m.Type),
+			EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+		})
+	}
+
+	for i := 0; i < len(tr.FieldSpecifiers); i++ {
+		m, ok := InfoModel[ElementKey{
+			tr.FieldSpecifiers[i].EnterpriseNo,
+			tr.FieldSpecifiers[i].ElementID,
+		}]
+
+		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)
+		if err != nil {
+			return nil, err
+		}
+
+		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
 		if err != nil {
 			return nil, err
 		}
 
 		if !ok {
 			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist",
-				tr.ScopeFieldSpecifiers[i].ElementID))
+				tr.FieldSpecifiers[i].ElementID))
 		}
 
 		fields = append(fields, DecodedField{
