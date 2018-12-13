@@ -89,7 +89,7 @@ key: value
 
 The default configuration file is /etc/vflow/mq.conf, you can be able to change it through vFlow configuration.
 
-## Configuration Keys
+## Configuration Keys (Default / Sarama)
 The Kafka configuration contains the following key
 
 |Key                  | Default     |  Environment variable        | Description                                                                        |
@@ -111,6 +111,29 @@ brokers:
 retry-max: 1
 retry-backoff: 30
 ```
+
+## Configuration Keys (Segmentio)
+The Kafka configuration contains the following key
+
+|Key                  | Default     |  Environment variable        | Description                                                                        |
+|---------------------| ------------|------------------------------|------------------------------------------------------------------------------------|
+|brokers              |             | VFLOW_KAFKA_BROKERS          |                                                                                    |
+|bootstrap-server     |             | VFLOW_KAFKA_BOOTSTRAP_SERVER |                                                                                    |
+|client-id            |             | VFLOW_KAFKA_CLIENT_ID        |                                                                                    |
+|compression          |             | VFLOW_KAFKA_COMPRESSION      |                                                                                    |
+|max-attempts         |             | VFLOW_KAFKA_MAX_ATTEMPTS     |                                                                                    |
+|queue-size           |             | VFLOW_KAFKA_QUEUE_SIZE       |                                                                                    |
+|batch-size           |             | VFLOW_KAFKA_BATCH_SIZE       |                                                                                    |
+|keepalive            |             | VFLOW_KAFKA_KEEPALIVE        |                                                                                    |
+|connect-timeout      |             | VFLOW_KAFKA_CONNECT_TIMEOUT  |                                                                                    |
+|required-acks        |             | VFLOW_KAFKA_REQUIRED_ACKS    |                                                                                    |
+|pflush               |             | VFLOW_KAFKA_PERIODIC_FLUSH   |                                                                                    |
+|tls-cert             |             | VFLOW_KAFKA_TLS_CERT         |                                                                                    |
+|tls-key              |             | VFLOW_KAFKA_TLS_KEY          |                                                                                    |
+|ca-file              |             | VFLOW_KAFKA_CA_FILE          |                                                                                    |
+|verify-ssl           |             | VFLOW_KAFKA_VERIFY_SSL       |                                                                                    |
+
+
 # NSQ Configuration
 
 ## Format
