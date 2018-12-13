@@ -477,7 +477,9 @@ func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, 
 		err        error
 		readLength uint16
 	)
+
 	r := d.reader
+
 	if (t == String || t == OctetArray) && (fieldSpecifierLen == 65535) {
 		var len8 uint8
 		len8, err = r.Uint8()
@@ -494,7 +496,8 @@ func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, 
 	} else {
 		readLength = fieldSpecifierLen
 	}
-	return readLength, err
+
+	return readLength, nil
 }
 
 func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
@@ -504,6 +507,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		b          []byte
 		readLength uint16
 	)
+
 	r := d.reader
 
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
@@ -511,6 +515,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			tr.ScopeFieldSpecifiers[i].EnterpriseNo,
 			tr.ScopeFieldSpecifiers[i].ElementID,
 		}]
+
+		if !ok {
+			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
+				tr.ScopeFieldSpecifiers[i].ElementID))
+		}
 
 		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type)
 		if err != nil {
@@ -520,11 +529,6 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		b, err = r.Read(int(readLength))
 		if err != nil {
 			return nil, err
-		}
-
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
-				tr.ScopeFieldSpecifiers[i].ElementID))
 		}
 
 		fields = append(fields, DecodedField{
@@ -540,19 +544,19 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			tr.FieldSpecifiers[i].ElementID,
 		}]
 
+		if !ok {
+			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist",
+				tr.FieldSpecifiers[i].ElementID))
+		}
+
 		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)
 		if err != nil {
 			return nil, err
 		}
 
-		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
+		b, err = r.Read(int(readLength))
 		if err != nil {
 			return nil, err
-		}
-
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID))
 		}
 
 		fields = append(fields, DecodedField{
