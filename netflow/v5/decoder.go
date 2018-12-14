@@ -37,15 +37,15 @@ type nonfatalError error
 // Based on docs at https://www.plixer.com/support/netflow-v5/
 // 24 bytes long
 type PacketHeader struct {
-	Version   uint16 // Version of Flow Record format exported in this packet
-	Count     uint16 // The total number of flows in the Export Packet
-	SysUpTime uint32 // Time in milliseconds since this device was first booted
-	UNIXSecs  uint32 // Time in seconds since 0000 UTC 1970
-	UNIXNSecs uint32 // Residual nanoseconds since 0000 UTC 1970
-	SeqNum    uint32 // Incremental sequence counter of total flows
-	EngType   uint8  // An 8-bit value that identifies the type of flow-switching engine
-	EngID     uint8  // An 8-bit value that identifies the Slot number of the flow-switching engine
-	SmpInt    uint16 // A 16-bit value that identifies the Sampling Interval
+	Version        uint16 // Version of Flow Record format exported in this packet
+	Count          uint16 // The total number of flows in the Export Packet
+	SysUpTimeMSecs uint32 // Time in milliseconds since this device was first booted
+	UNIXSecs       uint32 // Time in seconds since 0000 UTC 1970
+	UNIXNSecs      uint32 // Residual nanoseconds since 0000 UTC 1970
+	SeqNum         uint32 // Incremental sequence counter of total flows
+	EngType        uint8  // An 8-bit value that identifies the type of flow-switching engine
+	EngID          uint8  // An 8-bit value that identifies the Slot number of the flow-switching engine
+	SmpInt         uint16 // A 16-bit value that identifies the Sampling Interval
 	// The Sampling Interval - first 2 bits are the sampling mode, the last 14 bits hold the sampling interval
 }
 
@@ -60,8 +60,8 @@ type FlowRecord struct {
 	Output    uint16 // SNMP index of output interface
 	PktCount  uint32 // Number of packets in the flow
 	L3Octets  uint32 // Total number of Layer 3 bytes in the packets of the flow
-	StartTime uint32 // SysUptime at start of flow
-	EndTime   uint32 // SysUptime at the time the last packet of the flow was received
+	StartTime uint32 // SysUptime at start of flow in ms since last boot
+	EndTime   uint32 // SysUptime at end of the flow in ms since last boot
 	SrcPort   uint16 // TCP/UDP source port number or equivalent
 	DstPort   uint16 // TCP/UDP destination port number or equivalent
 	Padding1  uint8  // Unused (zero) bytes
@@ -117,7 +117,7 @@ func (h *PacketHeader) unmarshal(r *reader.Reader) error {
 		return err
 	}
 
-	if h.SysUpTime, err = r.Uint32(); err != nil {
+	if h.SysUpTimeMSecs, err = r.Uint32(); err != nil {
 		return err
 	}
 
@@ -176,9 +176,9 @@ func (h *PacketHeader) validate() error {
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //   |                           Octet Count                         |
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//   |                         Start SysUpTime                       |
+//   |                         Flow Start Time                       |
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//   |                          End SysUpTime                        |
+//   |                          Flow End Time                        |
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 //   |           Src Port            |           Dst Port            |
 //   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

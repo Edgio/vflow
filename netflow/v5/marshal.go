@@ -24,7 +24,9 @@ package netflow5
 
 import (
 	"bytes"
+	"encoding/binary"
 	"errors"
+	"net"
 	"strconv"
 )
 
@@ -57,7 +59,7 @@ func (m *Message) encodeHeader(b *bytes.Buffer) {
 	b.WriteString(",\"Count\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.Count), 10))
 	b.WriteString(",\"SysUpTime\":")
-	b.WriteString(strconv.FormatInt(int64(m.Header.SysUpTime), 10))
+	b.WriteString(strconv.FormatInt(int64(m.Header.SysUpTimeMSecs), 10))
 	b.WriteString(",\"UNIXSecs\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.UNIXSecs), 10))
 	b.WriteString(",\"UNIXNSecs\":")
@@ -80,12 +82,21 @@ func (m *Message) encodeAgent(b *bytes.Buffer) {
 }
 
 func (m *Message) encodeFlow(r FlowRecord, b *bytes.Buffer) {
+
+	ip := make(net.IP, 4)
+
 	b.WriteString("\"SrcAddr\":")
-	b.WriteString(strconv.FormatInt(int64(r.SrcAddr), 10))
+	binary.BigEndian.PutUint32(ip, r.SrcAddr)
+	b.WriteString(ip.String())
+
 	b.WriteString(",\"DstAddr\":")
-	b.WriteString(strconv.FormatInt(int64(r.DstAddr), 10))
+	binary.BigEndian.PutUint32(ip, r.DstAddr)
+	b.WriteString(ip.String())
+
 	b.WriteString(",\"NextHop\":")
-	b.WriteString(strconv.FormatInt(int64(r.NextHop), 10))
+	binary.BigEndian.PutUint32(ip, r.NextHop)
+	b.WriteString(ip.String())
+
 	b.WriteString(",\"Input\":")
 	b.WriteString(strconv.FormatInt(int64(r.Input), 10))
 	b.WriteString(",\"Output\":")
@@ -94,10 +105,17 @@ func (m *Message) encodeFlow(r FlowRecord, b *bytes.Buffer) {
 	b.WriteString(strconv.FormatInt(int64(r.PktCount), 10))
 	b.WriteString(",\"L3Octets\":")
 	b.WriteString(strconv.FormatInt(int64(r.L3Octets), 10))
+
+	// if these ever need to be translated actual time
+	// then this will require knowing some information from
+	// the header. I believe the basic formula is
+	// UnixSecs - SysUpTime + StartTime
+
 	b.WriteString(",\"StartTime\":")
 	b.WriteString(strconv.FormatInt(int64(r.StartTime), 10))
 	b.WriteString(",\"EndTime\":")
 	b.WriteString(strconv.FormatInt(int64(r.EndTime), 10))
+
 	b.WriteString(",\"SrcPort\":")
 	b.WriteString(strconv.FormatInt(int64(r.SrcPort), 10))
 	b.WriteString(",\"DstPort\":")
