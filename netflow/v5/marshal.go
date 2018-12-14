@@ -58,7 +58,7 @@ func (m *Message) encodeHeader(b *bytes.Buffer) {
 	b.WriteString(strconv.FormatInt(int64(m.Header.Version), 10))
 	b.WriteString(",\"Count\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.Count), 10))
-	b.WriteString(",\"SysUpTime\":")
+	b.WriteString(",\"SysUpTimeMSecs\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.SysUpTimeMSecs), 10))
 	b.WriteString(",\"UNIXSecs\":")
 	b.WriteString(strconv.FormatInt(int64(m.Header.UNIXSecs), 10))
@@ -85,19 +85,19 @@ func (m *Message) encodeFlow(r FlowRecord, b *bytes.Buffer) {
 
 	ip := make(net.IP, 4)
 
-	b.WriteString("\"SrcAddr\":")
+	b.WriteString("\"SrcAddr\":\"")
 	binary.BigEndian.PutUint32(ip, r.SrcAddr)
 	b.WriteString(ip.String())
 
-	b.WriteString(",\"DstAddr\":")
+	b.WriteString("\",\"DstAddr\":\"")
 	binary.BigEndian.PutUint32(ip, r.DstAddr)
 	b.WriteString(ip.String())
 
-	b.WriteString(",\"NextHop\":")
+	b.WriteString("\",\"NextHop\":\"")
 	binary.BigEndian.PutUint32(ip, r.NextHop)
 	b.WriteString(ip.String())
 
-	b.WriteString(",\"Input\":")
+	b.WriteString("\",\"Input\":")
 	b.WriteString(strconv.FormatInt(int64(r.Input), 10))
 	b.WriteString(",\"Output\":")
 	b.WriteString(strconv.FormatInt(int64(r.Output), 10))
