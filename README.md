@@ -59,9 +59,9 @@ go get -d ./...
 cd vflow; go build 
 ```
 ## Installation
-You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases/tag/v0.6.5)). 
+You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases/tag/v0.7.0)). 
 
-dpkg -i [vflow-0.6.5-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.6.5/vflow-0.6.5-x86_64.deb)
+dpkg -i [vflow-0.7.0-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.7.0/vflow-0.7.0-x86_64.deb)
 
 Once you installed you need to configure the below files, for more information check [configuration guide](/docs/config.md):
 ```
