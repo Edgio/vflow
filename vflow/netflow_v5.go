@@ -3,7 +3,7 @@
 //: All Rights Reserved
 //:
 //: file:    netflow_v5.go
-//: details: netflow decoders handler
+//: details: netflow v5 decoders handler
 //: author:  Christopher Noel
 //: date:    12/10/2018
 //:
@@ -31,8 +31,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/ChrisNoel/vflow/netflow/v5"
-	"github.com/ChrisNoel/vflow/producer"
+	"github.com/VerizonDigital/vflow/netflow/v5"
+	"github.com/VerizonDigital/vflow/producer"
 )
 
 // NetflowV5 represents netflow v5 collector

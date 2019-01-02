@@ -16,7 +16,7 @@ FROM alpine:latest
 COPY --from=builder /go/src/github.com/VerizonDigital/vflow/vflow/vflow /usr/bin/vflow
 COPY ./scripts/dockerStart.sh /dockerStart.sh
 
-EXPOSE 4739 6343 4729 8081
+EXPOSE 4739 6343 9996 4729 8081
 
 VOLUME /etc/vflow
 

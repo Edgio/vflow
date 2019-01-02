@@ -3,9 +3,9 @@
 //: All Rights Reserved
 //:
 //: file:    marshal.go
-//: details: encoding of each decoded netflow v9 data sets
-//: author:  Mehrdad Arshad Rad
-//: date:    04/27/2017
+//: details: encoding of each decoded netflow v5 flow set
+//: author:  Christopher Noel
+//: date:    12/10/2018
 //:
 //: Licensed under the Apache License, Version 2.0 (the "License");
 //: you may not use this file except in compliance with the License.

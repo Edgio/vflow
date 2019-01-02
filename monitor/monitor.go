@@ -27,7 +27,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/ChrisNoel/vflow/monitor/store"
+	"github.com/VerizonDigital/vflow/monitor/store"
 )
 
 type options struct {

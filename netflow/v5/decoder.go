@@ -4,8 +4,8 @@
 //:
 //: file:    decoder.go
 //: details: decodes netflow version 5 packets
-//: author:  Mehrdad Arshad Rad
-//: date:    04/10/2017
+//: author:  Christopher Noel
+//: date:    12/10/2018
 //:
 //: Licensed under the Apache License, Version 2.0 (the "License");
 //: you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/ChrisNoel/vflow/reader"
+	"github.com/VerizonDigital/vflow/reader"
 )
 
 type nonfatalError error

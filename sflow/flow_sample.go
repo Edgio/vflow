@@ -27,7 +27,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/ChrisNoel/vflow/packet"
+	"github.com/VerizonDigital/vflow/packet"
 )
 
 const (
