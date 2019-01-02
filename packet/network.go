@@ -60,6 +60,18 @@ const (
 
 	// IPv6HLen is IPv6 header length size
 	IPv6HLen = 40
+
+	// IANAProtoICMP is IANA Internet Control Message number
+	IANAProtoICMP = 1
+
+	// IANAProtoTCP is IANA Transmission Control number
+	IANAProtoTCP = 6
+
+	// IANAProtoUDP is IANA User Datagram number
+	IANAProtoUDP = 17
+
+	// IANAProtoIPv6ICMP is IANA Internet Control Message number for IPv6
+	IANAProtoIPv6ICMP = 58
 )
 
 var (
@@ -87,7 +99,7 @@ func (p *Packet) decodeNextLayer() error {
 	}
 
 	switch proto {
-	case IANAProtoICMP:
+	case IANAProtoICMP, IANAProtoIPv6ICMP:
 		icmp, err := decodeICMP(p.data)
 		if err != nil {
 			return err

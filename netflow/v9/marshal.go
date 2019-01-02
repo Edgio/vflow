@@ -157,15 +157,15 @@ func (m *Message) encodeAgent(b *bytes.Buffer) {
 func (m *Message) writeValue(b *bytes.Buffer, i, j int) error {
 	switch m.DataSets[i][j].Value.(type) {
 	case uint:
-		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(uint)), 10))
+		b.WriteString(strconv.FormatUint(uint64(m.DataSets[i][j].Value.(uint)), 10))
 	case uint8:
-		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(uint8)), 10))
+		b.WriteString(strconv.FormatUint(uint64(m.DataSets[i][j].Value.(uint8)), 10))
 	case uint16:
-		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(uint16)), 10))
+		b.WriteString(strconv.FormatUint(uint64(m.DataSets[i][j].Value.(uint16)), 10))
 	case uint32:
-		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(uint32)), 10))
+		b.WriteString(strconv.FormatUint(uint64(m.DataSets[i][j].Value.(uint32)), 10))
 	case uint64:
-		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(uint64)), 10))
+		b.WriteString(strconv.FormatUint(m.DataSets[i][j].Value.(uint64), 10))
 	case int:
 		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(int)), 10))
 	case int8:
@@ -175,7 +175,7 @@ func (m *Message) writeValue(b *bytes.Buffer, i, j int) error {
 	case int32:
 		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(int32)), 10))
 	case int64:
-		b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].Value.(int64)), 10))
+		b.WriteString(strconv.FormatInt(m.DataSets[i][j].Value.(int64), 10))
 	case float32:
 		b.WriteString(strconv.FormatFloat(float64(m.DataSets[i][j].Value.(float32)), 'E', -1, 32))
 	case float64:

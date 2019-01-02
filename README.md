@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/VerizonDigital/vflow.svg?branch=master)](https://travis-ci.org/VerizonDigital/vflow) 
 [![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow)
 [![GoDoc](https://godoc.org/github.com/VerizonDigital/vflow?status.svg)](https://godoc.org/github.com/VerizonDigital/vflow)
-[![Join Slack](https://img.shields.io/badge/join-slack-9B69A0.svg)](https://vflowworkspace.slack.com)
+[![Join Slack](https://img.shields.io/badge/join-slack-9B69A0.svg)](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNTAwNjMyNzg0MDY5LWJlNGExZDNiYThmYjkyNmM1NDAyZGY4NmMyZjYwYmE0ZjAzZjA2MTZlZjRkYjY3Njc1MDJjYTlhZDU2OTk2MGE)
 
 High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (written in pure Golang).
 
@@ -59,9 +59,9 @@ go get -d ./...
 cd vflow; go build 
 ```
 ## Installation
-You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases/tag/v0.6.5)). 
+You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases/tag/v0.7.0)). 
 
-dpkg -i [vflow-0.6.5-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.6.5/vflow-0.6.5-x86_64.deb)
+dpkg -i [vflow-0.7.0-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.7.0/vflow-0.7.0-x86_64.deb)
 
 Once you installed you need to configure the below files, for more information check [configuration guide](/docs/config.md):
 ```
@@ -88,7 +88,7 @@ docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA
 
 ## Slack
 
-You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://vflowworkspace.slack.com) and chat with developers.
+You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNTAwNjMyNzg0MDY5LWJlNGExZDNiYThmYjkyNmM1NDAyZGY4NmMyZjYwYmE0ZjAzZjA2MTZlZjRkYjY3Njc1MDJjYTlhZDU2OTk2MGE) and chat with developers.
 
 ## License
 Licensed under the Apache License, Version 2.0 (the "License")
