@@ -82,12 +82,11 @@ type Options struct {
 	IPFIXTplCacheFile  string `yaml:"ipfix-tpl-cache-file"`
 
 	// Netflow V5
-	NetflowV5Enabled      bool   `yaml:"netflow5-enabled"`
-	NetflowV5Port         int    `yaml:"netflow5-port"`
-	NetflowV5UDPSize      int    `yaml:"netflow5-udp-size"`
-	NetflowV5Workers      int    `yaml:"netflow5-workers"`
-	NetflowV5Topic        string `yaml:"netflow5-topic"`
-
+	NetflowV5Enabled bool   `yaml:"netflow5-enabled"`
+	NetflowV5Port    int    `yaml:"netflow5-port"`
+	NetflowV5UDPSize int    `yaml:"netflow5-udp-size"`
+	NetflowV5Workers int    `yaml:"netflow5-workers"`
+	NetflowV5Topic   string `yaml:"netflow5-topic"`
 
 	// Netflow
 	NetflowV9Enabled      bool   `yaml:"netflow9-enabled"`
@@ -159,11 +158,11 @@ func NewOptions() *Options {
 		IPFIXMirrorWorkers: 5,
 		IPFIXTplCacheFile:  "/tmp/vflow.templates",
 
-		NetflowV5Enabled:      true,
-		NetflowV5Port:         9996,
-		NetflowV5UDPSize:      1500,
-		NetflowV5Workers:      200,
-		NetflowV5Topic:        "vflow.netflow5",
+		NetflowV5Enabled: true,
+		NetflowV5Port:    9996,
+		NetflowV5UDPSize: 1500,
+		NetflowV5Workers: 200,
+		NetflowV5Topic:   "vflow.netflow5",
 
 		NetflowV9Enabled:      true,
 		NetflowV9Port:         4729,

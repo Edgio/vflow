@@ -64,7 +64,7 @@ type NetflowV5Stats struct {
 var (
 	netflowV5UDPCh = make(chan NetflowV5UDPMsg, 1000)
 	netflowV5MQCh  = make(chan []byte, 1000)
-	
+
 	// ipfix udp payload pool
 	netflowV5Buffer = &sync.Pool{
 		New: func() interface{} {
@@ -217,7 +217,7 @@ LOOP:
 		if opts.Verbose {
 			logger.Println(string(b))
 		}
-		
+
 	}
 
 }
