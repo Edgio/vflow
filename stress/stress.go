@@ -29,7 +29,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ChrisNoel/vflow/stress/hammer"
+	"github.com/VerizonDigital/vflow/stress/hammer"
 )
 
 var opts = struct {
