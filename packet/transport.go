@@ -33,6 +33,10 @@ const (
 
 	// IANAProtoUDP is IANA User Datagram number
 	IANAProtoUDP = 17
+
+	// IANAProtoIPv6ICMP is IANA Internet Control Message number
+	IANAProtoIPv6ICMP = 58
+
 )
 
 // TCPHeader represents TCP header

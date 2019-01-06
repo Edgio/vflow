@@ -31,7 +31,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/VerizonDigital/vflow/ipfix"
+	"../ipfix"
 	"github.com/VerizonDigital/vflow/producer"
 )
 

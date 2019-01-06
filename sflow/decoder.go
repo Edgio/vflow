@@ -33,9 +33,11 @@ import (
 const (
 	// DataFlowSample defines packet flow sampling
 	DataFlowSample = 1
+	DataFlowSampleExpanded = 3
 
 	// DataCounterSample defines counter sampling
 	DataCounterSample = 2
+	DataCounterSampleExpanded = 4
 )
 
 // SFDecoder represents sFlow decoder
@@ -106,7 +108,6 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		if m := d.isFilterMatch(sfTypeFormat); m {
 			d.reader.Seek(int64(sfDataLength), 1)
 			continue
@@ -114,17 +115,29 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 		switch sfTypeFormat {
 		case DataFlowSample:
-			d, err := decodeFlowSample(d.reader)
+			f, err := decodeFlowSample(d.reader, false)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.Samples = append(datagram.Samples, d)
+			datagram.Samples = append(datagram.Samples, f)
 		case DataCounterSample:
-			d, err := decodeFlowCounter(d.reader)
+			f, err := decodeFlowCounter(d.reader, false)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.Counters = append(datagram.Counters, d)
+			datagram.Counters = append(datagram.Counters, f)
+		case DataFlowSampleExpanded:
+			f, err := decodeFlowSample(d.reader, true)
+			if err != nil {
+				return datagram, err
+			}
+			datagram.Samples = append(datagram.Samples, f)
+		case DataCounterSampleExpanded:
+			f, err := decodeFlowCounter(d.reader, true)
+			if err != nil {
+				return datagram, err
+			}
+			datagram.Counters = append(datagram.Counters, f)
 		default:
 			d.reader.Seek(int64(sfDataLength), 1)
 		}
@@ -197,7 +210,6 @@ func (d *SFDecoder) getSampleInfo() (uint32, uint32, error) {
 
 	sfTypeEnterprise = sfType >> 12 // 20 bytes enterprise
 	sfTypeFormat = sfType & 0xfff   // 12 bytes format
-
 	// supports standard sflow data
 	if sfTypeEnterprise != 0 {
 		d.reader.Seek(int64(sfDataLength), 1)
@@ -207,7 +219,6 @@ func (d *SFDecoder) getSampleInfo() (uint32, uint32, error) {
 	if err = read(d.reader, &sfDataLength); err != nil {
 		return 0, 0, errDataLengthUnknown
 	}
-
 	return sfTypeFormat, sfDataLength, nil
 }
 

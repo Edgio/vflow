@@ -22,7 +22,9 @@
 
 package packet
 
-import "errors"
+import (
+	"errors"
+)
 
 // The header protocol describes the format of the sampled header
 const (
@@ -117,7 +119,6 @@ func (p *Packet) decodeEthernetHeader() error {
 		if err != nil {
 			return err
 		}
-
 	default:
 		return errUnknownEtherType
 	}
