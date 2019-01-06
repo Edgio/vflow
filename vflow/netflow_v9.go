@@ -31,7 +31,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/VerizonDigital/vflow/netflow/v9"
+	"../netflow/v9"
 	"github.com/VerizonDigital/vflow/producer"
 )
 

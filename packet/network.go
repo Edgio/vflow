@@ -87,6 +87,8 @@ func (p *Packet) decodeNextLayer() error {
 	}
 
 	switch proto {
+	case IANAProtoIPv6ICMP:
+		fallthrough
 	case IANAProtoICMP:
 		icmp, err := decodeICMP(p.data)
 		if err != nil {

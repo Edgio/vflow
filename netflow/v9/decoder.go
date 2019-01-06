@@ -29,7 +29,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/VerizonDigital/vflow/ipfix"
+	"../../ipfix"
 	"github.com/VerizonDigital/vflow/reader"
 )
 
@@ -336,8 +336,12 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID))
+			fields = append(fields, DecodedField{
+				ID:    tr.FieldSpecifiers[i].ElementID,
+				Value: ipfix.Interpret(&b, ipfix.FieldTypes["octetArray"]),
+			})
+			continue
+			//return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist", 				tr.FieldSpecifiers[i].ElementID))
 		}
 
 		fields = append(fields, DecodedField{
@@ -426,11 +430,11 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	// This check is somewhat redundant with the switch-clause below, but the retrieve() operation should not be executed inside the loop.
 	if setHeader.FlowSetID > 255 {
 		var ok bool
-		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr)
+		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr, msg.Header.SrcID)
 		if !ok {
-			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d",
+			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d from sourceID %d",
 				d.raddr.String(),
-				setHeader.FlowSetID,
+				setHeader.FlowSetID, msg.Header.SrcID
 			))
 		}
 	}
@@ -446,7 +450,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				err = tr.unmarshalOpts(d.reader)
 			}
 			if err == nil {
-				mem.insert(tr.TemplateID, d.raddr, tr)
+				mem.insert(tr.TemplateID, d.raddr, tr, msg.Header.SrcID)
 			}
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records

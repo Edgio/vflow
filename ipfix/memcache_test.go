@@ -33,7 +33,7 @@ func TestMemCacheRetrieve(t *testing.T) {
 	mCache := GetCache("cache.file")
 	d := NewDecoder(ip, tpl)
 	d.Decode(mCache)
-	v, ok := mCache.retrieve(256, ip)
+	v, ok := mCache.retrieve(256, ip, 33792)
 	if !ok {
 		t.Error("expected mCache retrieve status true, got", ok)
 	}
@@ -48,9 +48,9 @@ func TestMemCacheInsert(t *testing.T) {
 	mCache := GetCache("cache.file")
 
 	tpl.TemplateID = 310
-	mCache.insert(310, ip, tpl)
+	mCache.insert(310, ip, tpl, 513)
 
-	v, ok := mCache.retrieve(310, ip)
+	v, ok := mCache.retrieve(310, ip, 513)
 	if !ok {
 		t.Error("expected mCache retrieve status true, got", ok)
 	}
@@ -65,11 +65,11 @@ func TestMemCacheAllSetIds(t *testing.T) {
 	mCache := GetCache("cache.file")
 
 	tpl.TemplateID = 310
-	mCache.insert(tpl.TemplateID, ip, tpl)
+	mCache.insert(tpl.TemplateID, ip, tpl, 513)
 	tpl.TemplateID = 410
-	mCache.insert(tpl.TemplateID, ip, tpl)
+	mCache.insert(tpl.TemplateID, ip, tpl, 513)
 	tpl.TemplateID = 210
-	mCache.insert(tpl.TemplateID, ip, tpl)
+	mCache.insert(tpl.TemplateID, ip, tpl, 513)
 
 	expected := []int{210, 310, 410}
 	actual := mCache.allSetIds()

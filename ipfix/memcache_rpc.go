@@ -91,7 +91,7 @@ func NewRPC(mCache MemCache) *IRPC {
 func (r *IRPC) Get(req RPCRequest, resp *TemplateRecord) error {
 	var ok bool
 
-	*resp, ok = r.mCache.retrieve(req.ID, req.IP)
+	*resp, ok = r.mCache.retrieve(req.ID, req.IP, 1)
 	if !ok {
 		return errNotAvail
 	}
@@ -168,7 +168,7 @@ func RPC(m MemCache, config *RPCConfig) {
 				continue
 			}
 
-			m.insert(req.ID, req.IP, *tr)
+			m.insert(req.ID, req.IP, *tr, 1)
 			break
 		}
 

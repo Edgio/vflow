@@ -27,7 +27,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/VerizonDigital/vflow/packet"
+	"../packet"
 )
 
 const (
@@ -44,7 +44,7 @@ const (
 // FlowSample represents single flow sample
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
-	SourceID     byte   // sfSourceID
+	SourceID     uint32 // sfSourceID
 	SamplingRate uint32 // sfPacketSamplingRate
 	SamplePool   uint32 // Total number of packets that could have been sampled
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
@@ -82,18 +82,26 @@ var (
 	errMaxOutEthernetLength = errors.New("the ethernet length is greater than 1500")
 )
 
-func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
+func (fs *FlowSample) unmarshal(r io.ReadSeeker, expanded bool) error {
 	var err error
 
 	if err = read(r, &fs.SequenceNo); err != nil {
 		return err
 	}
 
-	if err = read(r, &fs.SourceID); err != nil {
-		return err
+	if expanded {
+		if err = read(r, &fs.SourceID); err != nil {
+			return err
+		}
+		r.Seek(4, 1) // skip counter sample decoding
+	} else {
+		buf := make([]byte, 1)
+		if err = read(r, &buf); err != nil {
+			return err
+		}
+		fs.SourceID = uint32(buf[0])
+		r.Seek(3, 1) // skip counter sample decoding
 	}
-
-	r.Seek(3, 1) // skip counter sample decoding
 
 	if err = read(r, &fs.SamplingRate); err != nil {
 		return err
@@ -107,9 +115,13 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
+	if expanded { r.Seek(4, 1) } // skip Input interface format
+
 	if err = read(r, &fs.Input); err != nil {
 		return err
 	}
+
+	if expanded { r.Seek(4, 1) } // skip Output interface format
 
 	if err = read(r, &fs.Output); err != nil {
 		return err
@@ -197,7 +209,7 @@ func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
 	return err
 }
 
-func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
+func decodeFlowSample(r io.ReadSeeker, expanded bool) (*FlowSample, error) {
 	var (
 		fs          = new(FlowSample)
 		rTypeFormat uint32
@@ -205,7 +217,7 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 		err         error
 	)
 
-	if err = fs.unmarshal(r); err != nil {
+	if err = fs.unmarshal(r, expanded); err != nil {
 		return nil, err
 	}
 
@@ -218,7 +230,6 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 		if err = read(r, &rTypeLength); err != nil {
 			return nil, err
 		}
-
 		switch rTypeFormat {
 		case SFDataRawHeader:
 			d, err := decodeSampledHeader(r)

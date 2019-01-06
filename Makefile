@@ -1,4 +1,4 @@
-VERSION= 0.6.5
+VERSION= 0.6.5.9
 PACKAGES= $(shell find . -name '*.go' -print0 | xargs -0 -n1 dirname | sort --unique)
 LDFLAGS= -ldflags "-X main.version=${VERSION}"
 DEBPATH= scripts/dpkg
@@ -74,6 +74,5 @@ rpm: build
 	cp scripts/ipfix.elements ${RPMPATH}/SOURCES/
 	cp LICENSE ${RPMPATH}/SOURCES/license
 	cp NOTICE ${RPMPATH}/SOURCES/notice
-	apt-get install rpm
 	rpmbuild -ba ${RPMPATH}/SPECS/vflow.spec --define "_topdir `pwd`/scripts/rpmbuild"
 	sed -i 's/${VERSION}/%VERSION%/' ${RPMPATH}/SPECS/vflow.spec
