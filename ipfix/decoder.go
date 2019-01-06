@@ -173,7 +173,8 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			}
 			err = nonfatalError(fmt.Errorf("%s unknown ipfix template id# %d with domain ID",
 				d.raddr.String(),
-				setHeader.SetID, msg.Header.DomainID
+				setHeader.SetID,
+			        msg.Header.DomainID,
 			))
 		}
 	}

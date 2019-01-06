@@ -434,7 +434,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		if !ok {
 			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d from sourceID %d",
 				d.raddr.String(),
-				setHeader.FlowSetID, msg.Header.SrcID
+				setHeader.FlowSetID, msg.Header.SrcID,
 			))
 		}
 	}
