@@ -1,5 +1,5 @@
 Name:       vflow
-Version:    0.6.5
+Version:    %VERSION%
 Release:    0
 Group:      Application
 URL:        https://github.com/VerizonDigital/vflow
