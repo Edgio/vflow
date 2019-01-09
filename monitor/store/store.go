@@ -59,6 +59,16 @@ type SFlow struct {
 	Workers      int64
 }
 
+// NetflowV5 represents Netflow v5 metrics
+type NetflowV5 struct {
+	UDPQueue     int64
+	MessageQueue int64
+	UDPCount     int64
+	DecodedCount int64
+	MQErrorCount int64
+	Workers      int64
+}
+
 // NetflowV9 represents Netflow v9 metrics
 type NetflowV9 struct {
 	UDPQueue     int64
@@ -75,6 +85,7 @@ type Flow struct {
 	Timestamp int64
 	IPFIX     IPFIX
 	SFlow     SFlow
+	NetflowV5 NetflowV5
 	NetflowV9 NetflowV9
 }
 

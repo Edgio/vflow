@@ -49,6 +49,15 @@ Flow API : http://localhost:8081/flow
       "UDPQueue" : 0,
       "Workers" : 100
    },
+   "NetflowV5" : {
+      "MessageQueue" : 0,
+      "DecodedCount" : 322,
+      "MQErrorCount" : 0,
+      "UDPCount" : 322,
+      "UDPMirrorQueue" : 0,
+      "UDPQueue" : 0,
+      "Workers" : 50
+   },
    "NetflowV9" : {
       "MessageQueue" : 0,
       "DecodedCount" : 562,
