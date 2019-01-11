@@ -51,10 +51,11 @@ type KafkaSaramaConfig struct {
 	RetryMax       int      `yaml:"retry-max" env:"RETRY_MAX"`
 	RequestSizeMax int32    `yaml:"request-size-max" env:"REQUEST_SIZE_MAX"`
 	RetryBackoff   int      `yaml:"retry-backoff" env:"RETRY_BACKOFF"`
+	TLSEnabled     bool     `yaml:"tls-enabled" env:"TLS_ENABLED"`
 	TLSCertFile    string   `yaml:"tls-cert" env:"TLS_CERT"`
 	TLSKeyFile     string   `yaml:"tls-key" env:"TLS_KEY"`
 	CAFile         string   `yaml:"ca-file" env:"CA_FILE"`
-	VerifySSL      bool     `yaml:"verify-ssl" env:"VERIFY_SSL"`
+	TLSSkipVerify  bool     `yaml:"tls-skip-verify" env:"TLS-SKIP-VERIFY"`
 }
 
 func (k *KafkaSarama) setup(configFile string, logger *log.Logger) error {
@@ -69,7 +70,8 @@ func (k *KafkaSarama) setup(configFile string, logger *log.Logger) error {
 		RetryMax:       2,
 		RequestSizeMax: 104857600,
 		RetryBackoff:   10,
-		VerifySSL:      true,
+		TLSEnabled:     false,
+		TLSSkipVerify:  true,
 	}
 
 	k.logger = logger
@@ -97,10 +99,14 @@ func (k *KafkaSarama) setup(configFile string, logger *log.Logger) error {
 		config.Producer.Compression = sarama.CompressionNone
 	}
 
-	if tlsConfig := k.tlsConfig(); tlsConfig != nil {
+	if tlsConfig := k.tlsConfig(); tlsConfig != nil || k.config.TLSEnabled {
 		config.Net.TLS.Config = tlsConfig
 		config.Net.TLS.Enable = true
-		k.logger.Println("Kafka client TLS enabled")
+		if k.config.TLSSkipVerify {
+			k.logger.Printf("kafka client TLS enabled (server certificate didn't validate)")
+		} else {
+			k.logger.Printf("kafka client TLS enabled")
+		}
 	}
 
 	// get env config
@@ -164,15 +170,15 @@ func (k *KafkaSarama) load(f string) error {
 func (k KafkaSarama) tlsConfig() *tls.Config {
 	var t *tls.Config
 
-	if k.config.TLSCertFile != "" && k.config.TLSKeyFile != "" && k.config.CAFile != "" {
+	if k.config.TLSCertFile != "" || k.config.TLSKeyFile != "" || k.config.CAFile != "" {
 		cert, err := tls.LoadX509KeyPair(k.config.TLSCertFile, k.config.TLSKeyFile)
 		if err != nil {
-			k.logger.Fatal("Kafka TLS error: ", err)
+			k.logger.Fatal("kafka TLS load X509 key pair error: ", err)
 		}
 
 		caCert, err := ioutil.ReadFile(k.config.CAFile)
 		if err != nil {
-			k.logger.Fatal("Kafka TLS error: ", err)
+			k.logger.Fatal("kafka TLS CA file error: ", err)
 		}
 
 		caCertPool := x509.NewCertPool()
@@ -181,7 +187,7 @@ func (k KafkaSarama) tlsConfig() *tls.Config {
 		t = &tls.Config{
 			Certificates:       []tls.Certificate{cert},
 			RootCAs:            caCertPool,
-			InsecureSkipVerify: k.config.VerifySSL,
+			InsecureSkipVerify: k.config.TLSSkipVerify,
 		}
 	}
 
