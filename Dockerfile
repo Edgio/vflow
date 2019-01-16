@@ -1,5 +1,5 @@
 # build vFlow in the first stage
-FROM golang:1.8.3 as builder
+FROM golang:1.11.4 as builder
 
 WORKDIR /go/src/
 
