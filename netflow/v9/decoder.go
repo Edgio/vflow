@@ -332,6 +332,31 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 
 	r := d.reader
 
+	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
+		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
+		if err != nil {
+			return nil, err
+		}
+
+		m, ok := ipfix.InfoModel[ipfix.ElementKey{
+			0,
+			tr.ScopeFieldSpecifiers[i].ElementID,
+		}]
+
+		if !ok {
+			fields = append(fields, DecodedField{
+				ID:    tr.ScopeFieldSpecifiers[i].ElementID,
+				Value: ipfix.Interpret(&b, ipfix.FieldTypes["octetArray"]),
+			})
+			continue
+		}
+
+		fields = append(fields, DecodedField{
+			ID:    m.FieldID,
+			Value: ipfix.Interpret(&b, m.Type),
+		})
+	}
+
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
 		if err != nil {
@@ -349,29 +374,6 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 				Value: ipfix.Interpret(&b, ipfix.FieldTypes["octetArray"]),
 			})
 			continue
-			//return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist", 				tr.FieldSpecifiers[i].ElementID))
-		}
-
-		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: ipfix.Interpret(&b, m.Type),
-		})
-	}
-
-	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
-		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
-		if err != nil {
-			return nil, err
-		}
-
-		m, ok := ipfix.InfoModel[ipfix.ElementKey{
-			0,
-			tr.ScopeFieldSpecifiers[i].ElementID,
-		}]
-
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
-				tr.ScopeFieldSpecifiers[i].ElementID))
 		}
 
 		fields = append(fields, DecodedField{
@@ -438,11 +440,11 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	// This check is somewhat redundant with the switch-clause below, but the retrieve() operation should not be executed inside the loop.
 	if setHeader.FlowSetID > 255 {
 		var ok bool
-		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr, msg.Header.SrcID)
+		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr)
 		if !ok {
-			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d from sourceID %d",
+			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d",
 				d.raddr.String(),
-				setHeader.FlowSetID, msg.Header.SrcID,
+				setHeader.FlowSetID,
 			))
 		}
 	}

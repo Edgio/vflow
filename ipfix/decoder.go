@@ -483,20 +483,73 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	return nil
 }
 
-func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
+func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, error) {
 	var (
-		fields []DecodedField
-		err    error
-		b      []byte
+		err        error
+		readLength uint16
 	)
+
 	r := d.reader
 
-	for i := 0; i < len(tr.FieldSpecifiers); i++ {
-		b, err = r.Read(int(tr.FieldSpecifiers[i].Length))
+	if (t == String || t == OctetArray) && (fieldSpecifierLen == 65535) {
+		var len8 uint8
+		len8, err = r.Uint8()
+		if err != nil {
+			return 0, err
+		} else if len8 == 255 {
+			readLength, err = r.Uint16()
+			if err != nil {
+				return 0, err
+			}
+		} else {
+			readLength = uint16(len8)
+		}
+	} else {
+		readLength = fieldSpecifierLen
+	}
+
+	return readLength, nil
+}
+
+func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
+	var (
+		fields     []DecodedField
+		err        error
+		b          []byte
+		readLength uint16
+	)
+
+	r := d.reader
+
+	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
+		m, ok := InfoModel[ElementKey{
+			tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+			tr.ScopeFieldSpecifiers[i].ElementID,
+		}]
+
+		if !ok {
+			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
+				tr.ScopeFieldSpecifiers[i].ElementID))
+		}
+
+		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type)
 		if err != nil {
 			return nil, err
 		}
 
+		b, err = r.Read(int(readLength))
+		if err != nil {
+			return nil, err
+		}
+
+		fields = append(fields, DecodedField{
+			ID:           m.FieldID,
+			Value:        Interpret(&b, m.Type),
+			EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+		})
+	}
+
+	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		m, ok := InfoModel[ElementKey{
 			tr.FieldSpecifiers[i].EnterpriseNo,
 			tr.FieldSpecifiers[i].ElementID,
@@ -511,32 +564,19 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			//return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist", 				tr.FieldSpecifiers[i].ElementID))
 		}
 
-		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: Interpret(&b, m.Type),
-		})
-	}
-
-	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
-		b, err = r.Read(int(tr.ScopeFieldSpecifiers[i].Length))
+		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)
 		if err != nil {
 			return nil, err
 		}
 
-		m, ok := InfoModel[ElementKey{
-			tr.ScopeFieldSpecifiers[i].EnterpriseNo,
-			tr.ScopeFieldSpecifiers[i].ElementID,
-		}]
-
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
-				tr.ScopeFieldSpecifiers[i].ElementID))
+		b, err = r.Read(int(readLength))
+		if err != nil {
+			return nil, err
 		}
 
 		fields = append(fields, DecodedField{
-			ID:           m.FieldID,
-			Value:        Interpret(&b, m.Type),
-			EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+			ID:    m.FieldID,
+			Value: Interpret(&b, m.Type),
 		})
 	}
 

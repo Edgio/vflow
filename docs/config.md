@@ -39,6 +39,11 @@ The vFlow configuration contains the following keys
 |sflow-udp-size          | 1500                           | maximum sFlow UDP packet size                    |
 |sflow-topic             | vflow.sflow                    | sFlow message queue topic name                   |
 |sflow-type-filter       | -                              | filter sflow type(s)                             |
+|netflow5-enabled        | true                           | enable/disable netflow v5 decoders               |
+|netflow5-port           | 9996                           | server netflow v5 UDP port                       |
+|netflow5-workers        | 50                             | netflow v5 concurrent decoders                   |
+|netflow5-topic          | vflow.netflow5                 | netflow v5 message queue topic name              |
+|netflow5-udp-size       | 1500                           | maximum netflow v9 UDP packet size 
 |netflow9-enabled        | true                           | enable/disable netflow v9 decoders               |
 |netflow9-port           | 4729                           | server netflow v9 UDP port                       |
 |netflow9-workers        | 50                             | netflow v9 concurrent decoders                   |
@@ -49,7 +54,7 @@ The vFlow configuration contains the following keys
 |stats-enabled           | true                           | enable/disable web stats listener                |
 |stats-http-addr         | *                              | web stats address option at server startup       |
 |stats-http-port         | 8081                           | web stats TCP port                               |
-|mq-name                 | kafka                          | message queueing name (kafka, nsq or nats)       |
+|mq-name                 | kafka                          | [message queues](#message-queues)        |
 |mq-config-file          | /etc/vflow/mq.conf             | message queue config file                        |
 
 The default configuration path is /etc/vflow/vflow.conf but you can change it as below:
@@ -67,6 +72,16 @@ ipfix-workers: 600
 sflow-workers: 300
 log-file: /var/log/vflow.log
 ```
+## Message Queues 
+The vFlow supports these message queuing 
+- kafka
+- kafka.segmentio
+- nsq
+- nat
+- rawSocket
+
+Note: there are two kafka drivers: [Kafka Sarama](https://github.com/Shopify/sarama) (Default) and [Kafka Segmentio](https://github.com/segmentio/kafka-go) (Kafka-Go)
+
 
 # Kafka Configuration
 
@@ -79,7 +94,7 @@ key: value
 
 The default configuration file is /etc/vflow/mq.conf, you can be able to change it through vFlow configuration.
 
-## Configuration Keys
+## Configuration Keys (Default / Sarama)
 The Kafka configuration contains the following key
 
 |Key                  | Default     |  Environment variable        | Description                                                                        |
@@ -88,11 +103,12 @@ The Kafka configuration contains the following key
 |compression          | none        | VFLOW_KAFKA_COMPRESSION      | compression codecs: gzip, snappy, lz4                                              |
 |retry-max            | 2           | VFLOW_KAFKA_RETRY_MAX        | the total number of times to retry                                                 |
 |request-size-max     | 104857600   | VFLOW_KAFKA_REQUEST_SIZE_MAX | the maximum size (in bytes) of any request that will be attempted to send to Kafka |
-|retry-backoff        | 10          | VFLOW_KAFKA_RETRY_BACKOFF    | wait for leader election to occur before retrying in milliseconds                  |
+|retry-backoff        | 10          | VFLOW_KAFKA_RETRY_BACKOFF    | wait for leader election to occur before retrying in milliseconds              |
+|tls-enabled          | false       | VFLOW_KAFKA_TLS_ENABLED      | connect using TLS                                                                   |
 |tls-cert             | none        | VFLOW_KAFKA_TLS_CERT         | certificate file for client authentication                                         |
 |tls-key              | none        | VFLOW_KAFKA_TLS_KEY          | key file for client authentication                                                 |
 |ca-file              | none        | VFLOW_KAFKA_CA_FILE          | certificate authority file for TLS client authentication                           |
-|verify-ssl           | true        | VFLOW_KAFKA_VERIFY_SSL       | verify ssl certificates chain                                                      |
+|tls-skip-verify      | true        | VFLOW_KAFKA_TLS_SKIP_VERIFY  | if true, the server's certificate will not validate                                                      |
 
 ## Example
 ```
@@ -101,6 +117,29 @@ brokers:
 retry-max: 1
 retry-backoff: 30
 ```
+
+## Configuration Keys (Segmentio)
+The Kafka configuration contains the following key
+
+|Key                  | Default     |  Environment variable        | Description                                                                        |
+|---------------------| ------------|------------------------------|------------------------------------------------------------------------------------|
+|brokers              |             | VFLOW_KAFKA_BROKERS          |                                                                                    |
+|bootstrap-server     |             | VFLOW_KAFKA_BOOTSTRAP_SERVER |                                                                                    |
+|client-id            |             | VFLOW_KAFKA_CLIENT_ID        |                                                                                    |
+|compression          |             | VFLOW_KAFKA_COMPRESSION      |                                                                                    |
+|max-attempts         |             | VFLOW_KAFKA_MAX_ATTEMPTS     |                                                                                    |
+|queue-size           |             | VFLOW_KAFKA_QUEUE_SIZE       |                                                                                    |
+|batch-size           |             | VFLOW_KAFKA_BATCH_SIZE       |                                                                                    |
+|keepalive            |             | VFLOW_KAFKA_KEEPALIVE        |                                                                                    |
+|connect-timeout      |             | VFLOW_KAFKA_CONNECT_TIMEOUT  |                                                                                    |
+|required-acks        |             | VFLOW_KAFKA_REQUIRED_ACKS    |                                                                                    |
+|pflush               |             | VFLOW_KAFKA_PERIODIC_FLUSH   |                                                                                    |
+|tls-cert             |             | VFLOW_KAFKA_TLS_CERT         |                                                                                    |
+|tls-key              |             | VFLOW_KAFKA_TLS_KEY          |                                                                                    |
+|ca-file              |             | VFLOW_KAFKA_CA_FILE          |                                                                                    |
+|verify-ssl           |             | VFLOW_KAFKA_VERIFY_SSL       |                                                                                    |
+
+
 # NSQ Configuration
 
 ## Format
@@ -152,7 +191,7 @@ The default configuration file is /etc/vflow/mq.conf, you can be able to change 
 
 
 ## Configuration Keys
-The NATS configuration contains the following key
+The rawSocket configuration contains the following key
 
 |Key                  | Default               |  Environment variable    | Description                                                          |
 |---------------------| ----------------------|--------------------------|----------------------------------------------------------------------|

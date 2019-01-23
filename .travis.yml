@@ -1,14 +1,16 @@
 language: go
 sudo: required
 go:
-  - 1.8
-  - tip
+  - "1.11.x"
+env:
+  global:
+    - GO111MODULE=on
 
 notifications:
   email: false
 
 before_install:
-    - go get -d ./...
+    - go get -v ./...
 script:
   - test -z "$(gofmt -s -l . | tee /dev/stderr)"
   - go test -v ./... -timeout 1m
