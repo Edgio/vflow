@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/VerizonDigital/vflow/reader"
+	"../../reader"
 )
 
 type nonfatalError error

@@ -29,7 +29,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/VerizonDigital/vflow/reader"
+	"../reader"
 )
 
 // Decoder represents IPFIX payload and remote address
@@ -174,7 +174,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			err = nonfatalError(fmt.Errorf("%s unknown ipfix template id# %d with domain ID %d",
 				d.raddr.String(),
 				setHeader.SetID,
-			        msg.Header.DomainID,
+				msg.Header.DomainID,
 			))
 		}
 	}
@@ -528,8 +528,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
-				tr.ScopeFieldSpecifiers[i].ElementID))
+			fields = append(fields, DecodedField{
+				ID:    tr.ScopeFieldSpecifiers[i].ElementID,
+				Value: Interpret(&b, FieldTypes["octetArray"]),
+			})
+			continue
 		}
 
 		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type)
@@ -561,7 +564,6 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 				Value: Interpret(&b, FieldTypes["octetArray"]),
 			})
 			continue
-			//return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist", 				tr.FieldSpecifiers[i].ElementID))
 		}
 
 		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)

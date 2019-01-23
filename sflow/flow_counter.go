@@ -22,9 +22,7 @@
 
 package sflow
 
-import (
-	"io"
-)
+import "io"
 
 const (
 	// SFGenericInterfaceCounters is Generic interface counters - see RFC 2233

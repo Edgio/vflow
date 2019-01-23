@@ -93,7 +93,7 @@ func (m MemCache) getShard(templateId uint16, addr net.IP, domainId uint32) (*Te
 	hash.Write(key)
 	hSum32 := hash.Sum32()
 
-	return m[uint32(hSum32)%uint32(shardNo)], hSum32
+	return m[uint(hSum32)%uint(shardNo)], hSum32
 }
 
 func (m *MemCache) insert(id uint16, addr net.IP, tr TemplateRecord, domainID uint32) {

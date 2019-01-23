@@ -30,7 +30,7 @@ import (
 	"net"
 
 	"../../ipfix"
-	"github.com/VerizonDigital/vflow/reader"
+	"../../reader"
 )
 
 type nonfatalError error
@@ -440,11 +440,11 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	// This check is somewhat redundant with the switch-clause below, but the retrieve() operation should not be executed inside the loop.
 	if setHeader.FlowSetID > 255 {
 		var ok bool
-		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr)
+		tr, ok = mem.retrieve(setHeader.FlowSetID, d.raddr, msg.Header.SrcID)
 		if !ok {
-			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d",
+			err = nonfatalError(fmt.Errorf("%s unknown netflow template id# %d from sourceID %d",
 				d.raddr.String(),
-				setHeader.FlowSetID,
+				setHeader.FlowSetID, msg.Header.SrcID,
 			))
 		}
 	}

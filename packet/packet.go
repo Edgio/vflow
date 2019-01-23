@@ -22,9 +22,7 @@
 
 package packet
 
-import (
-	"errors"
-)
+import "errors"
 
 // The header protocol describes the format of the sampled header
 const (

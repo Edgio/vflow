@@ -32,7 +32,7 @@ import (
 	"time"
 
 	"../ipfix"
-	"github.com/VerizonDigital/vflow/producer"
+	"../producer"
 )
 
 // IPFIX represents IPFIX collector

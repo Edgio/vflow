@@ -32,7 +32,7 @@ import (
 	"time"
 
 	"../netflow/v9"
-	"github.com/VerizonDigital/vflow/producer"
+	"../producer"
 )
 
 // NetflowV9 represents netflow v9 collector
