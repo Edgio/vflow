@@ -179,13 +179,12 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	}
 
 	// the next set should be greater than 4 bytes otherwise that's padding
-	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 4 {
+	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 4 && setHeader.Length-uint16(d.reader.ReadCount()-startCount) > 4 {
 		if setId := setHeader.SetID; setId == 2 || setId == 3 {
 			// Template record or template option record
 
 			// Check if only padding is left in this set. A template id of zero indicates padding bytes, which MUST be zero.
-			templateId, err := d.reader.PeekUint16()
-			if err == nil && templateId == 0 {
+			if templateId, err := d.reader.PeekUint16(); err == nil && templateId == 0 {
 				break
 			}
 
@@ -201,6 +200,9 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		} else if setId >= 4 && setId <= 255 {
 			// Reserved set, do not read any records
 			break
+		} else if setId == 0 {
+			// Invalid set
+			return fmt.Errorf("failed to decodeSet / invalid setId")
 		} else {
 			// Data set
 			var data []DecodedField
@@ -563,6 +565,10 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			ID:    m.FieldID,
 			Value: Interpret(&b, m.Type),
 		})
+	}
+
+	if len(fields) == 0 {
+		return nil, fmt.Errorf("failed to decodeData")
 	}
 
 	return fields, nil
