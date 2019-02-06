@@ -164,8 +164,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	// This check is somewhat redundant with the switch-clause below, but the retrieve() operation should not be executed inside the loop.
 	if setHeader.SetID > 255 {
 		var ok bool
-		tr, ok = mem.retrieve(setHeader.SetID, d.raddr)
-		if !ok {
+		if tr, ok = mem.retrieve(setHeader.SetID, d.raddr); !ok {
 			select {
 			case rpcChan <- RPCRequest{
 				ID: setHeader.SetID,
@@ -182,16 +181,16 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 
 	// the next set should be greater than 4 bytes otherwise that's padding
 	for err == nil && setHeader.Length > uint16(d.reader.ReadCount()-startCount) && d.reader.Len() > 4 && setHeader.Length-uint16(d.reader.ReadCount()-startCount) > 4 {
-		if setId := setHeader.SetID; setId == 2 || setId == 3 {
+		if setID := setHeader.SetID; setID == 2 || setID == 3 {
 			// Template record or template option record
 
 			// Check if only padding is left in this set. A template id of zero indicates padding bytes, which MUST be zero.
-			if templateId, err := d.reader.PeekUint16(); err == nil && templateId == 0 {
+			if templateID, err := d.reader.PeekUint16(); err == nil && templateID == 0 {
 				break
 			}
 
 			tr := TemplateRecord{}
-			if setId == 2 {
+			if setID == 2 {
 				err = tr.unmarshal(d.reader)
 			} else {
 				err = tr.unmarshalOpts(d.reader)
@@ -199,17 +198,16 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
-		} else if setId >= 4 && setId <= 255 {
+		} else if setID >= 4 && setID <= 255 {
 			// Reserved set, do not read any records
 			break
-		} else if setId == 0 {
+		} else if setID == 0 {
 			// Invalid set
-			return fmt.Errorf("failed to decodeSet / invalid setId")
+			return fmt.Errorf("failed to decodeSet / invalid setID")
 		} else {
 			// Data set
 			var data []DecodedField
-			data, err = d.decodeData(tr)
-			if err == nil {
+			if data, err = d.decodeData(tr); err == nil {
 				msg.DataSets = append(msg.DataSets, data)
 			} else {
 				switch err.(type) {
@@ -225,8 +223,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	// This is necessary if the set is padded, has a reserved set ID, or a nonfatal error occurred
 	leftoverBytes := setHeader.Length - uint16(d.reader.ReadCount()-startCount)
 	if leftoverBytes > 0 {
-		_, skipErr := d.reader.Read(int(leftoverBytes))
-		if skipErr != nil {
+		if _, skipErr := d.reader.Read(int(leftoverBytes)); skipErr != nil {
 			err = skipErr
 		}
 	}
@@ -492,12 +489,10 @@ func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, 
 
 	if (t == String || t == OctetArray) && (fieldSpecifierLen == 65535) {
 		var len8 uint8
-		len8, err = r.Uint8()
-		if err != nil {
+		if len8, err = r.Uint8(); err != nil {
 			return 0, err
 		} else if len8 == 255 {
-			readLength, err = r.Uint16()
-			if err != nil {
+			if readLength, err = r.Uint16(); err != nil {
 				return 0, err
 			}
 		} else {
@@ -531,13 +526,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 				tr.ScopeFieldSpecifiers[i].ElementID)}
 		}
 
-		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type)
-		if err != nil {
+		if readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type); err != nil {
 			return nil, err
 		}
 
-		b, err = r.Read(int(readLength))
-		if err != nil {
+		if b, err = r.Read(int(readLength)); err != nil {
 			return nil, err
 		}
 
@@ -559,13 +552,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 				tr.FieldSpecifiers[i].ElementID)}
 		}
 
-		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)
-		if err != nil {
+		if readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type); err != nil {
 			return nil, err
 		}
 
-		b, err = r.Read(int(readLength))
-		if err != nil {
+		if b, err = r.Read(int(readLength)); err != nil {
 			return nil, err
 		}
 
