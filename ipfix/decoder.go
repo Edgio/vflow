@@ -90,7 +90,9 @@ type SetHeader struct {
 	Length uint16
 }
 
-type nonfatalError error
+type nonfatalError struct {
+	error
+}
 
 var rpcChan = make(chan RPCRequest, 1)
 
@@ -171,10 +173,10 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			}:
 			default:
 			}
-			err = nonfatalError(fmt.Errorf("%s unknown ipfix template id# %d",
+			err = nonfatalError{fmt.Errorf("%s unknown ipfix template id# %d",
 				d.raddr.String(),
 				setHeader.SetID,
-			))
+			)}
 		}
 	}
 
@@ -209,6 +211,12 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			data, err = d.decodeData(tr)
 			if err == nil {
 				msg.DataSets = append(msg.DataSets, data)
+			} else {
+				switch err.(type) {
+				case nonfatalError:
+				default:
+					return err
+				}
 			}
 		}
 	}
@@ -519,8 +527,8 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist (scope)",
-				tr.ScopeFieldSpecifiers[i].ElementID))
+			return nil, nonfatalError{fmt.Errorf("IPFIX element key (%d) not exist (scope)",
+				tr.ScopeFieldSpecifiers[i].ElementID)}
 		}
 
 		readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type)
@@ -547,8 +555,8 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("IPFIX element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID))
+			return nil, nonfatalError{fmt.Errorf("IPFIX element key (%d) not exist",
+				tr.FieldSpecifiers[i].ElementID)}
 		}
 
 		readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type)
