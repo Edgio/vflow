@@ -185,7 +185,10 @@ func getFlow(vhost, host string) (*Flow, *Flow, error) {
 		return nil, nil, err
 	}
 
-	ioutil.WriteFile(lastFlowFile, b, 0644)
+	err = ioutil.WriteFile(lastFlowFile, b, 0644)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// once the vFlow restarted
 	if flow.StartTime != lastFlow.StartTime {
