@@ -98,8 +98,8 @@ func (p *Packet) decodeNextLayer() error {
 		return errUnknownL3Protocol
 	}
 
-	switch proto {
-	case IANAProtoICMP, IANAProtoIPv6ICMP:
+	switch {
+	case proto == IANAProtoICMP || proto == IANAProtoIPv6ICMP:
 		icmp, err := decodeICMP(p.data)
 		if err != nil {
 			return err
@@ -107,7 +107,7 @@ func (p *Packet) decodeNextLayer() error {
 
 		p.L4 = icmp
 		len = 4
-	case IANAProtoTCP:
+	case proto == IANAProtoTCP:
 		tcp, err := decodeTCP(p.data)
 		if err != nil {
 			return err
@@ -115,7 +115,7 @@ func (p *Packet) decodeNextLayer() error {
 
 		p.L4 = tcp
 		len = 20
-	case IANAProtoUDP:
+	case proto == IANAProtoUDP:
 		udp, err := decodeUDP(p.data)
 		if err != nil {
 			return err
@@ -123,6 +123,11 @@ func (p *Packet) decodeNextLayer() error {
 
 		p.L4 = udp
 		len = 8
+	case proto < 143:
+		p.L4 = struct {
+
+		}{}
+		len = 0
 	default:
 		return errUnknownTransportLayer
 	}
