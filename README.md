@@ -93,7 +93,7 @@ docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA
 
 ## Slack
 
-You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNTAwNjMyNzg0MDY5LWJlNGExZDNiYThmYjkyNmM1NDAyZGY4NmMyZjYwYmE0ZjAzZjA2MTZlZjRkYjY3Njc1MDJjYTlhZDU2OTk2MGE) and chat with developers.
+You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNjUyMDk0MjM1NDExLTJhNGU4NjkwMWUwMzdjNzg1NTE1YzBmNDI2YjZkZWEyMmY3OWQ1ZjhkNWQyNmZkNDY1NDIwOTNhZTIxMzdlOWQ) and chat with developers.
 
 ## License
 Licensed under the Apache License, Version 2.0 (the "License")
