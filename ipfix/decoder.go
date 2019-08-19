@@ -82,6 +82,7 @@ type DecodedField struct {
 	ID           uint16
 	Value        interface{}
 	EnterpriseNo uint32
+	Name         string
 }
 
 // SetHeader represents set header fields
@@ -460,7 +461,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 		if err := tf.unmarshal(r); err != nil {
 			return err
 		}
-		tr.ScopeFieldSpecifiers = append(tr.FieldSpecifiers, tf)
+		tr.ScopeFieldSpecifiers = append(tr.ScopeFieldSpecifiers, tf)
 	}
 
 	for i := th.FieldCount - th.ScopeFieldCount; i > 0; i-- {
@@ -535,6 +536,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			ID:           m.FieldID,
 			Value:        Interpret(&b, m.Type),
 			EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+			Name:         m.Name,
 		})
 	}
 
@@ -560,8 +562,10 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}
 
 		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: Interpret(&b, m.Type),
+			ID:           m.FieldID,
+			Value:        Interpret(&b, m.Type),
+			EnterpriseNo: tr.FieldSpecifiers[i].EnterpriseNo,
+			Name:         m.Name,
 		})
 	}
 

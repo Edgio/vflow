@@ -34,20 +34,10 @@ var errUknownMarshalDataType = errors.New("unknown data type to marshal")
 
 // JSONMarshal encodes IPFIX message
 func (m *Message) JSONMarshal(b *bytes.Buffer) ([]byte, error) {
-	b.WriteString("{")
-
-	// encode agent id
-	m.encodeAgent(b)
-
-	// encode header
-	m.encodeHeader(b)
-
 	// encode data sets
-	if err := m.encodeDataSet(b); err != nil {
+	if err := m.encodeDataSetFlat(b); err != nil {
 		return nil, err
 	}
-
-	b.WriteString("}")
 
 	return b.Bytes(), nil
 }
@@ -59,7 +49,6 @@ func (m *Message) encodeDataSet(b *bytes.Buffer) error {
 		err      error
 	)
 
-	b.WriteString("\"DataSets\":")
 	dsLength = len(m.DataSets)
 
 	b.WriteByte('[')
@@ -69,15 +58,10 @@ func (m *Message) encodeDataSet(b *bytes.Buffer) error {
 
 		b.WriteByte('[')
 		for j := range m.DataSets[i] {
-			b.WriteString("{\"I\":")
-			b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].ID), 10))
-			b.WriteString(",\"V\":")
+			b.WriteString("{\"")
+			b.WriteString(m.DataSets[i][j].Name)
+			b.WriteString("\":")
 			err = m.writeValue(b, i, j)
-
-			if m.DataSets[i][j].EnterpriseNo != 0 {
-				b.WriteString(",\"E\":")
-				b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].EnterpriseNo), 10))
-			}
 
 			if j < length-1 {
 				b.WriteString("},")
@@ -105,7 +89,6 @@ func (m *Message) encodeDataSetFlat(b *bytes.Buffer) error {
 		err      error
 	)
 
-	b.WriteString("\"DataSets\":")
 	dsLength = len(m.DataSets)
 
 	b.WriteByte('[')
@@ -116,7 +99,7 @@ func (m *Message) encodeDataSetFlat(b *bytes.Buffer) error {
 		b.WriteByte('{')
 		for j := range m.DataSets[i] {
 			b.WriteByte('"')
-			b.WriteString(strconv.FormatInt(int64(m.DataSets[i][j].ID), 10))
+			b.WriteString(m.DataSets[i][j].Name)
 			b.WriteString("\":")
 			err = m.writeValue(b, i, j)
 

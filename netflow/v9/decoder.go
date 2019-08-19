@@ -78,6 +78,7 @@ type TemplateRecord struct {
 type DecodedField struct {
 	ID    uint16
 	Value interface{}
+	Name  string
 }
 
 // Decoder represents Netflow payload and remote address
@@ -301,7 +302,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 			return err
 		}
 
-		tr.ScopeFieldSpecifiers = append(tr.FieldSpecifiers, tf)
+		tr.ScopeFieldSpecifiers = append(tr.ScopeFieldSpecifiers, tf)
 	}
 
 	for i := th.OptionLen / 4; i > 0; i-- {
@@ -343,6 +344,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
 			Value: ipfix.Interpret(&b, m.Type),
+			Name:  m.Name,
 		})
 	}
 
@@ -365,6 +367,7 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		fields = append(fields, DecodedField{
 			ID:    m.FieldID,
 			Value: ipfix.Interpret(&b, m.Type),
+			Name:  m.Name,
 		})
 	}
 

@@ -28,6 +28,7 @@ import (
 	"hash/fnv"
 	"io/ioutil"
 	"net"
+	"sort"
 	"sync"
 	"time"
 )
@@ -124,4 +125,22 @@ func (m MemCache) Dump(cacheFile string) error {
 	}
 
 	return nil
+}
+
+// Fill a slice with all known set ids. This is inefficient and is only used for error reporting or debugging.
+func (m MemCache) allSetIds() []int {
+	num := 0
+	for _, shard := range m {
+		num += len(shard.Templates)
+	}
+	result := make([]int, 0, num)
+	for _, shard := range m {
+		shard.RLock()
+		for _, set := range shard.Templates {
+			result = append(result, int(set.Template.TemplateID))
+		}
+		shard.RUnlock()
+	}
+	sort.Ints(result)
+	return result
 }

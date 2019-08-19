@@ -23,6 +23,7 @@
 package reader
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -121,4 +122,80 @@ func TestReadCount(t *testing.T) {
 	check(15)
 	r.Read(3)
 	check(18)
+}
+
+func TestReadString(t *testing.T) {
+	x := "TetrationAnalytics"
+	b := []byte{byte(len(x))}
+	xb := []byte(x)
+	b = append(b, xb...)
+	fmt.Printf("byte: %+v\n", b)
+	r := NewReader(b)
+	d, err := r.Read(65535)
+	if err != nil {
+		t.Errorf("read failed: %s", err.Error())
+	}
+	dx := string(d)
+	fmt.Printf("read string: %s", dx)
+	if x != dx {
+		t.Errorf("string differs: found %s, expected: %s", x, dx)
+	}
+}
+
+func TestReadTwoStrings(t *testing.T) {
+	x := []string{"TetrationAnalytics", "NetFlowSensor"}
+	b := []byte{}
+	for i := range x {
+		xi := x[i]
+		b = append(b, byte(len(xi)))
+		xb := []byte(xi)
+		b = append(b, xb...)
+	}
+	fmt.Printf("byte: %+v\n", b)
+	r := NewReader(b)
+	for i := range x {
+		xi := x[i]
+		d, err := r.Read(65535)
+		if err != nil {
+			t.Errorf("read failed: %s", err.Error())
+		}
+		dx := string(d)
+		fmt.Printf("read string: %s", dx)
+		if xi != dx {
+			t.Errorf("string differs: found %s, expected: %s", x, dx)
+		}
+	}
+}
+
+func TestReadStringError(t *testing.T) {
+	r := NewReader([]byte{})
+	_, err := r.readString(10)
+	if err == nil {
+		t.Errorf("we should have errored out")
+	}
+	x := "TetrationAnalytics"
+	b := []byte{5}
+	xb := []byte(x)
+	b = append(b, xb...)
+	r = NewReader(b)
+	fmt.Printf("byte: %+v\n", b)
+	_, err = r.readString(65535)
+	if err != nil {
+		t.Errorf("no error expected even though expected len is %d, found %d", len(x), b[0])
+	}
+	b[0] = byte(len(x))
+	r = NewReader(b)
+	_, err = r.readString(5)
+	if err == nil {
+		t.Errorf("to read only %d, string length is %d", 5, b[0])
+	}
+	fmt.Printf("byte: %+v\n", b)
+	r = NewReader(b)
+	d, err := r.readString(65535)
+	if err != nil {
+		t.Errorf("no error expected")
+	}
+	if string(d) != x {
+		t.Errorf("expected string %s, found %s", x, string(d))
+	}
 }

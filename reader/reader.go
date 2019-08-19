@@ -26,6 +26,7 @@ package reader
 import (
 	"encoding/binary"
 	"errors"
+	"fmt"
 )
 
 // Reader represents the data bytes for reading
@@ -93,6 +94,9 @@ func (r *Reader) Uint64() (uint64, error) {
 
 // Read reads n bytes and returns it
 func (r *Reader) Read(n int) ([]byte, error) {
+	if n == 65535 {
+		return r.readString(n)
+	}
 	if len(r.data) < n {
 		return []byte{}, errReader
 	}
@@ -101,6 +105,30 @@ func (r *Reader) Read(n int) ([]byte, error) {
 	r.advance(n)
 
 	return d, nil
+}
+
+func (r *Reader) readString(n int) ([]byte, error) {
+	if len(r.data) < 1 {
+		return []byte(""), errReader
+	}
+	penlen := int(r.data[0])
+	r.advance(1)
+	if penlen == 255 {
+		x, err := r.Uint16()
+		if err != nil {
+			return []byte(""), fmt.Errorf("not enought data available to read the length of the variable length element: %d", len(r.data))
+		}
+		penlen = int(x)
+	}
+	if len(r.data) < penlen || penlen > n {
+		return []byte(""), fmt.Errorf("not enough data available to read %d length of the variable length element, available: %d", penlen, len(r.data))
+	}
+	if penlen != 0 {
+		d := r.data[:penlen]
+		r.advance(penlen)
+		return d, nil
+	}
+	return []byte(""), nil
 }
 
 // PeekUint16 peeks the next two bytes interpreted as big-endian two-byte integer
