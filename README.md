@@ -105,3 +105,5 @@ Welcomes any kind of contribution, please follow the next steps:
 - Create a new branch.
 - Commit changes to the new branch.
 - Send a pull request.
+
+## Dummy PR to test owner approval
