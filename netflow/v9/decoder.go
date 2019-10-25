@@ -29,8 +29,8 @@ import (
 	"io"
 	"net"
 
-	"../../ipfix"
-	"../../reader"
+	"github.com/ajruckman/vflow/ipfix"
+	"github.com/ajruckman/vflow/reader"
 )
 
 type nonfatalError error

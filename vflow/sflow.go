@@ -32,8 +32,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"../producer"
-	"../sflow"
+	"github.com/ajruckman/vflow/producer"
+	"github.com/ajruckman/vflow/sflow"
 )
 
 // SFUDPMsg represents sFlow UDP message

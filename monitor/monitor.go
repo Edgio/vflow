@@ -27,7 +27,7 @@ import (
 	"log"
 	"os"
 
-	"../monitor/store"
+	"github.com/ajruckman/vflow/monitor/store"
 )
 
 type options struct {

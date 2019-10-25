@@ -1,4 +1,4 @@
-module github.com/VerizonDigital/vflow
+module github.com/ajruckman/vflow
 
 require (
 	github.com/Shopify/sarama v1.19.0
