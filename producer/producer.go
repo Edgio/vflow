@@ -54,6 +54,7 @@ func NewProducer(mqName string) *Producer {
 		"nsq":             new(NSQ),
 		"nats":            new(NATS),
 		"rawSocket":       new(RawSocket),
+		"http": 		   new(Http),
 	}
 
 	return &Producer{
