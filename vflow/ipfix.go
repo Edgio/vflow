@@ -31,8 +31,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/VerizonDigital/vflow/ipfix"
-	"github.com/VerizonDigital/vflow/producer"
+	"github.com/guardicore/vflow/ipfix"
+	"github.com/guardicore/vflow/producer"
 )
 
 // IPFIX represents IPFIX collector

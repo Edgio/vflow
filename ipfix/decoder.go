@@ -29,7 +29,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/VerizonDigital/vflow/reader"
+	"github.com/guardicore/vflow/reader"
 )
 
 // Decoder represents IPFIX payload and remote address
