@@ -52,6 +52,7 @@ func main() {
 	runtime.GOMAXPROCS(opts.GetCPU())
 
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	logger = opts.Logger
 
 	sFlow := NewSFlow()
 	ipfix := NewIPFIX()

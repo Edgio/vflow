@@ -76,8 +76,6 @@ var (
 
 // NewSFlow constructs sFlow collector
 func NewSFlow() *SFlow {
-	logger = opts.Logger
-
 	return &SFlow{
 		port:    opts.SFlowPort,
 		workers: opts.SFlowWorkers,
