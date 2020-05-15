@@ -26,7 +26,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/nats-io/go-nats"
+	"github.com/nats-io/nats.go"
 	"gopkg.in/yaml.v2"
 )
 

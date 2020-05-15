@@ -26,7 +26,7 @@ import (
 	"io/ioutil"
 	"log"
 
-	"github.com/bitly/go-nsq"
+	"github.com/nsqio/go-nsq"
 	"gopkg.in/yaml.v2"
 )
 

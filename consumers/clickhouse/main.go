@@ -32,7 +32,7 @@ import (
 	"time"
 
 	cluster "github.com/bsm/sarama-cluster"
-	"github.com/kshvakov/clickhouse"
+	"github.com/ClickHouse/clickhouse-go"
 )
 
 type options struct {
