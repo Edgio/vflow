@@ -16,7 +16,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (writ
 - Produce to Apache Kafka, NSQ, NATS
 - Replicate IPFIX to 3rd party collector
 - Supports IPv4 and IPv6
-- Monitoring with InfluxDB and OpenTSDB backend
+- Prometheus and RESTful APIs monitoring
 
 ![Alt text](/docs/imgs/vflow.gif?raw=true "vFlow")
 

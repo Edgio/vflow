@@ -69,7 +69,7 @@ func main() {
 		}(p)
 	}
 
-	go statsHTTPServer(ipfix, sFlow, netflow5, netflow9)
+	go statsExpose(protos)
 
 	<-signalCh
 
