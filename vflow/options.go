@@ -30,6 +30,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"reflect"
 	"runtime"
 	"strconv"
 	"strings"
@@ -184,8 +185,8 @@ func NewOptions() *Options {
 func GetOptions() *Options {
 	opts := NewOptions()
 
-	opts.vFlowFlagSet()
-	opts.vFlowVersion()
+	opts.flagSet()
+	opts.printVersion()
 
 	if opts.Verbose {
 		opts.Logger.Printf("the full logging enabled")
@@ -241,15 +242,15 @@ func (opts Options) vFlowIsRunning() bool {
 	return true
 }
 
-func (opts Options) vFlowVersion() {
+func (opts Options) printVersion() {
 	if opts.version {
 		fmt.Printf("vFlow version: %s\n", version)
 		os.Exit(0)
 	}
 }
 
-// GetCPU returns the number of the CPU
-func (opts Options) GetCPU() int {
+// getCPU returns the number of the CPU
+func (opts Options) getCPU() int {
 	var (
 		numCPU      int
 		availCPU    = runtime.NumCPU()
@@ -290,12 +291,13 @@ func (opts Options) GetCPU() int {
 	return numCPU
 }
 
-func (opts *Options) vFlowFlagSet() {
+func (opts *Options) flagSet() {
 
 	var config string
 	flag.StringVar(&config, "config", "/etc/vflow/vflow.conf", "path to config file")
 
-	vFlowLoadCfg(opts)
+	opts.getEnv()
+	opts.loadCfg()
 
 	// global options
 	flag.BoolVar(&opts.Verbose, "verbose", opts.Verbose, "enable/disable verbose logging")
@@ -374,7 +376,7 @@ func (opts *Options) vFlowFlagSet() {
 	flag.Parse()
 }
 
-func vFlowLoadCfg(opts *Options) {
+func (opts *Options) loadCfg() {
 	var file = path.Join(opts.VFlowConfigPath, "vflow.conf")
 
 	for i, flag := range os.Args {
@@ -393,5 +395,38 @@ func vFlowLoadCfg(opts *Options) {
 	err = yaml.Unmarshal(b, opts)
 	if err != nil {
 		opts.Logger.Println(err)
+	}
+}
+
+func (opts *Options) getEnv() {
+	r := reflect.TypeOf(*opts)
+	for i := 0; i < r.NumField(); i++ {
+		key := strings.ToUpper(r.Field(i).Tag.Get("yaml"))
+		key = strings.ReplaceAll(key, "-", "_")
+		key = fmt.Sprintf("VFLOW_%s", key)
+		value := os.Getenv(key)
+
+		ve := reflect.ValueOf(opts).Elem()
+		if value != "" {
+			switch ve.Field(i).Kind() {
+			case reflect.String:
+				ve.Field(i).SetString(value)
+			case reflect.Int:
+				v, err := strconv.Atoi(value)
+				if err != nil {
+					log.Fatal(err)
+					return
+				}
+				ve.Field(i).SetInt(int64(v))
+			case reflect.Bool:
+				v, err := strconv.ParseBool(value)
+				if err != nil {
+					log.Fatal(err)
+					return
+				}
+				ve.Field(i).SetBool(v)
+			}
+
+		}
 	}
 }
