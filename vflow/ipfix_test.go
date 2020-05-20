@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	opts = GetOptions()
+	opts = &Options{}
 }
 
 func TestMirrorIPFIX(t *testing.T) {

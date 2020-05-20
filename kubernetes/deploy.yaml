@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vflow
+  labels:
+    app: vflow
+spec:
+  ports:
+    - name: ipfix
+      protocol: UDP
+      port: 4739
+    - name: sflow
+      protocol: UDP
+      port: 6343
+    - name: netflowv5
+      protocol: UDP
+      port: 9996
+    - name: netflowv9
+      protocol: UDP
+      port: 4729
+    - name: stats
+      protocol: TCP
+      port: 8081
+  selector:
+    app: vflow
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vflow-deployment
+spec:
+  selector:
+    matchLabels:
+      app: vflow
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: vflow
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+    spec:
+      hostname: vflow
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values:
+                      - vflow
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: vflow
+          image: mehrdadrad/vflow:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4739
+              protocol: UDP
+            - containerPort: 6343
+              protocol: UDP
+            - containerPort: 9996
+              protocol: UDP
+            - containerPort: 4729
+              protocol: UDP
+            - containerPort: 8081
+          volumeMounts:
+            - name: vflow-config-volume
+              mountPath: /etc/vflow
+      volumes:
+        - name: vflow-config-volume
+          configMap:
+            defaultMode: 420
+            name: vflow-config
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vflow-config
+data:
+  vflow.conf: |-
+    mq-name: nsq

@@ -28,12 +28,23 @@ import (
 	"net/http"
 	"runtime"
 	"time"
+
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var startTime = time.Now().Unix()
 
-// StatsSysHandler handles /sys endpoint
-func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
+type rest struct {
+	StartTime int64
+	IPFIX     *IPFIXStats
+	SFlow     *SFlowStats
+	NetflowV5 *NetflowV5Stats
+	NetflowV9 *NetflowV9Stats
+}
+
+func statsSysHandler(w http.ResponseWriter, r *http.Request) {
 	var mem runtime.MemStats
 
 	runtime.ReadMemStats(&mem)
@@ -79,24 +90,27 @@ func StatsSysHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// StatsFlowHandler handles /flow endpoint
-func StatsFlowHandler(i *IPFIX, s *SFlow, n5 *NetflowV5, n *NetflowV9) http.HandlerFunc {
+func statsFlowHandler(protos []proto) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var data = &struct {
-			StartTime int64
-			IPFIX     *IPFIXStats
-			SFlow     *SFlowStats
-			NetflowV5 *NetflowV5Stats
-			NetflowV9 *NetflowV9Stats
-		}{
-			startTime,
-			i.status(),
-			s.status(),
-			n5.status(),
-			n.status(),
+		rd := &rest{StartTime: startTime}
+		for _, p := range protos {
+			switch p.(type) {
+			case *IPFIX:
+				ipfix, _ := p.(*IPFIX)
+				rd.IPFIX = ipfix.status()
+			case *SFlow:
+				sflow, _ := p.(*SFlow)
+				rd.SFlow = sflow.status()
+			case *NetflowV5:
+				netflowv5, _ := p.(*NetflowV5)
+				rd.NetflowV5 = netflowv5.status()
+			case *NetflowV9:
+				netflowv9, _ := p.(*NetflowV9)
+				rd.NetflowV9 = netflowv9.status()
+			}
 		}
 
-		j, err := json.Marshal(data)
+		j, err := json.Marshal(rd)
 		if err != nil {
 			logger.Println(err)
 		}
@@ -107,20 +121,281 @@ func StatsFlowHandler(i *IPFIX, s *SFlow, n5 *NetflowV5, n *NetflowV9) http.Hand
 	}
 }
 
-func statsHTTPServer(ipfix *IPFIX, sflow *SFlow, netflow5 *NetflowV5, netflow9 *NetflowV9) {
+func statsExpose(protos []proto) {
+	if opts.StatsFormat != "prometheus" {
+		statsRest(protos)
+	} else {
+		statsPrometheus(protos)
+	}
+}
+
+func statsRest(protos []proto) {
 	if !opts.StatsEnabled {
 		return
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/sys", StatsSysHandler)
-	mux.HandleFunc("/flow", StatsFlowHandler(ipfix, sflow, netflow5, netflow9))
+	mux.HandleFunc("/sys", statsSysHandler)
+	mux.HandleFunc("/flow", statsFlowHandler(protos))
+
+	logger.Println("starting stats http server ...")
 
 	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
-
-	logger.Println("starting stats web server ...")
 	err := http.ListenAndServe(addr, mux)
 	if err != nil {
 		logger.Fatal(err)
+	}
+}
+
+func statsPrometheus(protos []proto) {
+	for _, p := range protos {
+		promCounterDecoded(p)
+		promCounterMQError(p)
+		promCounterUDP(p)
+		promGaugeMessageQueue(p)
+		promGaugeUDPQueue(p)
+		promGaugeWorkers(p)
+		promGaugeUDPMirrorQueue(p)
+	}
+
+	logger.Println("starting prometheus http server ...")
+
+	addr := net.JoinHostPort(opts.StatsHTTPAddr, opts.StatsHTTPPort)
+	http.Handle("/metrics", promhttp.Handler())
+	http.ListenAndServe(addr, nil)
+}
+
+func promCounterDecoded(p interface{}) {
+	switch flow := p.(type) {
+	case *IPFIX:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_ipfix_decoded_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().DecodedCount)
+			})
+	case *SFlow:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_sflow_decoded_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().DecodedCount)
+			})
+	case *NetflowV5:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv5_decoded_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().DecodedCount)
+			})
+	case *NetflowV9:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv9_decoded_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().DecodedCount)
+			})
+	}
+}
+
+func promCounterMQError(p interface{}) {
+	switch flow := p.(type) {
+	case *IPFIX:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_ipfix_mq_error",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MQErrorCount)
+			})
+	case *SFlow:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_sflow_mq_error",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MQErrorCount)
+			})
+	case *NetflowV5:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv5_mq_error",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MQErrorCount)
+			})
+	case *NetflowV9:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv9_mq_error",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MQErrorCount)
+			})
+	}
+}
+
+func promCounterUDP(p interface{}) {
+	switch flow := p.(type) {
+	case *IPFIX:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_ipfix_udp_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPCount)
+			})
+	case *SFlow:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_sflow_udp_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPCount)
+			})
+	case *NetflowV5:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv5_udp_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPCount)
+			})
+	case *NetflowV9:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv9_udp_packets",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPCount)
+			})
+	}
+}
+
+func promGaugeMessageQueue(p interface{}) {
+	switch flow := p.(type) {
+	case *IPFIX:
+		promauto.NewGaugeFunc(prometheus.GaugeOpts{
+			Name: "vflow_ipfix_message_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MessageQueue)
+			})
+	case *SFlow:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_sflow_message_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MessageQueue)
+			})
+	case *NetflowV5:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv5_message_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MessageQueue)
+			})
+	case *NetflowV9:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv9_message_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().MessageQueue)
+			})
+	}
+}
+
+func promGaugeUDPQueue(p interface{}) {
+	switch flow := p.(type) {
+	case *IPFIX:
+		promauto.NewGaugeFunc(prometheus.GaugeOpts{
+			Name: "vflow_ipfix_udp_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPQueue)
+			})
+	case *SFlow:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_sflow_udp_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPQueue)
+			})
+	case *NetflowV5:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv5_udp_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPQueue)
+			})
+	case *NetflowV9:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv9_udp_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPQueue)
+			})
+	}
+}
+
+func promGaugeWorkers(p interface{}) {
+	switch flow := p.(type) {
+	case *IPFIX:
+		promauto.NewGaugeFunc(prometheus.GaugeOpts{
+			Name: "vflow_ipfix_workers",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().Workers)
+			})
+	case *SFlow:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_sflow_workers",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().Workers)
+			})
+	case *NetflowV5:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv5_workers",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().Workers)
+			})
+	case *NetflowV9:
+		promauto.NewCounterFunc(prometheus.CounterOpts{
+			Name: "vflow_netflowv9_workers",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().Workers)
+			})
+	}
+}
+
+func promGaugeUDPMirrorQueue(p interface{}) {
+	switch flow := p.(type) {
+	case *IPFIX:
+		promauto.NewGaugeFunc(prometheus.GaugeOpts{
+			Name: "vflow_ipfix_udp_mirror_queue",
+			Help: "",
+		},
+			func() float64 {
+				return float64(flow.status().UDPMirrorQueue)
+			})
 	}
 }

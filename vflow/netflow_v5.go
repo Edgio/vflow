@@ -158,7 +158,7 @@ func (i *NetflowV5) shutdown() {
 
 	// logging and close UDP channel
 	logger.Println("netflow v5 has been shutdown")
-	close(netflowV9UDPCh)
+	close(netflowV5UDPCh)
 }
 
 func (i *NetflowV5) netflowV5Worker(wQuit chan struct{}) {

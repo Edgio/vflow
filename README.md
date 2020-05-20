@@ -16,7 +16,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (writ
 - Produce to Apache Kafka, NSQ, NATS
 - Replicate IPFIX to 3rd party collector
 - Supports IPv4 and IPv6
-- Monitoring with InfluxDB and OpenTSDB backend
+- Prometheus and RESTful APIs monitoring
 
 ![Alt text](/docs/imgs/vflow.gif?raw=true "vFlow")
 
@@ -53,14 +53,13 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 - Windows
 
 ## Build
-Given that the Go Language compiler (version 1.11 preferred) is installed, you can build it with:
+Given that the Go Language compiler (version 1.14.x preferred) is installed, you can build it with:
 ```
 go get github.com/VerizonDigital/vflow/vflow
 cd $GOPATH/src/github.com/VerizonDigital/vflow
 
 make build
 or
-go get -d ./...
 cd vflow; go build 
 ```
 ## Installation
@@ -78,22 +77,20 @@ You can start the service by the below:
 service vflow start
 ```
 
+## Kubernetes
+```
+kubectl apply -f https://github.com/VerizonDigital/vflow/blob/master/kubernetes/deploy.yaml
+```
+
 ## Docker
-1. Install [Docker](https://www.docker.com/).
-2. Download vFlow and Kafka images from public [Docker Hub ](https://hub.docker.com/): 
-```
-docker pull mehrdadrad/vflow
-docker pull spotify/kafka
-```
-3. You can run them like below:
 ```
 docker run -d -p 2181:2181 -p 9092:9092 spotify/kafka
-docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow
+docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow:latest
 ```
 
 ## Slack
 
-You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNTAwNjMyNzg0MDY5LWJlNGExZDNiYThmYjkyNmM1NDAyZGY4NmMyZjYwYmE0ZjAzZjA2MTZlZjRkYjY3Njc1MDJjYTlhZDU2OTk2MGE) and chat with developers.
+You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNjUyMDk0MjM1NDExLTJhNGU4NjkwMWUwMzdjNzg1NTE1YzBmNDI2YjZkZWEyMmY3OWQ1ZjhkNWQyNmZkNDY1NDIwOTNhZTIxMzdlOWQ) and chat with developers.
 
 ## License
 Licensed under the Apache License, Version 2.0 (the "License")

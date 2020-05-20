@@ -49,9 +49,10 @@ func main() {
 	)
 
 	opts = GetOptions()
-	runtime.GOMAXPROCS(opts.GetCPU())
+	runtime.GOMAXPROCS(opts.getCPU())
 
 	signal.Notify(signalCh, syscall.SIGINT, syscall.SIGTERM)
+	logger = opts.Logger
 
 	sFlow := NewSFlow()
 	ipfix := NewIPFIX()
@@ -68,7 +69,7 @@ func main() {
 		}(p)
 	}
 
-	go statsHTTPServer(ipfix, sFlow, netflow5, netflow9)
+	go statsExpose(protos)
 
 	<-signalCh
 

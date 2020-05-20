@@ -31,8 +31,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ClickHouse/clickhouse-go"
 	cluster "github.com/bsm/sarama-cluster"
-	"github.com/kshvakov/clickhouse"
 )
 
 type options struct {
