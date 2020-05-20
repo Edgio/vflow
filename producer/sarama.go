@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"github.com/Shopify/sarama"
-	"gopkg.in/yaml.v2"
+	yaml "gopkg.in/yaml.v2"
 )
 
 // KafkaSarama represents kafka producer
@@ -55,7 +55,9 @@ type KafkaSaramaConfig struct {
 	TLSCertFile    string   `yaml:"tls-cert" env:"TLS_CERT"`
 	TLSKeyFile     string   `yaml:"tls-key" env:"TLS_KEY"`
 	CAFile         string   `yaml:"ca-file" env:"CA_FILE"`
-	TLSSkipVerify  bool     `yaml:"tls-skip-verify" env:"TLS-SKIP-VERIFY"`
+	TLSSkipVerify  bool     `yaml:"tls-skip-verify" env:"TLS_SKIP_VERIFY"`
+	SASLUsername   string   `yaml:"sasl-username" env:"SASL_USERNAME"`
+	SASLPassword   string   `yaml:"sasl-password" env:"SASL_PASSWORD"`
 }
 
 func (k *KafkaSarama) setup(configFile string, logger *log.Logger) error {
@@ -107,6 +109,13 @@ func (k *KafkaSarama) setup(configFile string, logger *log.Logger) error {
 		} else {
 			k.logger.Printf("kafka client TLS enabled")
 		}
+	}
+
+	// Enable SASL Auth Config if username is filled
+	if k.config.SASLUsername != "" {
+		config.Net.SASL.Enable = true
+		config.Net.SASL.User = k.config.SASLUsername
+		config.Net.SASL.Password = k.config.SASLPassword
 	}
 
 	// get env config
