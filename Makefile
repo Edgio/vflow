@@ -36,12 +36,9 @@ tools:
 	go get github.com/kisielk/errcheck
 	go get github.com/alecthomas/gocyclo
 
-depends:
-	go get -d ./...
-
-build: depends
-	cd vflow; go build $(LDFLAGS)
-	cd stress; go build
+build: 
+	cd vflow; CGO_ENABLED=0 go build $(LDFLAGS)
+	cd stress; CGO_ENABLED=0 go build
 
 dpkg: build
 	mkdir -p ${DEBPATH}/etc/init.d ${DEBPATH}/etc/logrotate.d
