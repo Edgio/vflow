@@ -1,12 +1,11 @@
 # build vFlow in the first stage
 FROM golang:1.14.3 as builder
-ENV VERSION 0.7.0
 WORKDIR /go/src/
 
 RUN mkdir -p github.com/VerizonDigital/vflow
 ADD . github.com/VerizonDigital/vflow
-WORKDIR github.com/VerizonDigital/vflow/vflow
-RUN CGO_ENABLED=0 go build -ldflags "-X main.version=$VERSION" -a -installsuffix cgo .
+WORKDIR github.com/VerizonDigital/vflow
+RUN make build
 
 # run vFlow within alpine in the second stage
 FROM alpine:latest
