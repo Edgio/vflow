@@ -53,7 +53,7 @@ func TestMirrorIPFIX(t *testing.T) {
 		}
 	}()
 
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	go func() {
 		b := make([]byte, 1500)
