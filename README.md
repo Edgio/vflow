@@ -63,9 +63,9 @@ or
 cd vflow; go build 
 ```
 ## Installation
-You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases/tag/v0.7.0)). 
+You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases/tag/v0.8.0)). 
 
-dpkg -i [vflow-0.7.0-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.7.0/vflow-0.7.0-x86_64.deb)
+dpkg -i [vflow-0.8.0-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.8.0/vflow-0.8.0-x86_64.deb)
 
 Once you installed you need to configure the below files, for more information check [configuration guide](/docs/config.md):
 ```
@@ -85,7 +85,7 @@ kubectl apply -f https://github.com/VerizonDigital/vflow/blob/master/kubernetes/
 ## Docker
 ```
 docker run -d -p 2181:2181 -p 9092:9092 spotify/kafka
-docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow:latest
+docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow
 ```
 
 ## Slack
