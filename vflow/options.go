@@ -215,7 +215,7 @@ func GetOptions() *Options {
 }
 
 func (opts Options) vFlowPIDWrite() {
-	f, err := os.OpenFile(opts.PIDFile, os.O_WRONLY|os.O_CREATE, 0666)
+	f, err := os.OpenFile(opts.PIDFile, os.O_WRONLY|os.O_TRUNC|os.O_CREATE, 0666)
 	if err != nil {
 		opts.Logger.Println(err)
 		return
