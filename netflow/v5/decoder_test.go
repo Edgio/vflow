@@ -43,6 +43,8 @@ func TestV5HeaderDecode(t *testing.T) {
 	} else {
 		buf := new(bytes.Buffer)
 		msg.JSONMarshal(buf)
-		t.Log(fmt.Printf("Got a message \n%v\n", buf.String()))
+		if buf.Len() < 100 {
+			t.Error("message is empty")
+		}
 	}
 }
