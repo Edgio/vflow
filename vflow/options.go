@@ -63,12 +63,15 @@ type Options struct {
 	StatsHTTPPort string `yaml:"stats-http-port"`
 
 	// sFlow options
-	SFlowEnabled    bool           `yaml:"sflow-enabled"`
-	SFlowPort       int            `yaml:"sflow-port"`
-	SFlowUDPSize    int            `yaml:"sflow-udp-size"`
-	SFlowWorkers    int            `yaml:"sflow-workers"`
-	SFlowTopic      string         `yaml:"sflow-topic"`
-	SFlowTypeFilter arrUInt32Flags `yaml:"sflow-type-filter"`
+	SFlowEnabled       bool           `yaml:"sflow-enabled"`
+	SFlowPort          int            `yaml:"sflow-port"`
+	SFlowUDPSize       int            `yaml:"sflow-udp-size"`
+	SFlowWorkers       int            `yaml:"sflow-workers"`
+	SFlowTopic         string         `yaml:"sflow-topic"`
+	SFlowMirrorAddr    string         `yaml:"sflow-mirror-addr"`
+	SFlowMirrorPort    int            `yaml:"sflow-mirror-port"`
+	SFlowMirrorWorkers int            `yaml:"sflow-mirror-workers"`
+	SFlowTypeFilter    arrUInt32Flags `yaml:"sflow-type-filter"`
 
 	// IPFIX options
 	IPFIXEnabled       bool   `yaml:"ipfix-enabled"`
@@ -143,12 +146,15 @@ func NewOptions() *Options {
 		StatsHTTPPort: "8081",
 		StatsHTTPAddr: "",
 
-		SFlowEnabled:    true,
-		SFlowPort:       6343,
-		SFlowUDPSize:    1500,
-		SFlowWorkers:    200,
-		SFlowTopic:      "vflow.sflow",
-		SFlowTypeFilter: []uint32{},
+		SFlowEnabled:       true,
+		SFlowPort:          6343,
+		SFlowUDPSize:       1500,
+		SFlowWorkers:       200,
+		SFlowTopic:         "vflow.sflow",
+		SFlowMirrorAddr:    "",
+		SFlowMirrorPort:    4171,
+		SFlowMirrorWorkers: 5,
+		SFlowTypeFilter:    []uint32{},
 
 		IPFIXEnabled:       true,
 		IPFIXRPCEnabled:    true,
@@ -320,6 +326,9 @@ func (opts *Options) flagSet() {
 	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers number")
 	flag.StringVar(&opts.SFlowTopic, "sflow-topic", opts.SFlowTopic, "sflow topic name")
 	flag.Var(&opts.SFlowTypeFilter, "sflow-type-filter", "sflow type filter")
+	flag.StringVar(&opts.SFlowMirrorAddr, "sflow-mirror-addr", opts.SFlowMirrorAddr, "sflow mirror destination address")
+	flag.IntVar(&opts.SFlowMirrorPort, "sflow-mirror-port", opts.SFlowMirrorPort, "sflow mirror destination port number")
+	flag.IntVar(&opts.SFlowMirrorWorkers, "sflow-mirror-workers", opts.SFlowMirrorWorkers, "sflow mirror workers number")
 
 	// ipfix options
 	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable/disable IPFIX listener")

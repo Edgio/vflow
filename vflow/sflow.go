@@ -64,7 +64,10 @@ type SFlowStats struct {
 
 var (
 	sFlowUDPCh = make(chan SFUDPMsg, 1000)
+	sFlowMCh   = make(chan SFUDPMsg, 1000)
 	sFlowMQCh  = make(chan []byte, 1000)
+
+	sFlowMirrorEnabled bool
 
 	// sflow udp payload pool
 	sFlowBuffer = &sync.Pool{
@@ -106,6 +109,8 @@ func (s *SFlow) run() {
 			s.sFlowWorker(wQuit)
 		}()
 	}
+
+	go mirrorSFlowDispatcher(sFlowMCh)
 
 	logger.Printf("sFlow is running (UDP: listening on [::]:%d workers#: %d)", s.port, s.workers)
 
@@ -158,6 +163,7 @@ func (s *SFlow) sFlowWorker(wQuit chan struct{}) {
 	var (
 		reader *bytes.Reader
 		msg    SFUDPMsg
+		mirror SFUDPMsg
 		ok     bool
 		b      []byte
 	)
@@ -177,6 +183,17 @@ LOOP:
 		if opts.Verbose {
 			logger.Printf("rcvd sflow data from: %s, size: %d bytes",
 				msg.raddr, len(msg.body))
+		}
+
+		if sFlowMirrorEnabled {
+			mirror.raddr = msg.raddr
+			mirror.body = sFlowBuffer.Get().([]byte)
+			mirror.body = append(mirror.body[:0], msg.body...)
+
+			select {
+			case sFlowMCh <- mirror:
+			default:
+			}
 		}
 
 		reader = bytes.NewReader(msg.body)
