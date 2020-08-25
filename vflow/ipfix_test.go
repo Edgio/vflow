@@ -91,9 +91,7 @@ func TestMirrorIPFIX(t *testing.T) {
 		return
 	}
 
-	body := ipfixBuffer.Get().([]byte)
-	copy(body, []byte("hello"))
-	body = body[:5]
+	body := []byte("hello")
 
 	msg <- IPFIXUDPMsg{
 		body: body,
