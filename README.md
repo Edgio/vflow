@@ -14,7 +14,7 @@ High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (writ
 - Netflow v9 collector
 - Decoding sFlow raw header L2/L3/L4 
 - Produce to Apache Kafka, NSQ, NATS
-- Replicate IPFIX to 3rd party collector
+- Replicate IPFIX and sFlow to 3rd party collector
 - Supports IPv4 and IPv6
 - Prometheus and RESTful APIs monitoring
 
