@@ -49,6 +49,7 @@ type SFlow struct {
 	workers int
 	stop    bool
 	stats   SFlowStats
+	conn    *net.UDPConn
 	pool    chan chan struct{}
 }
 
@@ -87,6 +88,7 @@ func NewSFlow() *SFlow {
 }
 
 func (s *SFlow) run() {
+	var err error
 	// exit if the sflow is disabled
 	if !opts.SFlowEnabled {
 		logger.Println("sflow has been disabled")
@@ -96,7 +98,7 @@ func (s *SFlow) run() {
 	hostPort := net.JoinHostPort(s.addr, strconv.Itoa(s.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
 
-	conn, err := net.ListenUDP("udp", udpAddr)
+	s.conn, err = net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		logger.Fatal(err)
 	}
@@ -139,8 +141,8 @@ func (s *SFlow) run() {
 
 	for !s.stop {
 		b := sFlowBuffer.Get().([]byte)
-		conn.SetReadDeadline(time.Now().Add(1e9))
-		n, raddr, err := conn.ReadFromUDP(b)
+		s.conn.SetReadDeadline(time.Now().Add(1e9))
+		n, raddr, err := s.conn.ReadFromUDP(b)
 		if err != nil {
 			continue
 		}
@@ -148,13 +150,13 @@ func (s *SFlow) run() {
 		atomic.AddUint64(&s.stats.UDPCount, 1)
 		sFlowUDPCh <- SFUDPMsg{raddr, b[:n]}
 	}
-
 }
 
 func (s *SFlow) shutdown() {
 	s.stop = true
 	logger.Println("stopping sflow service gracefully ...")
 	time.Sleep(1 * time.Second)
+	s.conn.Close()
 	logger.Println("vFlow has been shutdown")
 	close(sFlowUDPCh)
 }
@@ -199,7 +201,7 @@ LOOP:
 		reader = bytes.NewReader(msg.body)
 		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter)
 		datagram, err := d.SFDecode()
-		if err != nil || len(datagram.Samples) < 1 {
+		if err != nil || (len(datagram.Counters) < 1 && len(datagram.Samples) < 1) {
 			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 			continue
 		}
