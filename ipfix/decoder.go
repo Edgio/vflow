@@ -467,7 +467,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 		if err := tf.unmarshal(r); err != nil {
 			return err
 		}
-		tr.ScopeFieldSpecifiers = append(tr.FieldSpecifiers, tf)
+		tr.ScopeFieldSpecifiers = append(tr.ScopeFieldSpecifiers, tf)
 	}
 
 	for i := th.FieldCount - th.ScopeFieldCount; i > 0; i-- {
