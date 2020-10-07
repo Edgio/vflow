@@ -561,8 +561,9 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}
 
 		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: Interpret(&b, m.Type),
+			ID:           m.FieldID,
+			Value:        Interpret(&b, m.Type),
+			EnterpriseNo: tr.FieldSpecifiers[i].EnterpriseNo,
 		})
 	}
 
