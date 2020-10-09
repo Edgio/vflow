@@ -301,7 +301,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 			return err
 		}
 
-		tr.ScopeFieldSpecifiers = append(tr.FieldSpecifiers, tf)
+		tr.ScopeFieldSpecifiers = append(tr.ScopeFieldSpecifiers, tf)
 	}
 
 	for i := th.OptionLen / 4; i > 0; i-- {
