@@ -87,10 +87,6 @@ docker run -d -p 2181:2181 -p 9092:9092 spotify/kafka
 docker run -d -p 4739:4739 -p 4729:4729 -p 6343:6343 -p 8081:8081 -e VFLOW_KAFKA_BROKERS="172.17.0.1:9092" mehrdadrad/vflow
 ```
 
-## Slack
-
-You can also join the vFlow Team on Slack [https://vflowworkspace.slack.com](https://join.slack.com/t/vflowworkspace/shared_invite/enQtNjUyMDk0MjM1NDExLTJhNGU4NjkwMWUwMzdjNzg1NTE1YzBmNDI2YjZkZWEyMmY3OWQ1ZjhkNWQyNmZkNDY1NDIwOTNhZTIxMzdlOWQ) and chat with developers.
-
 ## License
 Licensed under the Apache License, Version 2.0 (the "License")
 
