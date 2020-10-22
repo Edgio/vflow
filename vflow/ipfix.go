@@ -115,7 +115,10 @@ func (i *IPFIX) run() {
 
 	logger.Printf("ipfix is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 
-	ipfix.LoadExtElements(opts.VFlowConfigPath)
+	err = ipfix.LoadExtElements(opts.VFlowConfigPath)
+	if err != nil {
+		logger.Println("load.ext.elements:", err)
+	}
 
 	mCache = ipfix.GetCache(opts.IPFIXTplCacheFile)
 	go ipfix.RPC(mCache, &ipfix.RPCConfig{

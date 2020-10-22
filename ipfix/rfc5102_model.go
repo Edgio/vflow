@@ -561,22 +561,23 @@ var InfoModel = IANAInfoModel{
 }
 
 // LoadExtElements loads ipfix elements information through ipfix.elemets file
-func LoadExtElements(cfgPath string) {
+func LoadExtElements(cfgPath string) error {
 	var (
 		file          = path.Join(cfgPath, "ipfix.elements")
 		ipfixElements map[uint32]map[uint16][]string
 	)
 
 	if _, err := os.Stat(file); os.IsNotExist(err) {
-		return
+		return nil
 	}
 
 	b, err := ioutil.ReadFile(file)
 	if err != nil {
-		return
+		return err
 	}
 	err = yaml.Unmarshal(b, &ipfixElements)
 	if err != nil {
+		return err
 	}
 
 	InfoModel = make(map[ElementKey]InfoElementEntry)
@@ -589,4 +590,6 @@ func LoadExtElements(cfgPath string) {
 			}
 		}
 	}
+
+	return nil
 }
