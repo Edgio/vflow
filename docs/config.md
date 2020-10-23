@@ -77,7 +77,7 @@ The vFlow supports these message queuing
 - kafka
 - kafka.segmentio
 - nsq
-- nat
+- nats
 - rawSocket
 
 Note: there are two kafka drivers: [Kafka Sarama](https://github.com/Shopify/sarama) (Default) and [Kafka Segmentio](https://github.com/segmentio/kafka-go) (Kafka-Go)
