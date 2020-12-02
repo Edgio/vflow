@@ -1,0 +1,32 @@
+version: "3"
+services:
+  kafka:
+    image: spotify/kafka
+    hostname: kafka
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+
+  vflow:
+    image: mehrdadrad/vflow
+    hostname: vflow
+    entrypoint: /bin/sh -c "sleep 2 && vflow"
+    depends_on:
+      - kafka
+    environment:
+      - VFLOW_KAFKA_BROKERS=kafka:9092
+    ports:
+      - "4739:4739"
+      - "4729:4729"
+      - "6343:6343"
+      - "8081:8081"
+  prometheus:
+    image: prom/prometheus:latest
+    hostname: prom
+    ports:
+      - "9090:9090"
+    container_name: prometheus
+    volumes:
+      - ./scripts:/etc/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
