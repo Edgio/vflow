@@ -10,15 +10,16 @@ services:
   vflow:
     image: mehrdadrad/vflow
     hostname: vflow
-    entrypoint: /bin/sh -c "sleep 2 && vflow"
+    entrypoint: /bin/sh -c "sleep 5 && vflow"
     depends_on:
       - kafka
     environment:
       - VFLOW_KAFKA_BROKERS=kafka:9092
     ports:
-      - "4739:4739"
-      - "4729:4729"
-      - "6343:6343"
+      - "4739:4739/udp"
+      - "4729:4729/udp"
+      - "6343:6343/udp"
+      - "9996:9996/udp"
       - "8081:8081"
   prometheus:
     image: prom/prometheus:latest
