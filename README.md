@@ -1,8 +1,6 @@
 ![vFlow](docs/imgs/vflow_logo.png?raw=true "vFlow logo")
 ##
-[![Build Status](https://travis-ci.org/VerizonDigital/vflow.svg?branch=master)](https://travis-ci.org/VerizonDigital/vflow) 
-[![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow)
-[![GoDoc](https://godoc.org/github.com/VerizonDigital/vflow?status.svg)](https://godoc.org/github.com/VerizonDigital/vflow)
+[![Build Status](https://github.com/VerizonDigital/vflow/workflows/vflow/badge.svg)](https://github.com/VerizonDigital/vflow/actions?query=workflow%3Avflow) [![Go Report Card](https://goreportcard.com/badge/github.com/VerizonDigital/vflow)](https://goreportcard.com/report/github.com/VerizonDigital/vflow) [![GoDev](https://pkg.go.dev/static/img/badge.svg)](https://pkg.go.dev/github.com/VerizonDigital/vflow)
 
 High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (written in pure Golang).
 
@@ -62,9 +60,9 @@ or
 cd vflow; go build 
 ```
 ## Installation
-You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases/tag/v0.8.0)). 
+You can download and install pre-built debian package as below ([RPM and Linux binary are available](https://github.com/VerizonDigital/vflow/releases)). 
 
-dpkg -i [vflow-0.8.0-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.8.0/vflow-0.8.0-x86_64.deb)
+dpkg -i [vflow-0.9.0-x86_64.deb](https://github.com/VerizonDigital/vflow/releases/download/v0.9.0/vflow-0.9.0-x86_64.deb)
 
 Once you installed you need to configure the below files, for more information check [configuration guide](/docs/config.md):
 ```
