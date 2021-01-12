@@ -43,7 +43,7 @@ The vFlow configuration contains the following keys
 |netflow5-port           | 9996                           | server netflow v5 UDP port                       |
 |netflow5-workers        | 50                             | netflow v5 concurrent decoders                   |
 |netflow5-topic          | vflow.netflow5                 | netflow v5 message queue topic name              |
-|netflow5-udp-size       | 1500                           | maximum netflow v9 UDP packet size 
+|netflow5-udp-size       | 1500                           | maximum netflow v9 UDP packet size               |
 |netflow9-enabled        | true                           | enable/disable netflow v9 decoders               |
 |netflow9-port           | 4729                           | server netflow v9 UDP port                       |
 |netflow9-workers        | 50                             | netflow v9 concurrent decoders                   |
@@ -52,9 +52,10 @@ The vFlow configuration contains the following keys
 |netflow9-tpl-cache-file | /tmp/netflow9.templates        | netflow v9 templates cache file                  |
 |dynamic-workers         | true                           | enable/disable dynamic workers feature           |
 |stats-enabled           | true                           | enable/disable web stats listener                |
+|stats-format            | prometheus                     | set prometheus or restful format                 |
 |stats-http-addr         | *                              | web stats address option at server startup       |
 |stats-http-port         | 8081                           | web stats TCP port                               |
-|mq-name                 | kafka                          | [message queues](#message-queues)        |
+|mq-name                 | kafka                          | [message queues](#message-queues)                |
 |mq-config-file          | /etc/vflow/mq.conf             | message queue config file                        |
 
 The default configuration path is /etc/vflow/vflow.conf but you can change it as below:
