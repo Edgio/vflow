@@ -34,11 +34,89 @@
 
 ## vFlow API
 
-You can hit vFlow stats API directy to create your own monitoring
-
-Flow API : http://localhost:8081/flow 
+The default format is prometheus: http://localhost:8081/metrics
 
 ```
+# HELP vflow_ipfix_decoded_packets 
+# TYPE vflow_ipfix_decoded_packets counter
+vflow_ipfix_decoded_packets 0
+# HELP vflow_ipfix_message_queue 
+# TYPE vflow_ipfix_message_queue gauge
+vflow_ipfix_message_queue 0
+# HELP vflow_ipfix_mq_error 
+# TYPE vflow_ipfix_mq_error counter
+vflow_ipfix_mq_error 0
+# HELP vflow_ipfix_udp_mirror_queue 
+# TYPE vflow_ipfix_udp_mirror_queue gauge
+vflow_ipfix_udp_mirror_queue 0
+# HELP vflow_ipfix_udp_packets 
+# TYPE vflow_ipfix_udp_packets counter
+vflow_ipfix_udp_packets 0
+# HELP vflow_ipfix_udp_queue 
+# TYPE vflow_ipfix_udp_queue gauge
+vflow_ipfix_udp_queue 0
+# HELP vflow_ipfix_workers 
+# TYPE vflow_ipfix_workers gauge
+vflow_ipfix_workers 200
+# HELP vflow_netflowv5_decoded_packets 
+# TYPE vflow_netflowv5_decoded_packets counter
+vflow_netflowv5_decoded_packets 0
+# HELP vflow_netflowv5_message_queue 
+# TYPE vflow_netflowv5_message_queue counter
+vflow_netflowv5_message_queue 0
+# HELP vflow_netflowv5_mq_error 
+# TYPE vflow_netflowv5_mq_error counter
+vflow_netflowv5_mq_error 0
+# HELP vflow_netflowv5_udp_packets 
+# TYPE vflow_netflowv5_udp_packets counter
+vflow_netflowv5_udp_packets 0
+# HELP vflow_netflowv5_udp_queue 
+# TYPE vflow_netflowv5_udp_queue counter
+vflow_netflowv5_udp_queue 0
+# HELP vflow_netflowv5_workers 
+# TYPE vflow_netflowv5_workers counter
+vflow_netflowv5_workers 200
+# HELP vflow_netflowv9_decoded_packets 
+# TYPE vflow_netflowv9_decoded_packets counter
+vflow_netflowv9_decoded_packets 0
+# HELP vflow_netflowv9_message_queue 
+# TYPE vflow_netflowv9_message_queue counter
+vflow_netflowv9_message_queue 0
+# HELP vflow_netflowv9_mq_error 
+# TYPE vflow_netflowv9_mq_error counter
+vflow_netflowv9_mq_error 0
+# HELP vflow_netflowv9_udp_packets 
+# TYPE vflow_netflowv9_udp_packets counter
+vflow_netflowv9_udp_packets 0
+# HELP vflow_netflowv9_udp_queue 
+# TYPE vflow_netflowv9_udp_queue counter
+vflow_netflowv9_udp_queue 0
+# HELP vflow_netflowv9_workers 
+# TYPE vflow_netflowv9_workers counter
+vflow_netflowv9_workers 200
+# HELP vflow_sflow_decoded_packets 
+# TYPE vflow_sflow_decoded_packets counter
+vflow_sflow_decoded_packets 0
+# HELP vflow_sflow_message_queue 
+# TYPE vflow_sflow_message_queue counter
+vflow_sflow_message_queue 0
+# HELP vflow_sflow_mq_error 
+# TYPE vflow_sflow_mq_error counter
+vflow_sflow_mq_error 0
+# HELP vflow_sflow_udp_packets 
+# TYPE vflow_sflow_udp_packets counter
+vflow_sflow_udp_packets 0
+# HELP vflow_sflow_udp_queue 
+# TYPE vflow_sflow_udp_queue counter
+vflow_sflow_udp_queue 0
+# HELP vflow_sflow_workers 
+# TYPE vflow_sflow_workers counter
+vflow_sflow_workers 200
+```
+
+If you configured the [stats-format](https://github.com/VerizonDigital/vflow/blob/master/docs/config.md#Configuration-Keys) to restful then the metrics will be available at http://localhost:8081/flow for flow and system at http://localhost:8081/sys
+
+```json
 {
    "IPFIX" : {
       "MessageQueue" : 0,
@@ -79,9 +157,9 @@ Flow API : http://localhost:8081/flow
 }
 ```
 
-System API : http://localhost:8081/sys
+System API
 
-```
+```json
 {
    "GCSys" : 450560,
    "MemTotalAlloc" : 11435376,
