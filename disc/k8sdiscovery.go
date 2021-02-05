@@ -110,5 +110,5 @@ func (d *K8SDiscovery) pollForServers() {
 			d.GetvFlowServers()[s.Str] = vFlowServer{time.Now().Unix()}
 		}
 	}
-	logger.Printf("Discovered servers %+v", d.GetvFlowServers())
+	//logger.Printf("Discovered servers %+v", d.GetvFlowServers())
 }
