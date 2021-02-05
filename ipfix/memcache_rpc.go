@@ -27,12 +27,9 @@ import (
 	"log"
 	"net"
 	"net/rpc"
-	"strconv"
-	"sync"
 	"time"
 
-	"golang.org/x/net/ipv4"
-	"golang.org/x/net/ipv6"
+	"github.com/VerizonDigital/vflow/disc"
 )
 
 // IRPC represents IPFIX RPC
@@ -48,10 +45,12 @@ type RPCClient struct {
 
 // RPCConfig represents RPC config
 type RPCConfig struct {
-	Enabled bool
-	Port    int
-	Addr    net.IP
-	Logger  *log.Logger
+	Enabled                     bool
+	Port                        int
+	Addr                        net.IP
+	DiscoveryStrategy           string
+	DiscoveryStrategyConfigFile string
+	Logger                      *log.Logger
 }
 
 // RPCRequest represents RPC request
@@ -60,23 +59,8 @@ type RPCRequest struct {
 	IP net.IP
 }
 
-type vFlowServer struct {
-	timestamp int64
-}
-
-// Discovery represents vflow discovery
-type Discovery struct {
-	conn         interface{}
-	group        net.IP
-	port         int
-	rcvdMsg      chan net.IP
-	vFlowServers map[string]vFlowServer
-	mu           sync.RWMutex
-}
-
 var (
-	errNotAvail            = errors.New("the template is not available")
-	errMCInterfaceNotAvail = errors.New("multicast interface not available")
+	errNotAvail = errors.New("the template is not available")
 )
 
 // NewRPC constructs RPC
@@ -139,7 +123,13 @@ func RPC(m MemCache, config *RPCConfig) {
 		return
 	}
 
-	disc, err := vFlowDiscovery()
+	var disc_config disc.DiscoveryConfig
+	disc_config.DiscoveryStrategy = config.DiscoveryStrategy
+	disc_config.LoadConfig(config.DiscoveryStrategyConfigFile)
+	disc_config.Logger = config.Logger
+
+	disc, err := disc.BuildDiscovery(&disc_config)
+
 	if err != nil {
 		config.Logger.Println(err)
 		config.Logger.Println("RPC has been disabled")
@@ -154,7 +144,7 @@ func RPC(m MemCache, config *RPCConfig) {
 	for {
 		req := <-rpcChan
 
-		for _, rpcServer := range disc.rpcServers() {
+		for _, rpcServer := range disc.GetRPCServers() {
 			r, err := NewRPCClient(rpcServer)
 			if err != nil {
 				config.Logger.Println(err)
@@ -174,215 +164,4 @@ func RPC(m MemCache, config *RPCConfig) {
 
 		<-throttle
 	}
-}
-func vFlowDiscovery() (*Discovery, error) {
-	// TODO
-	disc := &Discovery{
-		group: net.ParseIP("224.0.0.55"),
-		port:  1024,
-	}
-
-	if err := disc.mConn(); err != nil {
-		return nil, err
-	}
-
-	if disc.group.To4() != nil {
-		go disc.startV4()
-	} else {
-		go disc.startV6()
-	}
-
-	return disc, nil
-}
-
-func (d *Discovery) mConn() error {
-	addr := net.JoinHostPort("", strconv.Itoa(d.port))
-	c, err := net.ListenPacket("udp", addr)
-	if err != nil {
-		return err
-	}
-
-	ifs, err := getMulticastIfs()
-	if err != nil {
-		return err
-	}
-
-	if d.group.To4() != nil {
-		d.conn = ipv4.NewPacketConn(c)
-		for _, i := range ifs {
-			err = d.conn.(*ipv4.PacketConn).JoinGroup(
-				&i,
-				&net.UDPAddr{IP: d.group},
-			)
-			if err != nil {
-				return err
-			}
-		}
-	} else {
-		d.conn = ipv6.NewPacketConn(c)
-		for _, i := range ifs {
-			err = d.conn.(*ipv6.PacketConn).JoinGroup(
-				&i,
-				&net.UDPAddr{IP: d.group},
-			)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
-}
-
-func (d *Discovery) receiverV4() {
-	var b = make([]byte, 1500)
-
-	d.vFlowServers = make(map[string]vFlowServer, 10)
-	conn := d.conn.(*ipv4.PacketConn)
-	laddrs, err := getLocalIPs()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for {
-		_, _, addr, err := conn.ReadFrom(b)
-		if err != nil {
-			continue
-		}
-
-		host, _, err := net.SplitHostPort(addr.String())
-		if err != nil {
-			continue
-		}
-
-		if _, ok := laddrs[host]; ok {
-			continue
-		}
-
-		d.mu.Lock()
-		d.vFlowServers[host] = vFlowServer{time.Now().Unix()}
-		d.mu.Unlock()
-	}
-}
-
-func (d *Discovery) startV4() {
-	tick := time.NewTicker(1 * time.Second)
-
-	b := []byte("Hello vFlow")
-	conn := d.conn.(*ipv4.PacketConn)
-	conn.SetTTL(2)
-	go d.receiverV4()
-
-	for {
-		<-tick.C
-		conn.WriteTo(b, nil, &net.UDPAddr{IP: d.group, Port: d.port})
-	}
-}
-
-func (d *Discovery) receiverV6() {
-	var b = make([]byte, 1500)
-
-	d.vFlowServers = make(map[string]vFlowServer, 10)
-	conn := d.conn.(*ipv6.PacketConn)
-	laddrs, err := getLocalIPs()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for {
-		_, _, addr, err := conn.ReadFrom(b)
-		if err != nil {
-			continue
-		}
-
-		host, _, err := net.SplitHostPort(addr.String())
-		if err != nil {
-			continue
-		}
-
-		if _, ok := laddrs[host]; ok {
-			continue
-		}
-
-		d.mu.Lock()
-		d.vFlowServers[host] = vFlowServer{time.Now().Unix()}
-		d.mu.Unlock()
-	}
-}
-
-func (d *Discovery) startV6() {
-	tick := time.NewTicker(1 * time.Second)
-
-	b := []byte("Hello vFlow")
-	conn := d.conn.(*ipv6.PacketConn)
-	conn.SetHopLimit(2)
-	go d.receiverV6()
-
-	for {
-		<-tick.C
-		conn.WriteTo(b, nil, &net.UDPAddr{IP: d.group, Port: d.port})
-	}
-}
-
-func (d *Discovery) rpcServers() []string {
-	var servers []string
-
-	now := time.Now().Unix()
-
-	d.mu.Lock()
-
-	for ip, server := range d.vFlowServers {
-		if now-server.timestamp < 300 {
-			servers = append(servers, ip)
-		} else {
-			delete(d.vFlowServers, ip)
-		}
-	}
-
-	d.mu.Unlock()
-
-	return servers
-}
-
-func getMulticastIfs() ([]net.Interface, error) {
-	var out []net.Interface
-
-	ifs, err := net.Interfaces()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, i := range ifs {
-		if i.Flags == 19 {
-			out = append(out, i)
-		}
-	}
-
-	if len(out) < 1 {
-		return nil, errMCInterfaceNotAvail
-	}
-
-	return out, nil
-}
-
-func getLocalIPs() (map[string]struct{}, error) {
-	ips := make(map[string]struct{})
-
-	ifs, err := net.Interfaces()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, i := range ifs {
-		addrs, err := i.Addrs()
-		if err != nil || i.Flags != 19 {
-			continue
-		}
-		for _, addr := range addrs {
-			ip, _, _ := net.ParseCIDR(addr.String())
-			ips[ip.String()] = struct{}{}
-		}
-	}
-
-	return ips, nil
 }
