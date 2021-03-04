@@ -122,6 +122,10 @@ func statsFlowHandler(protos []proto) http.HandlerFunc {
 }
 
 func statsExpose(protos []proto) {
+	if !opts.StatsEnabled {
+		return
+	}
+
 	if opts.StatsFormat != "prometheus" {
 		statsRest(protos)
 	} else {
@@ -130,10 +134,6 @@ func statsExpose(protos []proto) {
 }
 
 func statsRest(protos []proto) {
-	if !opts.StatsEnabled {
-		return
-	}
-
 	mux := http.NewServeMux()
 	mux.HandleFunc("/sys", statsSysHandler)
 	mux.HandleFunc("/flow", statsFlowHandler(protos))
