@@ -102,8 +102,9 @@ type Options struct {
 	NetflowV9TplCacheFile string `yaml:"netflow9-tpl-cache-file"`
 
 	// producer
-	MQName       string `yaml:"mq-name"`
-	MQConfigFile string `yaml:"mq-config-file"`
+	ProducerEnabled bool   `yaml:producer-enabled"`
+	MQName          string `yaml:"mq-name"`
+	MQConfigFile    string `yaml:"mq-config-file"`
 
 	VFlowConfigPath string
 }
@@ -180,8 +181,9 @@ func NewOptions() *Options {
 		NetflowV9Topic:        "vflow.netflow9",
 		NetflowV9TplCacheFile: "/tmp/netflowv9.templates",
 
-		MQName:       "kafka",
-		MQConfigFile: "mq.conf",
+		ProducerEnabled: true,
+		MQName:          "kafka",
+		MQConfigFile:    "mq.conf",
 
 		VFlowConfigPath: "/etc/vflow",
 	}
@@ -359,6 +361,7 @@ func (opts *Options) flagSet() {
 	flag.StringVar(&opts.NetflowV9TplCacheFile, "netflow9-tpl-cache-file", opts.NetflowV9TplCacheFile, "Netflow version 9 template cache file")
 
 	// producer options
+	flag.BoolVar(&opts.ProducerEnabled, "producer-enabled", opts.ProducerEnabled, "enable/disable producer message queue")
 	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
 	flag.StringVar(&opts.MQConfigFile, "mqueue-conf", opts.MQConfigFile, "producer message queue configuration file")
 

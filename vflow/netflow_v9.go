@@ -114,6 +114,10 @@ func (i *NetflowV9) run() {
 	mCacheNF9 = netflow9.GetCache(opts.NetflowV9TplCacheFile)
 
 	go func() {
+		if !opts.ProducerEnabled {
+			logger.Println("Producer message queue disabled")
+			return
+		}
 		p := producer.NewProducer(opts.MQName)
 
 		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
