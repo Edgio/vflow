@@ -109,6 +109,10 @@ func (i *NetflowV5) run() {
 	logger.Printf("netflow v5 is running (UDP: listening on [::]:%d workers#: %d)", i.port, i.workers)
 
 	go func() {
+		if !opts.ProducerEnabled {
+			logger.Println("Producer message queue disabled")
+			return
+		}
 		p := producer.NewProducer(opts.MQName)
 
 		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)

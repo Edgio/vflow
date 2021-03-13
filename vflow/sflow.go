@@ -118,6 +118,10 @@ func (s *SFlow) run() {
 
 	go func() {
 		p := producer.NewProducer(opts.MQName)
+		if !opts.ProducerEnabled {
+			logger.Println("Producer message queue disabled")
+			return
+		}
 
 		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 		p.MQErrorCount = &s.stats.MQErrorCount

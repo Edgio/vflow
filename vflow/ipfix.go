@@ -129,6 +129,10 @@ func (i *IPFIX) run() {
 	go mirrorIPFIXDispatcher(ipfixMCh)
 
 	go func() {
+		if !opts.ProducerEnabled {
+			logger.Println("Producer message queue disabled")
+			return
+		}
 		p := producer.NewProducer(opts.MQName)
 
 		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
