@@ -57,6 +57,7 @@ The vFlow configuration contains the following keys
 |stats-http-port         | 8081                           | web stats TCP port                               |
 |mq-name                 | kafka                          | [message queues](#message-queues)                |
 |mq-config-file          | /etc/vflow/mq.conf             | message queue config file                        |
+|producer-enabled        | true                           | enable/disable producer message queue            |
 
 The default configuration path is /etc/vflow/vflow.conf but you can change it as below:
 ```
