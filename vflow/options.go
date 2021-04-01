@@ -65,6 +65,7 @@ type Options struct {
 	// sFlow options
 	SFlowEnabled       bool           `yaml:"sflow-enabled"`
 	SFlowPort          int            `yaml:"sflow-port"`
+	SFlowAddr          string         `yaml:"sflow-addr"`
 	SFlowUDPSize       int            `yaml:"sflow-udp-size"`
 	SFlowWorkers       int            `yaml:"sflow-workers"`
 	SFlowTopic         string         `yaml:"sflow-topic"`
@@ -89,6 +90,7 @@ type Options struct {
 	// Netflow V5
 	NetflowV5Enabled bool   `yaml:"netflow5-enabled"`
 	NetflowV5Port    int    `yaml:"netflow5-port"`
+	NetflowV5Addr    string `yaml:"netflow5-addr"`
 	NetflowV5UDPSize int    `yaml:"netflow5-udp-size"`
 	NetflowV5Workers int    `yaml:"netflow5-workers"`
 	NetflowV5Topic   string `yaml:"netflow5-topic"`
@@ -96,13 +98,14 @@ type Options struct {
 	// Netflow
 	NetflowV9Enabled      bool   `yaml:"netflow9-enabled"`
 	NetflowV9Port         int    `yaml:"netflow9-port"`
+	NetflowV9Addr         string `yaml:"netflow9-addr"`
 	NetflowV9UDPSize      int    `yaml:"netflow9-udp-size"`
 	NetflowV9Workers      int    `yaml:"netflow9-workers"`
 	NetflowV9Topic        string `yaml:"netflow9-topic"`
 	NetflowV9TplCacheFile string `yaml:"netflow9-tpl-cache-file"`
 
 	// producer
-	ProducerEnabled bool   `yaml:producer-enabled"`
+	ProducerEnabled bool   `yaml:"producer-enabled"`
 	MQName          string `yaml:"mq-name"`
 	MQConfigFile    string `yaml:"mq-config-file"`
 
@@ -243,11 +246,8 @@ func (opts Options) vFlowIsRunning() bool {
 
 	cmd := exec.Command("kill", "-0", string(b))
 	_, err = cmd.Output()
-	if err != nil {
-		return false
-	}
 
-	return true
+	return err == nil
 }
 
 func (opts Options) printVersion() {
@@ -324,6 +324,7 @@ func (opts *Options) flagSet() {
 	// sflow options
 	flag.BoolVar(&opts.SFlowEnabled, "sflow-enabled", opts.SFlowEnabled, "enable/disable sflow listener")
 	flag.IntVar(&opts.SFlowPort, "sflow-port", opts.SFlowPort, "sflow port number")
+	flag.StringVar(&opts.SFlowAddr, "sflow-addr", opts.SFlowAddr, "sflow IP address to bind to")
 	flag.IntVar(&opts.SFlowUDPSize, "sflow-max-udp-size", opts.SFlowUDPSize, "sflow maximum UDP size")
 	flag.IntVar(&opts.SFlowWorkers, "sflow-workers", opts.SFlowWorkers, "sflow workers number")
 	flag.StringVar(&opts.SFlowTopic, "sflow-topic", opts.SFlowTopic, "sflow topic name")
@@ -348,6 +349,7 @@ func (opts *Options) flagSet() {
 	// netflow version 5
 	flag.BoolVar(&opts.NetflowV5Enabled, "netflow5-enabled", opts.NetflowV5Enabled, "enable/disable netflow version 5 listener")
 	flag.IntVar(&opts.NetflowV5Port, "netflow5-port", opts.NetflowV5Port, "Netflow Version 5 port number")
+	flag.StringVar(&opts.NetflowV5Addr, "netflow5-addr", opts.NetflowV5Addr, "Netflow 5 IP address to bind to")
 	flag.IntVar(&opts.NetflowV5UDPSize, "netflow5-max-udp-size", opts.NetflowV5UDPSize, "Netflow version 5 maximum UDP size")
 	flag.IntVar(&opts.NetflowV5Workers, "netflow5-workers", opts.NetflowV5Workers, "Netflow version 5 workers number")
 	flag.StringVar(&opts.NetflowV5Topic, "netflow5-topic", opts.NetflowV5Topic, "Netflow version 5 topic name")
@@ -355,6 +357,7 @@ func (opts *Options) flagSet() {
 	// netflow version 9
 	flag.BoolVar(&opts.NetflowV9Enabled, "netflow9-enabled", opts.NetflowV9Enabled, "enable/disable netflow version 9 listener")
 	flag.IntVar(&opts.NetflowV9Port, "netflow9-port", opts.NetflowV9Port, "Netflow Version 9 port number")
+	flag.StringVar(&opts.NetflowV9Addr, "netflow9-addr", opts.NetflowV9Addr, "Netflow 9 IP address to bind to")
 	flag.IntVar(&opts.NetflowV9UDPSize, "netflow9-max-udp-size", opts.NetflowV9UDPSize, "Netflow version 9 maximum UDP size")
 	flag.IntVar(&opts.NetflowV9Workers, "netflow9-workers", opts.NetflowV9Workers, "Netflow version 9 workers number")
 	flag.StringVar(&opts.NetflowV9Topic, "netflow9-topic", opts.NetflowV9Topic, "Netflow version 9 topic name")

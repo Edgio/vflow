@@ -31,7 +31,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/VerizonDigital/vflow/netflow/v9"
+	netflow9 "github.com/VerizonDigital/vflow/netflow/v9"
 	"github.com/VerizonDigital/vflow/producer"
 )
 
@@ -79,18 +79,19 @@ var (
 func NewNetflowV9() *NetflowV9 {
 	return &NetflowV9{
 		port:    opts.NetflowV9Port,
+		addr:    opts.NetflowV9Addr,
 		workers: opts.NetflowV9Workers,
-		pool:    make(chan chan struct{}, maxWorkers),
 	}
 }
 
 func (i *NetflowV9) run() {
-	//TODO
 	// exit if the netflow v9 is disabled
 	if !opts.NetflowV9Enabled {
-		logger.Println("netflowv9 has been disabled")
+		logger.Println("netflow v9 has been disabled")
 		return
 	}
+
+	i.pool = make(chan chan struct{}, maxWorkers)
 
 	hostPort := net.JoinHostPort(i.addr, strconv.Itoa(i.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
@@ -115,11 +116,10 @@ func (i *NetflowV9) run() {
 
 	go func() {
 		if !opts.ProducerEnabled {
-			logger.Println("Producer message queue disabled")
 			return
 		}
-		p := producer.NewProducer(opts.MQName)
 
+		p := producer.NewProducer(opts.MQName)
 		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 		p.MQErrorCount = &i.stats.MQErrorCount
 		p.Logger = logger
@@ -156,7 +156,6 @@ func (i *NetflowV9) run() {
 func (i *NetflowV9) shutdown() {
 	// exit if the netflow v9 is disabled
 	if !opts.NetflowV9Enabled {
-		logger.Println("netflow v9 disabled")
 		return
 	}
 

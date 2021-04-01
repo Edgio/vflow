@@ -82,8 +82,8 @@ var (
 func NewSFlow() *SFlow {
 	return &SFlow{
 		port:    opts.SFlowPort,
+		addr:    opts.SFlowAddr,
 		workers: opts.SFlowWorkers,
-		pool:    make(chan chan struct{}, maxWorkers),
 	}
 }
 
@@ -94,6 +94,8 @@ func (s *SFlow) run() {
 		logger.Println("sflow has been disabled")
 		return
 	}
+
+	s.pool = make(chan chan struct{}, maxWorkers)
 
 	hostPort := net.JoinHostPort(s.addr, strconv.Itoa(s.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
@@ -117,12 +119,11 @@ func (s *SFlow) run() {
 	logger.Printf("sFlow is running (UDP: listening on [::]:%d workers#: %d)", s.port, s.workers)
 
 	go func() {
-		p := producer.NewProducer(opts.MQName)
 		if !opts.ProducerEnabled {
-			logger.Println("Producer message queue disabled")
 			return
 		}
 
+		p := producer.NewProducer(opts.MQName)
 		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 		p.MQErrorCount = &s.stats.MQErrorCount
 		p.Logger = logger
@@ -157,11 +158,17 @@ func (s *SFlow) run() {
 }
 
 func (s *SFlow) shutdown() {
+	// exit if the sFlow v5 is disabled
+	if !opts.SFlowEnabled {
+		return
+	}
+
+	// stop reading from UDP listener
 	s.stop = true
 	logger.Println("stopping sflow service gracefully ...")
 	time.Sleep(1 * time.Second)
 	s.conn.Close()
-	logger.Println("vFlow has been shutdown")
+	logger.Println("sFlow has been shutdown")
 	close(sFlowUDPCh)
 }
 

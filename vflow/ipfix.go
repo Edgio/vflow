@@ -85,7 +85,6 @@ func NewIPFIX() *IPFIX {
 		port:    opts.IPFIXPort,
 		addr:    opts.IPFIXAddr,
 		workers: opts.IPFIXWorkers,
-		pool:    make(chan chan struct{}, maxWorkers),
 	}
 }
 
@@ -95,6 +94,8 @@ func (i *IPFIX) run() {
 		logger.Println("ipfix has been disabled")
 		return
 	}
+
+	i.pool = make(chan chan struct{}, maxWorkers)
 
 	hostPort := net.JoinHostPort(i.addr, strconv.Itoa(i.port))
 	udpAddr, _ := net.ResolveUDPAddr("udp", hostPort)
@@ -130,11 +131,10 @@ func (i *IPFIX) run() {
 
 	go func() {
 		if !opts.ProducerEnabled {
-			logger.Println("Producer message queue disabled")
 			return
 		}
-		p := producer.NewProducer(opts.MQName)
 
+		p := producer.NewProducer(opts.MQName)
 		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.MQConfigFile)
 		p.MQErrorCount = &i.stats.MQErrorCount
 		p.Logger = logger
@@ -171,7 +171,6 @@ func (i *IPFIX) run() {
 func (i *IPFIX) shutdown() {
 	// exit if the ipfix is disabled
 	if !opts.IPFIXEnabled {
-		logger.Println("ipfix disabled")
 		return
 	}
 
