@@ -44,9 +44,9 @@ const (
 // FlowSample represents single flow sample
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
-	SourceID     byte   // sfSourceID
-	DsClass      uint32 // DS class (expanded)
-	DsIndex      uint32 // DS index (expanded)
+	SourceID     byte   // SourceID for flow backward compatibility
+	SourceIDType uint32 // SourceIDType (expanded)
+	SourceIDIdx  uint32 // SourceIDIdx (expanded)
 	SamplingRate uint32 // sfPacketSamplingRate
 	SamplePool   uint32 // Total number of packets that could have been sampled
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
@@ -94,10 +94,10 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker, expanded bool) error {
 	}
 
 	if expanded {
-		if err = read(r, &fs.DsClass); err != nil {
+		if err = read(r, &fs.SourceIDType); err != nil {
 			return err
 		}
-		if err = read(r, &fs.DsIndex); err != nil {
+		if err = read(r, &fs.SourceIDIdx); err != nil {
 			return err
 		}
 	} else {
@@ -105,10 +105,9 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker, expanded bool) error {
 		if err = read(r, &id); err != nil {
 			return err
 		}
-		fs.DsClass = id >> 24
-		fs.DsIndex = id & 0x00ffffff
-		// for compatibility
-		fs.SourceID = byte(id >> 24)
+		fs.SourceID = byte(id >> 24) // for backward compatibility
+		fs.SourceIDType = id >> 24
+		fs.SourceIDIdx = id & 0x00ffffff
 	}
 
 	if err = read(r, &fs.SamplingRate); err != nil {

@@ -146,9 +146,7 @@ type ProcessorCounters struct {
 // CounterSample represents the periodic sampling or polling of counters associated with a Data Source
 type CounterSample struct {
 	SequenceNo   uint32
-	DsClass      uint32 // DS class (expanded)
-	DsIndex      uint32 // DS index (expanded)
-	SourceIDType byte
+	SourceIDType uint32
 	SourceIDIdx  uint32
 	RecordsNo    uint32
 	Records      map[string]Record
@@ -452,10 +450,10 @@ func (cs *CounterSample) unmarshal(r io.Reader, expanded bool) error {
 	}
 
 	if expanded {
-		if err = read(r, &cs.DsClass); err != nil {
+		if err = read(r, &cs.SourceIDType); err != nil {
 			return err
 		}
-		if err = read(r, &cs.DsIndex); err != nil {
+		if err = read(r, &cs.SourceIDIdx); err != nil {
 			return err
 		}
 	} else {
@@ -463,11 +461,8 @@ func (cs *CounterSample) unmarshal(r io.Reader, expanded bool) error {
 		if err = read(r, &id); err != nil {
 			return err
 		}
-		cs.DsClass = id >> 24
-		cs.DsIndex = id & 0x00ffffff
-		// for compatibility
-		cs.SourceIDType = byte(id >> 24)
-		cs.SourceIDIdx = cs.DsIndex // TODO: need endian conversion?
+		cs.SourceIDType = id >> 24
+		cs.SourceIDIdx = id & 0x00ffffff
 	}
 
 	err = read(r, &cs.RecordsNo)
