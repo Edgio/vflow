@@ -146,13 +146,15 @@ type ProcessorCounters struct {
 // CounterSample represents the periodic sampling or polling of counters associated with a Data Source
 type CounterSample struct {
 	SequenceNo   uint32
+	DsClass      uint32 // DS class (expanded)
+	DsIndex      uint32 // DS index (expanded)
 	SourceIDType byte
 	SourceIDIdx  uint32
 	RecordsNo    uint32
 	Records      map[string]Record
 }
 
-func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
+func decodeFlowCounter(r io.ReadSeeker, expanded bool) (*CounterSample, error) {
 	var (
 		cs          = new(CounterSample)
 		rTypeFormat uint32
@@ -160,7 +162,7 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 		err         error
 	)
 
-	if err = cs.unmarshal(r); err != nil {
+	if err = cs.unmarshal(r, expanded); err != nil {
 		return nil, err
 	}
 
@@ -441,7 +443,7 @@ func (pc *ProcessorCounters) unmarshal(r io.Reader) error {
 	return nil
 }
 
-func (cs *CounterSample) unmarshal(r io.Reader) error {
+func (cs *CounterSample) unmarshal(r io.Reader, expanded bool) error {
 
 	var err error
 
@@ -449,15 +451,24 @@ func (cs *CounterSample) unmarshal(r io.Reader) error {
 		return err
 	}
 
-	if err = read(r, &cs.SourceIDType); err != nil {
-		return err
+	if expanded {
+		if err = read(r, &cs.DsClass); err != nil {
+			return err
+		}
+		if err = read(r, &cs.DsIndex); err != nil {
+			return err
+		}
+	} else {
+		var id uint32
+		if err = read(r, &id); err != nil {
+			return err
+		}
+		cs.DsClass = id >> 24
+		cs.DsIndex = id & 0x00ffffff
+		// for compatibility
+		cs.SourceIDType = byte(id >> 24)
+		cs.SourceIDIdx = cs.DsIndex // TODO: need endian conversion?
 	}
-
-	buf := make([]byte, 3)
-	if err = read(r, &buf); err != nil {
-		return err
-	}
-	cs.SourceIDIdx = uint32(buf[2]) | uint32(buf[1])<<8 | uint32(buf[0])<<16
 
 	err = read(r, &cs.RecordsNo)
 

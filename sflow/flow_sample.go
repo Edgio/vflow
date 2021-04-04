@@ -45,10 +45,14 @@ const (
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
 	SourceID     byte   // sfSourceID
+	DsClass      uint32 // DS class (expanded)
+	DsIndex      uint32 // DS index (expanded)
 	SamplingRate uint32 // sfPacketSamplingRate
 	SamplePool   uint32 // Total number of packets that could have been sampled
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
+	InputFormat  uint32 // InputFormat (expanded)
 	Input        uint32 // SNMP ifIndex of input interface
+	OutputFormat uint32 // OutputFormat (expanded)
 	Output       uint32 // SNMP ifIndex of input interface
 	RecordsNo    uint32 // Number of records to follow
 	Records      map[string]Record
@@ -82,18 +86,30 @@ var (
 	errMaxOutEthernetLength = errors.New("the ethernet length is greater than 1500")
 )
 
-func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
+func (fs *FlowSample) unmarshal(r io.ReadSeeker, expanded bool) error {
 	var err error
 
 	if err = read(r, &fs.SequenceNo); err != nil {
 		return err
 	}
 
-	if err = read(r, &fs.SourceID); err != nil {
-		return err
+	if expanded {
+		if err = read(r, &fs.DsClass); err != nil {
+			return err
+		}
+		if err = read(r, &fs.DsIndex); err != nil {
+			return err
+		}
+	} else {
+		var id uint32
+		if err = read(r, &id); err != nil {
+			return err
+		}
+		fs.DsClass = id >> 24
+		fs.DsIndex = id & 0x00ffffff
+		// for compatibility
+		fs.SourceID = byte(id >> 24)
 	}
-
-	r.Seek(3, 1) // skip counter sample decoding
 
 	if err = read(r, &fs.SamplingRate); err != nil {
 		return err
@@ -107,12 +123,27 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	if err = read(r, &fs.Input); err != nil {
-		return err
-	}
+	if expanded {
+		if err = read(r, &fs.InputFormat); err != nil {
+			return err
+		}
+		if err = read(r, &fs.Input); err != nil {
+			return err
+		}
+		if err = read(r, &fs.OutputFormat); err != nil {
+			return err
+		}
+		if err = read(r, &fs.Output); err != nil {
+			return err
+		}
+	} else {
+		if err = read(r, &fs.Input); err != nil {
+			return err
+		}
 
-	if err = read(r, &fs.Output); err != nil {
-		return err
+		if err = read(r, &fs.Output); err != nil {
+			return err
+		}
 	}
 
 	err = read(r, &fs.RecordsNo)
@@ -197,7 +228,7 @@ func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
 	return err
 }
 
-func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
+func decodeFlowSample(r io.ReadSeeker, expanded bool) (*FlowSample, error) {
 	var (
 		fs          = new(FlowSample)
 		rTypeFormat uint32
@@ -205,7 +236,7 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 		err         error
 	)
 
-	if err = fs.unmarshal(r); err != nil {
+	if err = fs.unmarshal(r, expanded); err != nil {
 		return nil, err
 	}
 
