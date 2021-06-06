@@ -34,6 +34,16 @@ const (
 	// SFDataRawHeader is sFlow Raw Packet Header number
 	SFDataRawHeader = 1
 
+	// SFDataEthernetFrame is sFlow Ethernet Frame Data
+	// (parsing is not implemented yet)
+	SFDataEthernetFrame = 2
+
+	// SFDataPacketIPV4 is sFlow IP Version 4 Data number
+	SFDataPacketIPV4 = 3
+
+	// SFDataPacketIPV6 is sFlow IP Version 6 Data number
+	SFDataPacketIPV6 = 4
+
 	// SFDataExtSwitch is sFlow Extended Switch Data number
 	SFDataExtSwitch = 1001
 
@@ -44,12 +54,15 @@ const (
 // FlowSample represents single flow sample
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
-	SourceID     byte   // sfSourceID
+	SourceIDType uint32 // sfSourceID type
+	SourceIDIdx  uint32 // sfSourceID index
 	SamplingRate uint32 // sfPacketSamplingRate
 	SamplePool   uint32 // Total number of packets that could have been sampled
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
-	Input        uint32 // SNMP ifIndex of input interface
-	Output       uint32 // SNMP ifIndex of input interface
+	InputType    uint32 // SNMP ifType of input interface
+	InputIdx     uint32 // SNMP ifIndex of input interface
+	OutputType   uint32 // SNMP ifType of output interface
+	OutputIdx    uint32 // SNMP ifIndex of output interface
 	RecordsNo    uint32 // Number of records to follow
 	Records      map[string]Record
 }
@@ -61,6 +74,30 @@ type SampledHeader struct {
 	Stripped     uint32 // Header/trailer bytes stripped by sender
 	HeaderLength uint32 // Length of sampled header bytes to follow
 	Header       []byte // Header bytes
+}
+
+// IPV4Data represents Packet IP Version 4 Data
+type IPV4Data struct {
+	Len      uint32 // The length of the IP packet excluding lower layer encapsulations
+	Protocol uint32 // IP Protocol type: TCP = 6, UDP = 17)
+	SrcIP    net.IP // Source IP Address
+	DstIP    net.IP // Destination IP Address
+	SrcPort  uint32 // TCP/UDP source port number or equivalent
+	DstPort  uint32 // TCP/UDP destination port number or equivalent
+	TcpFlags uint32 // TCP flags
+	TOS      uint32 // IP type of service
+}
+
+// IPV6Data represents Packet IP Version 6 Data
+type IPV6Data struct {
+	Len      uint32 // The length of the IP packet excluding lower layer encapsulations
+	Protocol uint32 // IP Protocol type: TCP = 6, UDP = 17)
+	SrcIP    net.IP // Source IP Address
+	DstIP    net.IP // Destination IP Address
+	SrcPort  uint32 // TCP/UDP source port number or equivalent
+	DstPort  uint32 // TCP/UDP destination port number or equivalent
+	TcpFlags uint32 // TCP flags
+	Priority uint32 // IP priority
 }
 
 // ExtSwitchData represents Extended Switch Data
@@ -82,18 +119,30 @@ var (
 	errMaxOutEthernetLength = errors.New("the ethernet length is greater than 1500")
 )
 
-func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
-	var err error
+func (fs *FlowSample) unmarshal(r io.ReadSeeker, expanded bool) error {
+	var (
+		err error
+		val uint32
+	)
 
 	if err = read(r, &fs.SequenceNo); err != nil {
 		return err
 	}
 
-	if err = read(r, &fs.SourceID); err != nil {
-		return err
+	if !expanded {
+		if err = read(r, &val); err != nil {
+			return err
+		}
+		fs.SourceIDType = (val >> 24) & 0xFF
+		fs.SourceIDIdx = val & 0xFFFFFF
+	} else {
+		if err = read(r, &fs.SourceIDType); err != nil {
+			return err
+		}
+		if err = read(r, &fs.SourceIDIdx); err != nil {
+			return err
+		}
 	}
-
-	r.Seek(3, 1) // skip counter sample decoding
 
 	if err = read(r, &fs.SamplingRate); err != nil {
 		return err
@@ -107,12 +156,34 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	if err = read(r, &fs.Input); err != nil {
-		return err
+	if !expanded {
+		if err = read(r, &val); err != nil {
+			return err
+		}
+		fs.InputType = (val >> 16) & 0xFFFF // 2 most significant bytes
+		fs.InputIdx = val & 0xFFFF          // 2 least significant bytes
+	} else {
+		if err = read(r, &fs.InputType); err != nil {
+			return err
+		}
+		if err = read(r, &fs.InputIdx); err != nil {
+			return err
+		}
 	}
 
-	if err = read(r, &fs.Output); err != nil {
-		return err
+	if !expanded {
+		if err = read(r, &val); err != nil {
+			return err
+		}
+		fs.OutputType = (val >> 16) & 0xFFFF // 2 most significant bytes
+		fs.OutputIdx = val & 0xFFFF          // 2 least significant bytes
+	} else {
+		if err = read(r, &fs.OutputType); err != nil {
+			return err
+		}
+		if err = read(r, &fs.OutputIdx); err != nil {
+			return err
+		}
 	}
 
 	err = read(r, &fs.RecordsNo)
@@ -159,6 +230,85 @@ func (sh *SampledHeader) unmarshal(r io.Reader) error {
 	return nil
 }
 
+func (d *IPV4Data) unmarshal(r io.Reader) error {
+	var err error
+
+	if err = read(r, &d.Len); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.Protocol); err != nil {
+		return err
+	}
+
+	buff := make([]byte, 4)
+	if err = read(r, &buff); err != nil {
+		return err
+	}
+	d.SrcIP = net.IPv4(buff[0], buff[1], buff[2], buff[3])
+
+	if err = read(r, &buff); err != nil {
+		return err
+	}
+	d.DstIP = net.IPv4(buff[0], buff[1], buff[2], buff[3])
+
+	if err = read(r, &d.SrcPort); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.DstPort); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.TcpFlags); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.TOS); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (d *IPV6Data) unmarshal(r io.Reader) error {
+	var err error
+
+	if err = read(r, &d.Len); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.Protocol); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.SrcIP); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.DstIP); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.SrcPort); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.DstPort); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.TcpFlags); err != nil {
+		return err
+	}
+
+	if err = read(r, &d.Priority); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (es *ExtSwitchData) unmarshal(r io.Reader) error {
 	var err error
 
@@ -197,7 +347,7 @@ func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
 	return err
 }
 
-func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
+func decodeFlowSample(r io.ReadSeeker, expanded bool) (*FlowSample, error) {
 	var (
 		fs          = new(FlowSample)
 		rTypeFormat uint32
@@ -205,7 +355,7 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 		err         error
 	)
 
-	if err = fs.unmarshal(r); err != nil {
+	if err = fs.unmarshal(r, expanded); err != nil {
 		return nil, err
 	}
 
@@ -226,6 +376,18 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 				return fs, err
 			}
 			fs.Records["RawHeader"] = d
+		case SFDataPacketIPV4:
+			d, err := decodeIPV4Data(r)
+			if err != nil {
+				return fs, err
+			}
+			fs.Records["IPV4"] = d
+		case SFDataPacketIPV6:
+			d, err := decodeIPV6Data(r)
+			if err != nil {
+				return fs, err
+			}
+			fs.Records["IPV6"] = d
 		case SFDataExtSwitch:
 			d, err := decodeExtSwitchData(r)
 			if err != nil {
@@ -261,6 +423,26 @@ func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {
 	p := packet.NewPacket()
 	d, err := p.Decoder(h.Header, h.Protocol)
 	if err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
+func decodeIPV4Data(r io.Reader) (*IPV4Data, error) {
+	var d = new(IPV4Data)
+
+	if err := d.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return d, nil
+}
+
+func decodeIPV6Data(r io.Reader) (*IPV6Data, error) {
+	var d = new(IPV6Data)
+
+	if err := d.unmarshal(r); err != nil {
 		return nil, err
 	}
 

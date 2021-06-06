@@ -146,13 +146,13 @@ type ProcessorCounters struct {
 // CounterSample represents the periodic sampling or polling of counters associated with a Data Source
 type CounterSample struct {
 	SequenceNo   uint32
-	SourceIDType byte
+	SourceIDType uint32
 	SourceIDIdx  uint32
 	RecordsNo    uint32
 	Records      map[string]Record
 }
 
-func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
+func decodeFlowCounter(r io.ReadSeeker, expanded bool) (*CounterSample, error) {
 	var (
 		cs          = new(CounterSample)
 		rTypeFormat uint32
@@ -160,7 +160,7 @@ func decodeFlowCounter(r io.ReadSeeker) (*CounterSample, error) {
 		err         error
 	)
 
-	if err = cs.unmarshal(r); err != nil {
+	if err = cs.unmarshal(r, expanded); err != nil {
 		return nil, err
 	}
 
@@ -441,23 +441,31 @@ func (pc *ProcessorCounters) unmarshal(r io.Reader) error {
 	return nil
 }
 
-func (cs *CounterSample) unmarshal(r io.Reader) error {
+func (cs *CounterSample) unmarshal(r io.Reader, expanded bool) error {
 
-	var err error
+	var (
+		err error
+		val uint32
+	)
 
 	if err = read(r, &cs.SequenceNo); err != nil {
 		return err
 	}
 
-	if err = read(r, &cs.SourceIDType); err != nil {
-		return err
+	if !expanded {
+		if err = read(r, &val); err != nil {
+			return err
+		}
+		cs.SourceIDType = (val >> 24) & 0xFF
+		cs.SourceIDIdx = val & 0xFFFFFF
+	} else {
+		if err = read(r, &cs.SourceIDType); err != nil {
+			return err
+		}
+		if err = read(r, &cs.SourceIDIdx); err != nil {
+			return err
+		}
 	}
-
-	buf := make([]byte, 3)
-	if err = read(r, &buf); err != nil {
-		return err
-	}
-	cs.SourceIDIdx = uint32(buf[2]) | uint32(buf[1])<<8 | uint32(buf[0])<<16
 
 	err = read(r, &cs.RecordsNo)
 
