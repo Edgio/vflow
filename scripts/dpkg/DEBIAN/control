@@ -5,7 +5,7 @@ Source: vflow
 Maintainer: Mehrdad Arshad Rad <arshad.rad@gmail.com>
 Section: net
 Priority: optional
-Homepage: https://github.com/VerizonDigital/vflow
+Homepage: https://github.com/EdgeCast/vflow
 Description: High-performance, scalable and reliable IPFIX, sFlow and Netflow collector
  Features:
  .

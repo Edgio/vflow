@@ -114,7 +114,7 @@ vflow_sflow_udp_queue 0
 vflow_sflow_workers 200
 ```
 
-If you configured the [stats-format](https://github.com/VerizonDigital/vflow/blob/master/docs/config.md#Configuration-Keys) to restful then the metrics will be available at http://localhost:8081/flow for flow and system at http://localhost:8081/sys
+If you configured the [stats-format](https://github.com/EdgeCast/vflow/blob/master/docs/config.md#Configuration-Keys) to restful then the metrics will be available at http://localhost:8081/flow for flow and system at http://localhost:8081/sys
 
 ```json
 {

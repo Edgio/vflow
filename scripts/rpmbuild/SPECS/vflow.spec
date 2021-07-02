@@ -2,7 +2,7 @@ Name:       vflow
 Version:    %VERSION%
 Release:    0
 Group:      Application
-URL:        https://github.com/VerizonDigital/vflow
+URL:        https://github.com/EdgeCast/vflow
 License:    Apache-2
 Summary:    IPFIX/sFlow/Netflow collector
 Source0:    vflow

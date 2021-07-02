@@ -1,5 +1,5 @@
 Upstream-Name: vflow
-Source: https://github.com/VerizonDigital/vflow
+Source: https://github.com/EdgeCast/vflow
 
 Files: *
 Copyright: Copyright (C) 2017  Verizon (www.verizon.com; www.github.com/Verizon)

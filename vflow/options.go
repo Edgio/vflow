@@ -220,7 +220,7 @@ func GetOptions() *Options {
 	opts.vFlowPIDWrite()
 
 	opts.Logger.Printf("Welcome to vFlow v.%s Apache License 2.0", version)
-	opts.Logger.Printf("Copyright (C) 2018 Verizon. github.com/VerizonDigital/vflow")
+	opts.Logger.Printf("Copyright (C) 2018 Verizon. github.com/EdgeCast/vflow")
 
 	return opts
 }
@@ -382,7 +382,7 @@ func (opts *Options) flagSet() {
 	vflow -verbose=true
 
 	# for more information
-	https://github.com/VerizonDigital/vflow/blob/master/docs/config.md
+	https://github.com/EdgeCast/vflow/blob/master/docs/config.md
 
     `)
 

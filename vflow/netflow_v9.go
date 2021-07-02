@@ -31,8 +31,8 @@ import (
 	"sync/atomic"
 	"time"
 
-	netflow9 "github.com/VerizonDigital/vflow/netflow/v9"
-	"github.com/VerizonDigital/vflow/producer"
+	netflow9 "github.com/EdgeCast/vflow/netflow/v9"
+	"github.com/EdgeCast/vflow/producer"
 )
 
 // NetflowV9 represents netflow v9 collector

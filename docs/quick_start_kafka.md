@@ -3,12 +3,12 @@
 ## Download and install vFlow 
 ### Debian Package
 ``` 
-wget https://github.com/VerizonDigital/vflow/releases/download/v0.4.1/vflow-0.4.1-amd64.deb
+wget https://github.com/EdgeCast/vflow/releases/download/v0.4.1/vflow-0.4.1-amd64.deb
 dpkg -i vflow-0.4.1-amd64.deb
 ```
 ### RPM Package
 ```
-wget https://github.com/VerizonDigital/vflow/releases/download/v0.4.1/vflow-0.4.1.amd64.rpm
+wget https://github.com/EdgeCast/vflow/releases/download/v0.4.1/vflow-0.4.1.amd64.rpm
 rpm -ivh vflow-0.4.1.amd64.rpm 
 or
 yum localinstall vflow-0.4.1.amd64.rpm

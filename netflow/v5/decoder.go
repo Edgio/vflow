@@ -28,7 +28,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/VerizonDigital/vflow/reader"
+	"github.com/EdgeCast/vflow/reader"
 )
 
 type nonfatalError error
