@@ -1,6 +1,6 @@
 ![vFlow](docs/imgs/vflow_logo.png?raw=true "vFlow logo")
 ##
-[![Build Status](https://github.com/EdgeCast/vflow/workflows/vflow/badge.svg)](https://github.com/EdgeCast/vflow/actions?query=workflow%3Avflow) [![Go Report Card](https://goreportcard.com/badge/github.com/EdgeCast/vflow)](https://goreportcard.com/report/github.com/EdgeCast/vflow) [![GoDev](https://pkg.go.dev/static/img/badge.svg)](https://pkg.go.dev/github.com/EdgeCast/vflow)
+[![Build Status](https://github.com/EdgeCast/vflow/workflows/vflow/badge.svg)](https://github.com/EdgeCast/vflow/actions?query=workflow%3Avflow) [![Go Report Card](https://goreportcard.com/badge/github.com/EdgeCast/vflow)](https://goreportcard.com/report/github.com/EdgeCast/vflow) [![GoDev](https://pkg.go.dev/badge/github.com/EdgeCast/vflow?utm_source=godoc)](https://pkg.go.dev/github.com/EdgeCast/vflow)
 
 High-performance, scalable and reliable IPFIX, sFlow and Netflow collector (written in pure Golang).
 
