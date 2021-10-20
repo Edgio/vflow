@@ -26,6 +26,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
+	"log"
 	"net"
 	"time"
 )
@@ -48,6 +49,7 @@ const (
 type SFDecoder struct {
 	reader io.ReadSeeker
 	filter []uint32 // Filter data format(s)
+	logger *log.Logger
 }
 
 // SFDatagram represents sFlow datagram
@@ -90,10 +92,11 @@ var (
 )
 
 // NewSFDecoder constructs new sflow decoder
-func NewSFDecoder(r io.ReadSeeker, f []uint32) SFDecoder {
+func NewSFDecoder(r io.ReadSeeker, f []uint32, l *log.Logger) SFDecoder {
 	return SFDecoder{
 		reader: r,
 		filter: f,
+		logger: l,
 	}
 }
 
@@ -115,6 +118,9 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 		if m := d.isFilterMatch(sfTypeFormat); m {
 			d.reader.Seek(int64(sfDataLength), 1)
+			if d.logger != nil {
+				d.logger.Print("filter out sfTypeFormat: ", sfTypeFormat)
+			}
 			continue
 		}
 
@@ -132,6 +138,9 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 			}
 			datagram.Counters = append(datagram.Counters, s)
 		default:
+			if d.logger != nil {
+				d.logger.Printf("sflow: unknown sfTypeFormat: %d/0x%x", sfTypeFormat, sfTypeFormat)
+			}
 			d.reader.Seek(int64(sfDataLength), 1)
 		}
 

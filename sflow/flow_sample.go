@@ -24,6 +24,7 @@ package sflow
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"net"
 
@@ -400,14 +401,14 @@ func decodeFlowSample(r io.ReadSeeker, expanded bool) (*FlowSample, error) {
 			if err != nil {
 				return fs, err
 			}
-
 			fs.Records["ExtRouter"] = d
 		default:
+			err = fmt.Errorf("sflow: unknown rTypeFormat: %d/0x%x, size: %d", rTypeFormat, rTypeFormat, rTypeLength)
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}
 
-	return fs, nil
+	return fs, err
 }
 
 func decodeSampledHeader(r io.Reader) (*packet.Packet, error) {

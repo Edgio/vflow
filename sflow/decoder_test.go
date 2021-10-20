@@ -24,6 +24,8 @@ package sflow
 
 import (
 	"bytes"
+	"log"
+	"os"
 	"testing"
 )
 
@@ -105,7 +107,7 @@ var TestsFlowRawPacket = []byte{0x00, 0x00, 0x00, 0x05, 0x00, 0x00,
 func TestSFHeaderDecode(t *testing.T) {
 	filter := []uint32{DataCounterSample}
 	reader := bytes.NewReader(TestsFlowRawPacket)
-	d := NewSFDecoder(reader, filter)
+	d := NewSFDecoder(reader, filter, nil)
 	datagram, err := d.sfHeaderDecode()
 
 	if err != nil {
@@ -150,7 +152,7 @@ func TestGetSampleInfo(t *testing.T) {
 	skip := make([]byte, 4*7)
 	reader.Read(skip)
 
-	d := NewSFDecoder(reader, filter)
+	d := NewSFDecoder(reader, filter, nil)
 
 	sizes := []uint32{232, 232, 232, 172, 232}
 
@@ -173,7 +175,8 @@ func TestGetSampleInfo(t *testing.T) {
 func TestSFDecode(t *testing.T) {
 	filter := []uint32{DataCounterSample}
 	reader := bytes.NewReader(TestsFlowRawPacket)
-	d := NewSFDecoder(reader, filter)
+	logger := log.New(os.Stderr, "[vflow] ", log.Ldate|log.Ltime)
+	d := NewSFDecoder(reader, filter, logger)
 	_, err := d.SFDecode()
 	if err != nil {
 		t.Error("unexpected error", err)
@@ -184,7 +187,7 @@ func TestDecodeSampleHeader(t *testing.T) {
 	filter := []uint32{DataCounterSample}
 	reader := bytes.NewReader(TestsFlowRawPacket)
 
-	d := NewSFDecoder(reader, filter)
+	d := NewSFDecoder(reader, filter, nil)
 
 	datagram, err := d.SFDecode()
 	if err != nil {
@@ -235,7 +238,7 @@ func BenchmarkSFDecode(b *testing.B) {
 	filter := []uint32{DataCounterSample}
 	for i := 0; i < b.N; i++ {
 		reader := bytes.NewReader(TestsFlowRawPacket)
-		d := NewSFDecoder(reader, filter)
+		d := NewSFDecoder(reader, filter, nil)
 		d.SFDecode()
 	}
 }

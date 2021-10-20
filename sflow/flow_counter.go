@@ -22,7 +22,10 @@
 
 package sflow
 
-import "io"
+import (
+	"fmt"
+	"io"
+)
 
 const (
 	// SFGenericInterfaceCounters is Generic interface counters - see RFC 2233
@@ -213,11 +216,12 @@ func decodeFlowCounter(r io.ReadSeeker, expanded bool) (*CounterSample, error) {
 			}
 			cs.Records["Proc"] = d
 		default:
+			err = fmt.Errorf("sflow: unknown rTypeFormat: %d", rTypeFormat)
 			r.Seek(int64(rTypeLength), 1)
 		}
 	}
 
-	return cs, nil
+	return cs, err
 }
 
 func decodeGenericIntCounters(r io.Reader) (*GenericInterfaceCounters, error) {

@@ -24,6 +24,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/hex"
 	"encoding/json"
 	"net"
 	"path"
@@ -210,9 +211,21 @@ LOOP:
 		}
 
 		reader = bytes.NewReader(msg.body)
-		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter)
+		d := sflow.NewSFDecoder(reader, opts.SFlowTypeFilter, logger)
 		datagram, err := d.SFDecode()
 		if err != nil || (len(datagram.Counters) < 1 && len(datagram.Samples) < 1) {
+			if err != nil {
+				logger.Print("[ERROR] ", err)
+			}
+			if opts.Verbose {
+				sz := len(msg.body)
+				max := 1024
+				if sz > max {
+					sz = max
+					logger.Printf("data dump truncated to %d bytes", max)
+				}
+				logger.Print("\n", hex.Dump(msg.body[:sz]))
+			}
 			sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 			continue
 		}
