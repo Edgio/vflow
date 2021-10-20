@@ -201,8 +201,8 @@ func TestDecodeSampleHeader(t *testing.T) {
 		t.Error("expected SequenceNo 0xa65cc8eb, got", sample.SequenceNo)
 	}
 
-	if sample.SourceID != 0 {
-		t.Error("expected SourceID 0, got", sample.SourceID)
+	if sample.SourceIDType != 0 {
+		t.Error("expected SourceIDType 0, got", sample.SourceIDType)
 	}
 
 	if sample.SamplingRate != 0x1000 {
@@ -217,12 +217,12 @@ func TestDecodeSampleHeader(t *testing.T) {
 		t.Error("expected Drops 0, got", sample.Drops)
 	}
 
-	if sample.Input != 0x231 {
-		t.Error("expected Input 0x231, got", sample.Input)
+	if sample.InputIdx != 0x231 {
+		t.Error("expected InputIdx 0x231, got", sample.InputIdx)
 	}
 
-	if sample.Output != 0x2c3 {
-		t.Error("expected Output 0x2c3, got", sample.Output)
+	if sample.OutputIdx != 0x2c3 {
+		t.Error("expected Output 0x2c3, got", sample.OutputIdx)
 	}
 
 	if sample.RecordsNo != 0x3 {
