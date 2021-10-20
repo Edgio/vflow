@@ -119,15 +119,13 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 		}
 
 		switch sfTypeFormat {
-		case DataFlowSample:
-		case DataFlowSampleExpanded:
+		case DataFlowSample, DataFlowSampleExpanded:
 			s, err := decodeFlowSample(d.reader, sfTypeFormat == DataFlowSampleExpanded)
 			if err != nil {
 				return datagram, err
 			}
 			datagram.Samples = append(datagram.Samples, s)
-		case DataCounterSample:
-		case DataCounterSampleExpanded:
+		case DataCounterSample, DataCounterSampleExpanded:
 			s, err := decodeFlowCounter(d.reader, sfTypeFormat == DataCounterSampleExpanded)
 			if err != nil {
 				return datagram, err
