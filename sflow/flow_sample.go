@@ -283,13 +283,17 @@ func (d *IPV6Data) unmarshal(r io.Reader) error {
 		return err
 	}
 
-	if err = read(r, &d.SrcIP); err != nil {
+	buff := make([]byte, 16)
+	if err = read(r, &buff); err != nil {
 		return err
 	}
+	d.SrcIP = buff
 
-	if err = read(r, &d.DstIP); err != nil {
+	buff = make([]byte, 16)
+	if err = read(r, &buff); err != nil {
 		return err
 	}
+	d.DstIP = buff
 
 	if err = read(r, &d.SrcPort); err != nil {
 		return err
