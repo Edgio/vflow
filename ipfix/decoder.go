@@ -548,8 +548,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError{fmt.Errorf("IPFIX element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID)}
+			fields = append(fields, DecodedField{
+				ID:    tr.FieldSpecifiers[i].ElementID,
+				Value: Interpret(&b, FieldTypes["octetArray"]),
+			})
+			continue
 		}
 
 		if readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type); err != nil {

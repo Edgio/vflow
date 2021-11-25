@@ -358,8 +358,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID))
+			fields = append(fields, DecodedField{
+				ID:    tr.FieldSpecifiers[i].ElementID,
+				Value: ipfix.Interpret(&b, ipfix.FieldTypes["octetArray"]),
+			})
+			continue
 		}
 
 		fields = append(fields, DecodedField{
