@@ -548,11 +548,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			fields = append(fields, DecodedField{
-				ID:    tr.FieldSpecifiers[i].ElementID,
-				Value: Interpret(&b, FieldTypes["octetArray"]),
-			})
-			continue
+			m = InfoElementEntry{
+				FieldID: tr.FieldSpecifiers[i].ElementID,
+				Name:    "customField",
+				Type:    FieldTypes["octetArray"],
+			}
 		}
 
 		if readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type); err != nil {

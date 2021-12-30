@@ -358,11 +358,11 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 		}]
 
 		if !ok {
-			fields = append(fields, DecodedField{
-				ID:    tr.FieldSpecifiers[i].ElementID,
-				Value: ipfix.Interpret(&b, ipfix.FieldTypes["octetArray"]),
-			})
-			continue
+			m = ipfix.InfoElementEntry{
+				FieldID: tr.FieldSpecifiers[i].ElementID,
+				Name:    "customField",
+				Type:    ipfix.FieldTypes["octetArray"],
+			}
 		}
 
 		fields = append(fields, DecodedField{
