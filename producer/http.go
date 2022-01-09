@@ -28,6 +28,7 @@ import (
 	"strings"
 	"context"
 	"fmt"
+	"time"
 
 	"gopkg.in/yaml.v2"
 	"net"
@@ -52,7 +53,7 @@ type HttpConfig struct {
 func (h *Http) setup(configFile string, logger *log.Logger) error {
 	var err error
 	h.config = HttpConfig{
-		Address: "localhost:9555",
+		Address:  "localhost:9555",
 		URL:      "",
 		Protocol: "tcp",
 		MaxRetry: 2,
@@ -61,9 +62,10 @@ func (h *Http) setup(configFile string, logger *log.Logger) error {
 	if err = h.load(configFile); err != nil {
 		logger.Println(err)
 		return err
-	}	
+	}
 
 	h.connection = http.Client{
+		Timeout: time.Second * 10,
 		Transport: &http.Transport{
 			DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
 				return net.Dial(h.config.Protocol, h.config.Address)
@@ -94,15 +96,18 @@ func (h *Http) inputMsg(topic string, mCh chan []byte, ec *uint64) {
 
 		event := fmt.Sprintf("[%s]", string(msg))
 		for i := 0; ; i++ {
-			_, err = h.connection.Post("http://unix" + h.config.URL, "application/json", strings.NewReader(event))
+			_, err = h.connection.Post("http://unix"+h.config.URL, "application/json", strings.NewReader(event))
 			if err == nil {
 				break
 			}
+
+			h.logger.Println("Error sending event via POST:", err)
 
 			*ec++
 
 			if strings.HasSuffix(err.Error(), "broken pipe") {
 				var newConnection = http.Client{
+					Timeout: time.Second * 60,
 					Transport: &http.Transport{
 						DialContext: func(_ context.Context, _, _ string) (net.Conn, error) {
 							return net.Dial(h.config.Protocol, h.config.Address)
