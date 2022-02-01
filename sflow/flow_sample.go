@@ -93,8 +93,6 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	r.Seek(3, 1) // skip counter sample decoding
-
 	if err = read(r, &fs.SamplingRate); err != nil {
 		return err
 	}
