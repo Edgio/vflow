@@ -2,5 +2,5 @@
   "extends": [
     "config:base"
   ],
-  prHourlyLimit: 60
+  prHourlyLimit: 60,
 }
