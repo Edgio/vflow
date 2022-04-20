@@ -7,7 +7,7 @@ require (
 	github.com/Shopify/sarama v1.26.3
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/nats-io/nats-server/v2 v2.1.8 // indirect
-	github.com/nats-io/nats.go v1.10.0
+	github.com/nats-io/nats.go v1.14.0
 	github.com/nsqio/go-nsq v1.1.0
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
