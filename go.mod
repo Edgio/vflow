@@ -3,7 +3,7 @@ module github.com/EdgeCast/vflow
 go 1.15
 
 require (
-	github.com/ClickHouse/clickhouse-go v1.4.3
+	github.com/ClickHouse/clickhouse-go v1.5.4
 	github.com/Shopify/sarama v1.26.3
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/nats-io/nats-server/v2 v2.1.8 // indirect
