@@ -12,7 +12,7 @@ require (
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/prometheus/client_golang v1.6.0
-	github.com/segmentio/kafka-go v0.4.7
+	github.com/segmentio/kafka-go v0.4.31
 	golang.org/x/net v0.0.0-20220420153159-1850ba15e1be
 	gopkg.in/yaml.v2 v2.3.0
 )
