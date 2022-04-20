@@ -8,7 +8,7 @@ require (
 	github.com/bsm/sarama-cluster v2.1.15+incompatible
 	github.com/nats-io/nats-server/v2 v2.1.8 // indirect
 	github.com/nats-io/nats.go v1.10.0
-	github.com/nsqio/go-nsq v1.0.8
+	github.com/nsqio/go-nsq v1.1.0
 	github.com/onsi/ginkgo v1.14.2 // indirect
 	github.com/onsi/gomega v1.10.3 // indirect
 	github.com/prometheus/client_golang v1.12.1
