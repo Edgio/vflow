@@ -109,6 +109,10 @@ type Options struct {
 	MQName          string `yaml:"mq-name"`
 	MQConfigFile    string `yaml:"mq-config-file"`
 
+	// Discovery options
+	DiscoveryStrategy           string `yaml:"discovery-strategy"`
+	DiscoveryStrategyConfigFile string `yaml:"discovery-strategy-config-file"`
+
 	VFlowConfigPath string
 }
 
@@ -187,6 +191,9 @@ func NewOptions() *Options {
 		ProducerEnabled: true,
 		MQName:          "kafka",
 		MQConfigFile:    "mq.conf",
+
+		DiscoveryStrategy:           "vFlowDiscovery",
+		DiscoveryStrategyConfigFile: "discovery.conf",
 
 		VFlowConfigPath: "/etc/vflow",
 	}
@@ -367,6 +374,10 @@ func (opts *Options) flagSet() {
 	flag.BoolVar(&opts.ProducerEnabled, "producer-enabled", opts.ProducerEnabled, "enable/disable producer message queue")
 	flag.StringVar(&opts.MQName, "mqueue", opts.MQName, "producer message queue name")
 	flag.StringVar(&opts.MQConfigFile, "mqueue-conf", opts.MQConfigFile, "producer message queue configuration file")
+
+	// discovery strategy options
+	flag.StringVar(&opts.DiscoveryStrategy, "discovery-strategy", opts.DiscoveryStrategy, "discovery strategy name")
+	flag.StringVar(&opts.DiscoveryStrategyConfigFile, "discovery-strategy-conf", opts.DiscoveryStrategyConfigFile, "discovery strategy configuration file")
 
 	flag.Usage = func() {
 		flag.PrintDefaults()
