@@ -30,7 +30,9 @@ import (
 )
 
 func init() {
-	opts = &Options{}
+	opts = &Options{
+		IPFIXUDPSize: 1500,
+	}
 }
 
 func TestMirrorIPFIX(t *testing.T) {
@@ -91,7 +93,8 @@ func TestMirrorIPFIX(t *testing.T) {
 		return
 	}
 
-	body := []byte("hello")
+	body := ipfixBuffer.Get().([]byte)
+	body = append(body[:0], []byte("hello")...)
 
 	msg <- IPFIXUDPMsg{
 		body: body,
