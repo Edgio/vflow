@@ -23,13 +23,14 @@
 package netflow5
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"net"
 
+	verr "github.com/EdgeCast/vflow/error"
 	"github.com/EdgeCast/vflow/reader"
 )
+
+const expectedVersion = 5
 
 type nonfatalError error
 
@@ -150,8 +151,12 @@ func (h *PacketHeader) unmarshal(r *reader.Reader) error {
 
 func (h *PacketHeader) validate() error {
 
-	if h.Version != 5 {
-		return fmt.Errorf("invalid netflow version, (expected: 5) (received: %d)", h.Version)
+	if h.Version != expectedVersion {
+		return &verr.InvalidProtocolVersionError{
+			Expected: expectedVersion,
+			Received: h.Version,
+			Protocol: "netflow",
+		}
 	} else if h.Count < 1 || h.Count > 30 {
 		return fmt.Errorf("flow count out of bounds, (expected: [1...30]) (received: %d)", h.Count)
 	}
@@ -308,8 +313,7 @@ func (d *Decoder) Decode() (*Message, error) {
 		}
 	}
 
-	return msg, combineErrors(decodeErrors...)
-
+	return msg, verr.CombineErrors(decodeErrors...)
 }
 
 func (d *Decoder) decodeFlows(flowCount int, msg *Message) error {
@@ -335,20 +339,4 @@ func (d *Decoder) decodeFlows(flowCount int, msg *Message) error {
 	}
 
 	return err
-}
-
-func combineErrors(errorSlice ...error) (err error) {
-	switch len(errorSlice) {
-	case 0:
-	case 1:
-		err = errorSlice[0]
-	default:
-		var errMsg bytes.Buffer
-		errMsg.WriteString("Multiple errors:")
-		for _, subError := range errorSlice {
-			errMsg.WriteString("\n- " + subError.Error())
-		}
-		err = errors.New(errMsg.String())
-	}
-	return
 }

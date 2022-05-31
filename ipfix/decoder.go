@@ -23,14 +23,15 @@
 package ipfix
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net"
 
+	verr "github.com/EdgeCast/vflow/error"
 	"github.com/EdgeCast/vflow/reader"
 )
+
+const expectedVersion = 0x000a
 
 // Decoder represents IPFIX payload and remote address
 type Decoder struct {
@@ -132,7 +133,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		}
 	}
 
-	return msg, combineErrors(decodeErrors...)
+	return msg, verr.CombineErrors(decodeErrors...)
 }
 
 // RFC 7011 - part 3.B IPFIX Message Format
@@ -203,7 +204,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			break
 		} else if setID == 0 {
 			// Invalid set
-			return fmt.Errorf("failed to decodeSet / invalid setID")
+			return verr.ErrInvalidSetID
 		} else {
 			// Data set
 			var data []DecodedField
@@ -270,8 +271,12 @@ func (h *MessageHeader) unmarshal(r *reader.Reader) error {
 }
 
 func (h *MessageHeader) validate() error {
-	if h.Version != 0x000a {
-		return fmt.Errorf("invalid ipfix version (%d)", h.Version)
+	if h.Version != expectedVersion {
+		return &verr.InvalidProtocolVersionError{
+			Expected: expectedVersion,
+			Received: h.Version,
+			Protocol: "ipfix",
+		}
 	}
 
 	// TODO: needs more validation
@@ -568,24 +573,8 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 	}
 
 	if len(fields) == 0 {
-		return nil, fmt.Errorf("failed to decodeData")
+		return nil, verr.ErrNoFieldsDecoded
 	}
 
 	return fields, nil
-}
-
-func combineErrors(errorSlice ...error) (err error) {
-	switch len(errorSlice) {
-	case 0:
-	case 1:
-		err = errorSlice[0]
-	default:
-		var errMsg bytes.Buffer
-		errMsg.WriteString("Multiple errors:")
-		for _, subError := range errorSlice {
-			errMsg.WriteString("\n- " + subError.Error())
-		}
-		err = errors.New(errMsg.String())
-	}
-	return
 }

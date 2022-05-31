@@ -28,13 +28,15 @@ import (
 	"errors"
 )
 
+// ErrReaderNotEnoughBytes indicates the reader does not have enough bytes to
+// decode the next value.
+var ErrReaderNotEnoughBytes = errors.New("can not read the data")
+
 // Reader represents the data bytes for reading
 type Reader struct {
 	data  []byte
 	count int
 }
-
-var errReader = errors.New("can not read the data")
 
 // NewReader constructs a reader
 func NewReader(b []byte) *Reader {
@@ -46,7 +48,7 @@ func NewReader(b []byte) *Reader {
 // Uint8 reads a byte
 func (r *Reader) Uint8() (uint8, error) {
 	if len(r.data) < 1 {
-		return 0, errReader
+		return 0, ErrReaderNotEnoughBytes
 	}
 
 	d := r.data[0]
@@ -58,7 +60,7 @@ func (r *Reader) Uint8() (uint8, error) {
 // Uint16 reads two bytes as big-endian
 func (r *Reader) Uint16() (uint16, error) {
 	if len(r.data) < 2 {
-		return 0, errReader
+		return 0, ErrReaderNotEnoughBytes
 	}
 
 	d := binary.BigEndian.Uint16(r.data)
@@ -70,7 +72,7 @@ func (r *Reader) Uint16() (uint16, error) {
 // Uint32 reads four bytes as big-endian
 func (r *Reader) Uint32() (uint32, error) {
 	if len(r.data) < 4 {
-		return 0, errReader
+		return 0, ErrReaderNotEnoughBytes
 	}
 
 	d := binary.BigEndian.Uint32(r.data)
@@ -82,7 +84,7 @@ func (r *Reader) Uint32() (uint32, error) {
 // Uint64 reads eight bytes as big-endian
 func (r *Reader) Uint64() (uint64, error) {
 	if len(r.data) < 8 {
-		return 0, errReader
+		return 0, ErrReaderNotEnoughBytes
 	}
 
 	d := binary.BigEndian.Uint64(r.data)
@@ -94,7 +96,7 @@ func (r *Reader) Uint64() (uint64, error) {
 // Read reads n bytes and returns it
 func (r *Reader) Read(n int) ([]byte, error) {
 	if len(r.data) < n {
-		return []byte{}, errReader
+		return nil, ErrReaderNotEnoughBytes
 	}
 
 	d := r.data[:n]
@@ -115,7 +117,7 @@ func (r *Reader) PeekUint16() (res uint16, err error) {
 // Peek returns the next n bytes in the reader without advancing in the stream
 func (r *Reader) Peek(n int) ([]byte, error) {
 	if len(r.data) < n {
-		return []byte{}, errReader
+		return nil, ErrReaderNotEnoughBytes
 	}
 	return r.data[:n], nil
 }

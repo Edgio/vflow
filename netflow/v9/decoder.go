@@ -23,15 +23,16 @@
 package netflow9
 
 import (
-	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"net"
 
+	verr "github.com/EdgeCast/vflow/error"
 	"github.com/EdgeCast/vflow/ipfix"
 	"github.com/EdgeCast/vflow/reader"
 )
+
+const expectedVersion = 9
 
 type nonfatalError error
 
@@ -140,8 +141,12 @@ func (h *PacketHeader) unmarshal(r *reader.Reader) error {
 }
 
 func (h *PacketHeader) validate() error {
-	if h.Version != 9 {
-		return fmt.Errorf("invalid netflow version (%d)", h.Version)
+	if h.Version != expectedVersion {
+		return &verr.InvalidProtocolVersionError{
+			Expected: expectedVersion,
+			Received: h.Version,
+			Protocol: "netflow",
+		}
 	}
 
 	// TODO: needs more validation
@@ -407,7 +412,7 @@ func (d *Decoder) Decode(mem MemCache) (*Message, error) {
 		}
 	}
 
-	return msg, combineErrors(decodeErrors...)
+	return msg, verr.CombineErrors(decodeErrors...)
 }
 
 func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
@@ -471,20 +476,4 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 		}
 	}
 	return err
-}
-
-func combineErrors(errorSlice ...error) (err error) {
-	switch len(errorSlice) {
-	case 0:
-	case 1:
-		err = errorSlice[0]
-	default:
-		var errMsg bytes.Buffer
-		errMsg.WriteString("Multiple errors:")
-		for _, subError := range errorSlice {
-			errMsg.WriteString("\n- " + subError.Error())
-		}
-		err = errors.New(errMsg.String())
-	}
-	return
 }
