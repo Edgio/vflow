@@ -79,27 +79,32 @@ func GetCache(cacheFile string) MemCache {
 	return m
 }
 
-func (m MemCache) getShard(id uint16, addr net.IP) (*TemplatesShard, uint32) {
-	b := make([]byte, 2)
-	binary.BigEndian.PutUint16(b, id)
-	key := append(addr, b...)
-
+func (m MemCache) getShard(templateId uint16, addr net.IP, domainId uint32) (*TemplatesShard, uint32) {
+	var key []byte
 	hash := fnv.New32()
+	dId := make([]byte, 4)
+	tID := make([]byte, 2)
+	binary.LittleEndian.PutUint32(dId, domainId)
+	binary.BigEndian.PutUint16(tID, templateId)
+	key = append(key, addr...)
+	key = append(key, dId...)
+	key = append(key, tID...)
+
 	hash.Write(key)
 	hSum32 := hash.Sum32()
 
 	return m[uint(hSum32)%uint(shardNo)], hSum32
 }
 
-func (m MemCache) insert(id uint16, addr net.IP, tr TemplateRecord) {
-	shard, key := m.getShard(id, addr)
+func (m MemCache) insert(id uint16, addr net.IP, tr TemplateRecord, domainID uint32) {
+	shard, key := m.getShard(id, addr, domainID)
 	shard.Lock()
 	defer shard.Unlock()
 	shard.Templates[key] = Data{tr, time.Now().Unix()}
 }
 
-func (m MemCache) retrieve(id uint16, addr net.IP) (TemplateRecord, bool) {
-	shard, key := m.getShard(id, addr)
+func (m MemCache) retrieve(id uint16, addr net.IP, domainID uint32) (TemplateRecord, bool) {
+	shard, key := m.getShard(id, addr, domainID)
 	shard.RLock()
 	defer shard.RUnlock()
 	v, ok := shard.Templates[key]

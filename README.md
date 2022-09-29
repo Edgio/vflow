@@ -34,7 +34,7 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 
 ## Decoded sFlow data
 ```json
-{"Version":5,"IPVersion":1,"AgentSubID":5,"SequenceNo":37591,"SysUpTime":3287084017,"SamplesNo":1,"Samples":[{"SequenceNo":1530345639,"SourceID":0,"SamplingRate":4096,"SamplePool":1938456576,"Drops":0,"Input":536,"Output":728,"RecordsNo":3,"Records":{"ExtRouter":{"NextHop":"115.131.251.90","SrcMask":24,"DstMask":14},"ExtSwitch":{"SrcVlan":0,"SrcPriority":0,"DstVlan":0,"DstPriority":0},"RawHeader":{"L2":{"SrcMAC":"58:00:bb:e7:57:6f","DstMAC":"f4:a7:39:44:a8:27","Vlan":0,"EtherType":2048},"L3":{"Version":4,"TOS":0,"TotalLen":1452,"ID":13515,"Flags":0,"FragOff":0,"TTL":62,"Protocol":6,"Checksum":8564,"Src":"10.1.8.5","Dst":"161.140.24.181"},"L4":{"SrcPort":443,"DstPort":56521,"DataOffset":5,"Reserved":0,"Flags":16}}}}],"IPAddress":"192.168.10.0","ColTime": 1646157296}
+{"Version":5,"IPVersion":1,"AgentSubID":5,"SequenceNo":37591,"SysUpTime":3287084017,"SamplesNo":1,"Samples":[{"SequenceNo":1530345639,"SourceID":0,"SamplingRate":4096,"SamplePool":1938456576,"Drops":0,"Input":536,"Output":728,"RecordsNo":3,"Records":{"ExtRouter":{"NextHop":"115.131.251.90","SrcMask":24,"DstMask":14},"ExtSwitch":{"SrcVlan":0,"SrcPriority":0,"DstVlan":0,"DstPriority":0},"RawHeader":{"L2":{"SrcMAC":"58:00:bb:e7:57:6f","DstMAC":"f4:a7:39:44:a8:27","Vlan":0,"EtherType":2048},"L3":{"Version":4,"TOS":0,"TotalLen":1452,"ID":13515,"Flags":0,"FragOff":0,"TTL":62,"Protocol":6,"Checksum":8564,"Src":"10.1.8.5","Dst":"161.140.24.181"},"L4":{"SrcPort":443,"DstPort":56521,"DataOffset":5,"Reserved":0,"Flags":16}}}}],"IPAddress":"192.168.10.0"}
 ```
 ## Decoded Netflow v5 data
 ``` json

@@ -164,17 +164,19 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 	// This check is somewhat redundant with the switch-clause below, but the retrieve() operation should not be executed inside the loop.
 	if setHeader.SetID > 255 {
 		var ok bool
-		if tr, ok = mem.retrieve(setHeader.SetID, d.raddr); !ok {
+		if tr, ok = mem.retrieve(setHeader.SetID, d.raddr, msg.Header.DomainID); !ok {
 			select {
 			case rpcChan <- RPCRequest{
 				ID: setHeader.SetID,
 				IP: d.raddr,
+				SrcID: msg.Header.DomainID,
 			}:
 			default:
 			}
-			err = nonfatalError{fmt.Errorf("%s unknown ipfix template id# %d",
+			err = nonfatalError{fmt.Errorf("%s unknown ipfix template id# %d with domain ID %d",
 				d.raddr.String(),
 				setHeader.SetID,
+				msg.Header.DomainID,
 			)}
 		}
 	}
@@ -196,7 +198,7 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 				err = tr.unmarshalOpts(d.reader)
 			}
 			if err == nil {
-				mem.insert(tr.TemplateID, d.raddr, tr)
+				mem.insert(tr.TemplateID, d.raddr, tr, msg.Header.DomainID)
 			}
 		} else if setID >= 4 && setID <= 255 {
 			// Reserved set, do not read any records
