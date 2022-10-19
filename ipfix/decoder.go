@@ -198,12 +198,13 @@ func (d *Decoder) decodeSet(mem MemCache, msg *Message) error {
 			if err == nil {
 				mem.insert(tr.TemplateID, d.raddr, tr)
 			}
-		} else if setID >= 4 && setID <= 255 {
+		} else if setID <= 255 {
+			if setID == 0 {
+				// Invalid set
+				err = nonfatalError{fmt.Errorf("failed to decodeSet / invalid setID")}
+			}
 			// Reserved set, do not read any records
 			break
-		} else if setID == 0 {
-			// Invalid set
-			return fmt.Errorf("failed to decodeSet / invalid setID")
 		} else {
 			// Data set
 			var data []DecodedField
@@ -419,6 +420,10 @@ func (tr *TemplateRecord) unmarshal(r *reader.Reader) error {
 		}
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
 	}
+
+	if len(tr.FieldSpecifiers) == 0 {
+		return fmt.Errorf("Corrupted template: Template id %d is empty", th.TemplateID)
+	}
 	return nil
 }
 
@@ -475,6 +480,10 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 			return err
 		}
 		tr.FieldSpecifiers = append(tr.FieldSpecifiers, tf)
+	}
+
+	if len(tr.FieldSpecifiers) == 0 && len(tr.ScopeFieldSpecifiers) == 0 {
+		return fmt.Errorf("Options template id %d is empty the and it's probably corrupted", tr.TemplateID)
 	}
 	return nil
 }
