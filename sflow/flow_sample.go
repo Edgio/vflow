@@ -54,6 +54,29 @@ type FlowSample struct {
 	Records      map[string]Record
 }
 
+type sflowDataSourceExpand struct{
+	sourceIdType  uint32;   /* sFlowDataSource type */
+	sourceIdIndex uint32;  /* sFlowDataSource index */
+}
+
+type interfaceExpand struct{
+	format uint32;            /* interface format */
+	value  uint32;             /* interface value */
+}
+
+// FlowSampleExpand represents single flow sample expand
+type FlowSampleExpand struct {
+	SequenceNo   uint32 // Incremented with each flow sample
+	SourceID     sflowDataSourceExpand // sfSourceID
+	SamplingRate uint32 // sfPacketSamplingRate
+	SamplePool   uint32 // Total number of packets that could have been sampled
+	Drops        uint32 // Number of times a packet was dropped due to lack of resources
+	Input        interfaceExpand // SNMP ifIndex of input interface
+	Output       interfaceExpand // SNMP ifIndex of input interface
+	RecordsNo    uint32 // Number of records to follow
+	Records      map[string]Record
+}
+
 // SampledHeader represents sampled header
 type SampledHeader struct {
 	Protocol     uint32 // (enum SFLHeader_protocol)
@@ -82,25 +105,59 @@ var (
 	errMaxOutEthernetLength = errors.New("the ethernet length is greater than 1500")
 )
 
-func (fs *FlowSample) unmarshal(r io.ReadSeeker, expanded bool) error {
+func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 	var err error
 
 	if err = read(r, &fs.SequenceNo); err != nil {
 		return err
 	}
 
-	if expanded {
-		if err = read(r, &fs.SourceID); err != nil {
+	buf := make([]byte, 1)
+	if err = read(r, &buf); err != nil {
 			return err
-		}
-		r.Seek(4, 1) // skip counter sample decoding
-	} else {
-		buf := make([]byte, 1)
-		if err = read(r, &buf); err != nil {
-			return err
-		}
-		fs.SourceID = uint32(buf[0])
-		r.Seek(3, 1) // skip counter sample decoding
+	}
+	fs.SourceID = uint32(buf[0])
+	r.Seek(3, 1) // skip unused bytes
+
+
+	if err = read(r, &fs.SamplingRate); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.SamplePool); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Drops); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Input); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Output); err != nil {
+		return err
+	}
+
+	err = read(r, &fs.RecordsNo)
+
+	return err
+}
+
+func (fs *FlowSampleExpand) unmarshalExpand(r io.ReadSeeker) error {
+	var err error
+
+	if err = read(r, &fs.SequenceNo); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.SourceID.sourceIdType); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.SourceID.sourceIdType); err != nil {
+		return err
 	}
 
 	if err = read(r, &fs.SamplingRate); err != nil {
@@ -115,15 +172,19 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker, expanded bool) error {
 		return err
 	}
 
-	if expanded { r.Seek(4, 1) } // skip Input interface format
-
-	if err = read(r, &fs.Input); err != nil {
+	if err = read(r, &fs.Input.format); err != nil {
 		return err
 	}
 
-	if expanded { r.Seek(4, 1) } // skip Output interface format
+	if err = read(r, &fs.Input.value); err != nil {
+		return err
+	}
 
-	if err = read(r, &fs.Output); err != nil {
+	if err = read(r, &fs.Output.format); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Output.value); err != nil {
 		return err
 	}
 
@@ -209,7 +270,7 @@ func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
 	return err
 }
 
-func decodeFlowSample(r io.ReadSeeker, expanded bool) (*FlowSample, error) {
+func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 	var (
 		fs          = new(FlowSample)
 		rTypeFormat uint32
@@ -217,7 +278,58 @@ func decodeFlowSample(r io.ReadSeeker, expanded bool) (*FlowSample, error) {
 		err         error
 	)
 
-	if err = fs.unmarshal(r, expanded); err != nil {
+	if err = fs.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	fs.Records = make(map[string]Record)
+
+	for i := uint32(0); i < fs.RecordsNo; i++ {
+		if err = read(r, &rTypeFormat); err != nil {
+			return nil, err
+		}
+		if err = read(r, &rTypeLength); err != nil {
+			return nil, err
+		}
+
+		switch rTypeFormat {
+		case SFDataRawHeader:
+			d, err := decodeSampledHeader(r)
+			if err != nil {
+				return fs, err
+			}
+			fs.Records["RawHeader"] = d
+		case SFDataExtSwitch:
+			d, err := decodeExtSwitchData(r)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtSwitch"] = d
+		case SFDataExtRouter:
+			d, err := decodeExtRouterData(r, rTypeLength)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtRouter"] = d
+		default:
+			r.Seek(int64(rTypeLength), 1)
+		}
+	}
+
+	return fs, nil
+}
+
+func decodeFlowSampleExpand(r io.ReadSeeker) (*FlowSampleExpand, error) {
+	var (
+		fs          = new(FlowSampleExpand)
+		rTypeFormat uint32
+		rTypeLength uint32
+		err         error
+	)
+
+	if err = fs.unmarshalExpand(r); err != nil {
 		return nil, err
 	}
 

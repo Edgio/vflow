@@ -116,29 +116,29 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 		switch sfTypeFormat {
 		case DataFlowSample:
-			f, err := decodeFlowSample(d.reader, false)
+			d, err := decodeFlowSample(d.reader)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.Samples = append(datagram.Samples, f)
+			datagram.Samples = append(datagram.Samples, d)
 		case DataCounterSample:
-			f, err := decodeFlowCounter(d.reader, false)
+			d, err := decodeFlowCounter(d.reader, false)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.Counters = append(datagram.Counters, f)
+			datagram.Counters = append(datagram.Counters, d)
 		case DataFlowSampleExpanded:
-			f, err := decodeFlowSample(d.reader, true)
+			d, err := decodeFlowSampleExpand(d.reader)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.Samples = append(datagram.Samples, f)
+			datagram.Samples = append(datagram.Samples, d)
 		case DataCounterSampleExpanded:
-			f, err := decodeFlowCounter(d.reader, true)
+			d, err := decodeFlowCounter(d.reader, true)
 			if err != nil {
 				return datagram, err
 			}
-			datagram.Counters = append(datagram.Counters, f)
+			datagram.Counters = append(datagram.Counters, d)
 		default:
 			d.reader.Seek(int64(sfDataLength), 1)
 		}
