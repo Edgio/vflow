@@ -81,6 +81,7 @@ var (
 	errNoneEnterpriseStandard = errors.New("the enterprise is not standard sflow data")
 	errDataLengthUnknown      = errors.New("the sflow data length is unknown")
 	errSFVersionNotSupport    = errors.New("the sflow version doesn't support")
+	errSampleLengthInvalid    = errors.New("the sflow sample length is invalid")
 )
 
 // NewSFDecoder constructs new sflow decoder
@@ -112,6 +113,8 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 			continue
 		}
 
+		var offsetBefore, _ = d.reader.Seek(0, 1)
+
 		switch sfTypeFormat {
 		case DataFlowSample:
 			d, err := decodeFlowSample(d.reader)
@@ -129,9 +132,30 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 			d.reader.Seek(int64(sfDataLength), 1)
 		}
 
+		err = d.sfMoveToEndOfSample(sfDataLength, offsetBefore)
+		if err != nil {
+			return datagram, err
+		}
+
 	}
 
 	return datagram, nil
+}
+
+func (d *SFDecoder) sfMoveToEndOfSample(sfDataLength uint32, offsetBefore int64) error {
+	var offsetAfter, _ = d.reader.Seek(0, 1)
+	var bytesRead = offsetAfter - offsetBefore
+	var byteUntilEndOfSample = int64(sfDataLength) - bytesRead
+	if byteUntilEndOfSample < 0 {
+		return errSampleLengthInvalid
+	}
+	if byteUntilEndOfSample > 0 {
+		var _, err = d.reader.Seek(byteUntilEndOfSample, 1)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (d *SFDecoder) sfHeaderDecode() (*SFDatagram, error) {
