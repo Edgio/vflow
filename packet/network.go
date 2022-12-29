@@ -54,6 +54,9 @@ type IPv6Header struct {
 	Dst          string // destination address
 }
 
+type OtherTransportLayer struct {
+}
+
 const (
 	// IPv4HLen is IPv4 header length size
 	IPv4HLen = 20
@@ -78,7 +81,6 @@ var (
 	errShortIPv4HeaderLength = errors.New("short ipv4 header length")
 	errShortIPv6HeaderLength = errors.New("short ipv6 header length")
 	errShortEthernetLength   = errors.New("short ethernet header length")
-	errUnknownTransportLayer = errors.New("unknown transport layer")
 	errUnknownL3Protocol     = errors.New("unknown network layer protocol")
 )
 
@@ -124,7 +126,8 @@ func (p *Packet) decodeNextLayer() error {
 		p.L4 = udp
 		len = 8
 	default:
-		return errUnknownTransportLayer
+		p.L4 = OtherTransportLayer{}
+		len = 0
 	}
 
 	p.data = p.data[len:]
