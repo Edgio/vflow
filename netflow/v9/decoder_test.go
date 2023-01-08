@@ -31,7 +31,7 @@ func TestDecodeNoData(t *testing.T) {
 	ip := net.ParseIP("127.0.0.1")
 	mCache := GetCache("cache.file")
 	body := []byte{}
-	d := NewDecoder(ip, body)
+	d := NewDecoder(ip, body, false)
 	if _, err := d.Decode(mCache); err == nil {
 		t.Error("expected err but nothing")
 	}

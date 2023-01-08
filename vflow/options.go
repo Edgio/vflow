@@ -86,6 +86,7 @@ type Options struct {
 	IPFIXMirrorPort    int    `yaml:"ipfix-mirror-port"`
 	IPFIXMirrorWorkers int    `yaml:"ipfix-mirror-workers"`
 	IPFIXTplCacheFile  string `yaml:"ipfix-tpl-cache-file"`
+	IPFIXSkipUnknown   bool   `yaml:"ipfix-skip-unknown"`
 
 	// Netflow V5
 	NetflowV5Enabled bool   `yaml:"netflow5-enabled"`
@@ -103,6 +104,7 @@ type Options struct {
 	NetflowV9Workers      int    `yaml:"netflow9-workers"`
 	NetflowV9Topic        string `yaml:"netflow9-topic"`
 	NetflowV9TplCacheFile string `yaml:"netflow9-tpl-cache-file"`
+	NetflowV9SkipUnknown  bool   `yaml:"netflow9-skip-unknown"`
 
 	// producer
 	ProducerEnabled bool   `yaml:"producer-enabled"`
@@ -170,6 +172,7 @@ func NewOptions() *Options {
 		IPFIXMirrorPort:    4172,
 		IPFIXMirrorWorkers: 5,
 		IPFIXTplCacheFile:  "/tmp/vflow.templates",
+		IPFIXSkipUnknown:   false,
 
 		NetflowV5Enabled: true,
 		NetflowV5Port:    9996,
@@ -183,6 +186,7 @@ func NewOptions() *Options {
 		NetflowV9Workers:      200,
 		NetflowV9Topic:        "vflow.netflow9",
 		NetflowV9TplCacheFile: "/tmp/netflowv9.templates",
+		NetflowV9SkipUnknown:  false,
 
 		ProducerEnabled: true,
 		MQName:          "kafka",
@@ -345,6 +349,7 @@ func (opts *Options) flagSet() {
 	flag.StringVar(&opts.IPFIXMirrorAddr, "ipfix-mirror-addr", opts.IPFIXMirrorAddr, "IPFIX mirror destination address")
 	flag.IntVar(&opts.IPFIXMirrorPort, "ipfix-mirror-port", opts.IPFIXMirrorPort, "IPFIX mirror destination port number")
 	flag.IntVar(&opts.IPFIXMirrorWorkers, "ipfix-mirror-workers", opts.IPFIXMirrorWorkers, "IPFIX mirror workers number")
+	flag.BoolVar(&opts.IPFIXSkipUnknown, "ipfix-skip-unknown", opts.IPFIXSkipUnknown, "enabled/disable ignoring unknown fields")
 
 	// netflow version 5
 	flag.BoolVar(&opts.NetflowV5Enabled, "netflow5-enabled", opts.NetflowV5Enabled, "enable/disable netflow version 5 listener")
@@ -362,6 +367,7 @@ func (opts *Options) flagSet() {
 	flag.IntVar(&opts.NetflowV9Workers, "netflow9-workers", opts.NetflowV9Workers, "Netflow version 9 workers number")
 	flag.StringVar(&opts.NetflowV9Topic, "netflow9-topic", opts.NetflowV9Topic, "Netflow version 9 topic name")
 	flag.StringVar(&opts.NetflowV9TplCacheFile, "netflow9-tpl-cache-file", opts.NetflowV9TplCacheFile, "Netflow version 9 template cache file")
+	flag.BoolVar(&opts.NetflowV9SkipUnknown, "netflow9-skip-unknown", opts.NetflowV9SkipUnknown, "enabled/disable ignoring unknown fields")
 
 	// producer options
 	flag.BoolVar(&opts.ProducerEnabled, "producer-enabled", opts.ProducerEnabled, "enable/disable producer message queue")
