@@ -230,3 +230,43 @@ func TestDecodeDataTpl(t *testing.T) {
 		t.Error(err)
 	}
 }
+
+func TestUnknownElement(t *testing.T) {
+	// Single dataset, id 61166, 2 elements, element id 1, and element id 222, enterprise 7
+	var template = []byte{
+		0x00, 0x0a, 0x00, 0x20, 0x63, 0x75, 0x58, 0xb1, 0x19, 0x10, 0x70, 0x03, 0x00, 0x00, 0x00, 0x00,
+		0x00, 0x02, 0x00, 0x14, 0xee, 0xee, 0x00, 0x02, 0x00, 0x01, 0x00, 0x08, 0x80, 0xde, 0x00, 0x04,
+		0x00, 0x00, 0x00, 0x07}
+
+	var payload = []byte{
+		0x00, 0x0a, 0x00, 0x20, 0x63, 0x75, 0x58, 0xb1, 0x19, 0x10, 0x70, 0x04, 0x00, 0x00, 0x00, 0x00,
+		0xee, 0xee, 0x00, 0x10, 0x00, 0x00, 0x00, 0x11, 0x11, 0x11, 0x11, 0x11, 0x22, 0x22, 0x22, 0x22}
+
+	ip := net.ParseIP("127.0.0.1")
+	templates := GetCache("")
+	d := NewDecoder(ip, template, false)
+	_, err := d.Decode(templates)
+	if err != nil {
+		t.Error(err)
+	}
+
+	// Parse data with unknown element
+	d = NewDecoder(ip, payload, false)
+	m, err := d.Decode(templates)
+	if err == nil {
+		t.Error("Expected error due to unknown element, but got nil")
+	}
+	if len(m.DataSets) != 0 {
+		t.Error("Did not expect any result datasets, but got", m.DataSets)
+	}
+
+	// Now parse again, skip unknown element
+	d = NewDecoder(ip, payload, true)
+	m, err = d.Decode(templates)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(m.DataSets) != 1 {
+		t.Error("Expected 1 dataset, but got", m.DataSets)
+	}
+}
