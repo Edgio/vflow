@@ -154,7 +154,7 @@ var FieldTypes = map[string]FieldType{
 	"ipv6Address":          Ipv6Address,
 }
 
-//InfoModel maps element to name and type based on the field id and enterprise id
+// InfoModel maps element to name and type based on the field id and enterprise id
 var InfoModel = IANAInfoModel{
 	ElementKey{0, 1}:   InfoElementEntry{FieldID: 1, Name: "octetDeltaCount", Type: FieldTypes["unsigned64"]},
 	ElementKey{0, 2}:   InfoElementEntry{FieldID: 2, Name: "packetDeltaCount", Type: FieldTypes["unsigned64"]},

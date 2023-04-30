@@ -24,13 +24,14 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"log"
 	"sync"
 	"time"
 
-	cluster "github.com/bsm/sarama-cluster"
+	"github.com/Shopify/sarama"
 )
 
 type options struct {
@@ -68,57 +69,83 @@ func init() {
 func main() {
 	var wg sync.WaitGroup
 
-	config := cluster.NewConfig()
+	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
-	config.Group.Return.Notifications = true
+	config.Consumer.Group.Session.Timeout = 10 * time.Second
+	config.Consumer.Group.Heartbeat.Interval = 3 * time.Second
+	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	config.Version = sarama.V2_1_0_0
 
 	wg.Add(opts.Workers)
 
 	for i := 0; i < opts.Workers; i++ {
 		go func(ti int) {
-			var objmap ipfix
-
 			brokers := []string{opts.Broker}
 			topics := []string{opts.Topic}
-			consumer, err := cluster.NewConsumer(brokers, "mygroup", topics, config)
+			consumerGroup, err := sarama.NewConsumerGroup(brokers, "mygroup", config)
 
 			if err != nil {
 				panic(err)
 			}
-			defer consumer.Close()
+			defer consumerGroup.Close()
 
 			pCount := 0
 			count := 0
 			tik := time.Tick(10 * time.Second)
 
 			for {
-				select {
-				case <-tik:
-					if opts.Debug {
-						log.Printf("partition GroupId#%d,  rate=%d\n", ti, (count-pCount)/10)
-					}
-					pCount = count
-				case msg, more := <-consumer.Messages():
-					if more {
-						if err := json.Unmarshal(msg.Value, &objmap); err != nil {
-							log.Println(err)
-						} else {
-							for _, data := range objmap.DataSets {
-								for _, dd := range data {
-									if dd.I == opts.Id && dd.V == opts.Value {
-										log.Printf("%#v\n", data)
-									}
-								}
-							}
-						}
-
-						consumer.MarkOffset(msg, "")
-						count++
-					}
+				err := consumerGroup.Consume(context.Background(), topics, consumerGroupHandler{ti: ti, debug: opts.Debug, id: opts.Id, value: opts.Value, pCount: &pCount, count: &count, tik: tik})
+				if err != nil {
+					log.Printf("Error from consumer: %v", err)
 				}
 			}
 		}(i)
 	}
 
 	wg.Wait()
+}
+
+type consumerGroupHandler struct {
+	ti     int
+	debug  bool
+	id     int
+	value  string
+	pCount *int
+	count  *int
+	tik    <-chan time.Time
+}
+
+func (c consumerGroupHandler) Setup(sarama.ConsumerGroupSession) error   { return nil }
+func (c consumerGroupHandler) Cleanup(sarama.ConsumerGroupSession) error { return nil }
+func (c consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	var objmap ipfix
+
+	for {
+		select {
+		case <-c.tik:
+			if c.debug {
+				log.Printf("partition GroupId#%d,  rate=%d\n", c.ti, (*c.count-*c.pCount)/10)
+			}
+			*c.pCount = *c.count
+		case msg, more := <-claim.Messages():
+			if more {
+				if err := json.Unmarshal(msg.Value, &objmap); err != nil {
+					log.Println(err)
+				} else {
+					for _, data := range objmap.DataSets {
+						for _, dd := range data {
+							if dd.I == c.id && dd.V == c.value {
+								log.Printf("%#v\n", data)
+							}
+						}
+					}
+				}
+
+				sess.MarkMessage(msg, "")
+				*c.count++
+			}
+		}
+	}
+
+	return nil
 }

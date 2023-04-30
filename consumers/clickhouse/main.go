@@ -20,10 +20,11 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-// Package main is the vflow IPFIX consumer for the ClickHouse database (https://clickhouse.yandex)
+// Package main is the vflow IPFIX consumer for the ClickHouse database (https://clickhouse.com)
 package main
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"flag"
@@ -31,8 +32,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ClickHouse/clickhouse-go"
-	cluster "github.com/bsm/sarama-cluster"
+	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/Shopify/sarama"
 )
 
 type options struct {
@@ -61,6 +62,12 @@ type dIPFIXSample struct {
 	proto  uint8
 }
 
+type consumerGroupHandler struct {
+	ti    int
+	ch    chan ipfix
+	debug bool
+}
+
 var opts options
 
 func init() {
@@ -72,15 +79,47 @@ func init() {
 	flag.Parse()
 }
 
+func (h consumerGroupHandler) Setup(_ sarama.ConsumerGroupSession) error   { return nil }
+func (h consumerGroupHandler) Cleanup(_ sarama.ConsumerGroupSession) error { return nil }
+func (h consumerGroupHandler) ConsumeClaim(sess sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
+	pCount := 0
+	count := 0
+	tik := time.Tick(10 * time.Second)
+
+	for msg := range claim.Messages() {
+		select {
+		case <-tik:
+			if h.debug {
+				log.Printf("partition GroupId#%d,  rate=%d\n", h.ti, (count-pCount)/10)
+			}
+			pCount = count
+		default:
+			objmap := ipfix{}
+			if err := json.Unmarshal(msg.Value, &objmap); err != nil {
+				log.Println(err)
+			} else {
+				h.ch <- objmap
+			}
+			sess.MarkMessage(msg, "")
+			count++
+		}
+	}
+
+	return nil
+}
+
 func main() {
 	var (
 		wg sync.WaitGroup
 		ch = make(chan ipfix, 10000)
 	)
 
-	config := cluster.NewConfig()
+	config := sarama.NewConfig()
 	config.Consumer.Return.Errors = true
-	config.Group.Return.Notifications = true
+	config.Consumer.Group.Session.Timeout = 10 * time.Second
+	config.Consumer.Group.Heartbeat.Interval = 3 * time.Second
+	config.Consumer.Offsets.Initial = sarama.OffsetOldest
+	config.Version = sarama.V2_1_0_0
 
 	for i := 0; i < 5; i++ {
 		go ingestClickHouse(ch)
@@ -92,35 +131,16 @@ func main() {
 		go func(ti int) {
 			brokers := []string{opts.Broker}
 			topics := []string{opts.Topic}
-			consumer, err := cluster.NewConsumer(brokers, "mygroup", topics, config)
-
+			consumerGroup, err := sarama.NewConsumerGroup(brokers, "mygroup", config)
 			if err != nil {
-				panic(err)
+				log.Fatalf("Failed to create consumer group: %s", err)
 			}
-			defer consumer.Close()
-
-			pCount := 0
-			count := 0
-			tik := time.Tick(10 * time.Second)
+			defer consumerGroup.Close()
 
 			for {
-				select {
-				case <-tik:
-					if opts.Debug {
-						log.Printf("partition GroupId#%d,  rate=%d\n", ti, (count-pCount)/10)
-					}
-					pCount = count
-				case msg, more := <-consumer.Messages():
-					objmap := ipfix{}
-					if more {
-						if err := json.Unmarshal(msg.Value, &objmap); err != nil {
-							log.Println(err)
-						} else {
-							ch <- objmap
-						}
-						consumer.MarkOffset(msg, "")
-						count++
-					}
+				err := consumerGroup.Consume(context.Background(), topics, consumerGroupHandler{ti: ti, ch: ch, debug: opts.Debug})
+				if err != nil {
+					log.Printf("Error from consumer: %v", err)
 				}
 			}
 		}(i)
@@ -134,7 +154,8 @@ func ingestClickHouse(ch chan ipfix) {
 
 	connect, err := sql.Open("clickhouse", "tcp://127.0.0.1:9000?debug=false")
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
+		return
 	}
 	if err := connect.Ping(); err != nil {
 		if exception, ok := err.(*clickhouse.Exception); ok {
@@ -145,18 +166,19 @@ func ingestClickHouse(ch chan ipfix) {
 		return
 	}
 
+	tx, err := connect.Begin()
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	stmt, err := tx.Prepare("INSERT INTO vflow.samples (date,time,device,src,dst,srcASN,dstASN, proto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
 	for {
-		tx, err := connect.Begin()
-		if err != nil {
-			log.Fatal(err)
-		}
-		stmt, err := tx.Prepare("INSERT INTO vflow.samples (date,time,device,src,dst,srcASN,dstASN, proto) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
-		if err != nil {
-			log.Fatal(err)
-		}
-
 		for i := 0; i < 10000; i++ {
-
 			sample = <-ch
 			for _, data := range sample.DataSets {
 				s := dIPFIXSample{}
@@ -184,7 +206,8 @@ func ingestClickHouse(ch chan ipfix) {
 					s.dstASN,
 					s.proto,
 				); err != nil {
-					log.Fatal(err)
+					log.Println(err)
+					return
 				}
 
 			}
@@ -192,7 +215,7 @@ func ingestClickHouse(ch chan ipfix) {
 
 		go func(tx *sql.Tx) {
 			if err := tx.Commit(); err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 		}(tx)
 	}
