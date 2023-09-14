@@ -187,6 +187,7 @@ func (i *IPFIX) shutdown() {
 	// logging and close UDP channel
 	logger.Println("ipfix has been shutdown")
 	close(ipfixUDPCh)
+	close(ipfixMQCh)
 }
 
 func (i *IPFIX) ipfixWorker(wQuit chan struct{}) {
