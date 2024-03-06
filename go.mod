@@ -13,6 +13,6 @@ require (
 	github.com/onsi/gomega v1.19.0 // indirect
 	github.com/prometheus/client_golang v1.12.2
 	github.com/segmentio/kafka-go v0.4.31
-	golang.org/x/net v0.0.0-20220513224357-95641704303c
+	golang.org/x/net v0.7.0
 	gopkg.in/yaml.v2 v2.4.0
 )
