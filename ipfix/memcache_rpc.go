@@ -58,6 +58,7 @@ type RPCConfig struct {
 type RPCRequest struct {
 	ID uint16
 	IP net.IP
+	SrcID uint32
 }
 
 type vFlowServer struct {
@@ -91,7 +92,7 @@ func NewRPC(mCache MemCache) *IRPC {
 func (r *IRPC) Get(req RPCRequest, resp *TemplateRecord) error {
 	var ok bool
 
-	*resp, ok = r.mCache.retrieve(req.ID, req.IP)
+	*resp, ok = r.mCache.retrieve(req.ID, req.IP, req.SrcID)
 	if !ok {
 		return errNotAvail
 	}
@@ -168,7 +169,7 @@ func RPC(m MemCache, config *RPCConfig) {
 				continue
 			}
 
-			m.insert(req.ID, req.IP, *tr)
+			m.insert(req.ID, req.IP, *tr, req.SrcID)
 			break
 		}
 
