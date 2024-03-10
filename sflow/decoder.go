@@ -33,9 +33,11 @@ import (
 const (
 	// DataFlowSample defines packet flow sampling
 	DataFlowSample = 1
+	DataFlowSampleExpanded = 3
 
 	// DataCounterSample defines counter sampling
 	DataCounterSample = 2
+	DataCounterSampleExpanded = 4
 )
 
 // SFDecoder represents sFlow decoder
@@ -123,7 +125,19 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 			}
 			datagram.Samples = append(datagram.Samples, d)
 		case DataCounterSample:
-			d, err := decodeFlowCounter(d.reader)
+			d, err := decodeFlowCounter(d.reader, false)
+			if err != nil {
+				return datagram, err
+			}
+			datagram.Counters = append(datagram.Counters, d)
+		case DataFlowSampleExpanded:
+			d, err := decodeFlowSampleExpand(d.reader)
+			if err != nil {
+				return datagram, err
+			}
+			datagram.Samples = append(datagram.Samples, d)
+		case DataCounterSampleExpanded:
+			d, err := decodeFlowCounter(d.reader, true)
 			if err != nil {
 				return datagram, err
 			}
