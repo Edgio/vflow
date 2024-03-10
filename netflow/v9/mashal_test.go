@@ -20,7 +20,7 @@
 //: limitations under the License.
 //: ----------------------------------------------------------------------------
 
-package ipfix
+package netflow9
 
 import (
 	"bytes"
@@ -31,7 +31,7 @@ import (
 
 type TestMessage struct {
 	AgentID  string
-	Header   MessageHeader
+	Header   PacketHeader
 	DataSets [][]TestDecodedField
 }
 
@@ -42,12 +42,12 @@ type TestDecodedField struct {
 
 var mockDecodedMsg = Message{
 	AgentID: "10.10.10.10",
-	Header: MessageHeader{
-		Version:    10,
-		Length:     420,
-		ExportTime: 1483484756,
-		SequenceNo: 2563920489,
-		DomainID:   34560,
+	Header: PacketHeader{
+		Version:   9,
+		Count:     420,
+		SysUpTime: 1483484756,
+		SeqNum:    2563920489,
+		SrcID:     34560,
 	},
 	DataSets: [][]DecodedField{
 		{
@@ -97,8 +97,8 @@ func TestJSONMarshal(t *testing.T) {
 	if msg.AgentID != "10.10.10.10" {
 		t.Error("expect AgentID 10.10.10.10, got", msg.AgentID)
 	}
-	if msg.Header.Version != 10 {
-		t.Error("expect Version 10, got", msg.Header.Version)
+	if msg.Header.Version != 9 {
+		t.Error("expect Version 9, got", msg.Header.Version)
 	}
 }
 

@@ -25,6 +25,7 @@ package netflow9
 import (
 	"bytes"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"net"
 	"strconv"
@@ -181,9 +182,8 @@ func (m *Message) writeValue(b *bytes.Buffer, i, j int) error {
 	case float64:
 		b.WriteString(strconv.FormatFloat(m.DataSets[i][j].Value.(float64), 'E', -1, 64))
 	case string:
-		b.WriteByte('"')
-		b.WriteString(m.DataSets[i][j].Value.(string))
-		b.WriteByte('"')
+		var asJson, _ = json.Marshal(m.DataSets[i][j].Value.(string))
+		b.Write(asJson)
 	case net.IP:
 		b.WriteByte('"')
 		b.WriteString(m.DataSets[i][j].Value.(net.IP).String())
