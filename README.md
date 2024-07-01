@@ -50,7 +50,7 @@ The IPFIX data decodes to JSON format and IDs are [IANA IPFIX element ID](http:/
 - Windows
 
 ## Build
-Given that the Go Language compiler (version 1.14.x preferred) is installed, you can build it with:
+Given that the Go Language compiler is installed, you can build it with:
 ```
 go get github.com/EdgeCast/vflow/vflow
 cd $GOPATH/src/github.com/EdgeCast/vflow
