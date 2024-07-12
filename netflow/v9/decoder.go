@@ -82,8 +82,9 @@ type DecodedField struct {
 
 // Decoder represents Netflow payload and remote address
 type Decoder struct {
-	raddr  net.IP
-	reader *reader.Reader
+	raddr               net.IP
+	reader              *reader.Reader
+	skipUnknownElements bool
 }
 
 // Message represents Netflow decoded data
@@ -335,15 +336,18 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			tr.ScopeFieldSpecifiers[i].ElementID,
 		}]
 
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
-				tr.ScopeFieldSpecifiers[i].ElementID))
+		if ok {
+			fields = append(fields, DecodedField{
+				ID:    m.FieldID,
+				Value: ipfix.Interpret(&b, m.Type),
+			})
+		} else {
+			if !d.skipUnknownElements {
+				return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist (scope)",
+					tr.ScopeFieldSpecifiers[i].ElementID))
+			}
 		}
 
-		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: ipfix.Interpret(&b, m.Type),
-		})
 	}
 
 	for i := 0; i < len(tr.FieldSpecifiers); i++ {
@@ -357,23 +361,26 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			tr.FieldSpecifiers[i].ElementID,
 		}]
 
-		if !ok {
-			return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID))
+		if ok {
+			fields = append(fields, DecodedField{
+				ID:    m.FieldID,
+				Value: ipfix.Interpret(&b, m.Type),
+			})
+		} else {
+			if !d.skipUnknownElements {
+				return nil, nonfatalError(fmt.Errorf("Netflow element key (%d) not exist",
+					tr.FieldSpecifiers[i].ElementID))
+			}
 		}
 
-		fields = append(fields, DecodedField{
-			ID:    m.FieldID,
-			Value: ipfix.Interpret(&b, m.Type),
-		})
 	}
 
 	return fields, nil
 }
 
 // NewDecoder constructs a decoder
-func NewDecoder(raddr net.IP, b []byte) *Decoder {
-	return &Decoder{raddr, reader.NewReader(b)}
+func NewDecoder(raddr net.IP, b []byte, skipUnknownElements bool) *Decoder {
+	return &Decoder{raddr, reader.NewReader(b), skipUnknownElements}
 }
 
 // Decode decodes the flow records
