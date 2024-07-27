@@ -46,10 +46,11 @@ type Packet struct {
 
 // IPFIX represents IPFIX packet generator
 type IPFIX struct {
-	conn  mirror.Conn
-	ch    chan Packet
-	srcs  []net.IP
-	vflow net.IP
+	conn    mirror.Conn
+	ch      chan Packet
+	srcs    []net.IP
+	vflow   net.IP
+	metrics *MetricsIPFIX
 
 	MaxRouter int
 	Tick      time.Duration
@@ -59,10 +60,11 @@ type IPFIX struct {
 
 // SFlow represents SFlow packet generator
 type SFlow struct {
-	conn  mirror.Conn
-	ch    chan Packet
-	srcs  []net.IP
-	vflow net.IP
+	conn    mirror.Conn
+	ch      chan Packet
+	srcs    []net.IP
+	vflow   net.IP
+	metrics *MetricsSFlow
 
 	MaxRouter int
 	Port      int
@@ -81,6 +83,7 @@ func NewIPFIX(raddr net.IP) (*IPFIX, error) {
 		conn:      conn,
 		ch:        make(chan Packet, 10000),
 		vflow:     raddr,
+		metrics:   NewMetricsIPFIX(),
 		MaxRouter: 10,
 		RateLimit: 25 * 10e3,
 	}, nil
@@ -100,7 +103,12 @@ func (i *IPFIX) Run() {
 		defer wg.Done()
 		for {
 			p = <-i.ch
-			i.conn.Send(p.payload[:p.length])
+			if err := i.conn.Send(p.payload[:p.length]); err != nil {
+				i.metrics.sendErr.Inc()
+			} else {
+				i.metrics.sendOK.Inc()
+			}
+
 		}
 	}()
 
@@ -141,6 +149,7 @@ func (i *IPFIX) sendData() {
 		for j := range packets {
 			<-throttle
 			i.ch <- packets[j]
+			i.metrics.sendData.Inc()
 		}
 	}
 }
@@ -151,11 +160,13 @@ func (i *IPFIX) sendTemplate() {
 
 	for j := range packets {
 		i.ch <- packets[j]
+		i.metrics.sendTemplate.Inc()
 	}
 
 	for range c {
 		for j := range packets {
 			i.ch <- packets[j]
+			i.metrics.sendTemplate.Inc()
 		}
 	}
 }
@@ -166,11 +177,13 @@ func (i *IPFIX) sendTemplateOpt() {
 
 	for j := range packets {
 		i.ch <- packets[j]
+		i.metrics.sendTemplateOpt.Inc()
 	}
 
 	for range c {
 		for j := range packets {
 			i.ch <- packets[j]
+			i.metrics.sendTemplateOpt.Inc()
 		}
 	}
 }
@@ -235,6 +248,7 @@ func NewSFlow(raddr net.IP) (*SFlow, error) {
 		conn:      conn,
 		ch:        make(chan Packet, 10000),
 		vflow:     raddr,
+		metrics:   NewMetricsSFlow(),
 		MaxRouter: 10,
 		RateLimit: 25 * 10e3,
 	}, nil
@@ -254,7 +268,11 @@ func (s *SFlow) Run() {
 		defer wg.Done()
 		for {
 			p = <-s.ch
-			s.conn.Send(p.payload[:p.length])
+			if err := s.conn.Send(p.payload[:p.length]); err != nil {
+				s.metrics.sendErr.Inc()
+			} else {
+				s.metrics.sendOK.Inc()
+			}
 		}
 	}()
 
@@ -314,6 +332,7 @@ func (s *SFlow) sendData() {
 		for j := range packets {
 			<-throttle
 			s.ch <- packets[j]
+			s.metrics.sendData.Inc()
 		}
 	}
 }
