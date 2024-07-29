@@ -113,7 +113,9 @@ func mirrorIPFIX(dst net.IP, port int, ch chan IPFIXUDPMsg) error {
 		copy(packet[ipHLen:ipHLen+8], udpHdr)
 		copy(packet[ipHLen+8:], msg.body)
 
-		ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
+		if cap(msg.body) >= opts.IPFIXUDPSize {
+			ipfixBuffer.Put(msg.body[:opts.IPFIXUDPSize])
+		}
 
 		if err = conn.Send(packet[0 : ipHLen+8+pLen]); err != nil {
 			return err
