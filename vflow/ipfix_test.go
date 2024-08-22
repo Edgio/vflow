@@ -30,7 +30,7 @@ import (
 )
 
 func init() {
-	opts = &Options{}
+	opts = NewOptions()
 }
 
 func TestMirrorIPFIX(t *testing.T) {
@@ -39,6 +39,7 @@ func TestMirrorIPFIX(t *testing.T) {
 		fb    = make(chan IPFIXUDPMsg)
 		dst   = net.ParseIP("127.0.0.1")
 		ready = make(chan struct{})
+		errCh = make(chan struct{})
 	)
 
 	go func() {
@@ -46,14 +47,19 @@ func TestMirrorIPFIX(t *testing.T) {
 		if err != nil {
 			if strings.Contains(err.Error(), "not permitted") {
 				t.Log(err)
-				ready <- struct{}{}
+				errCh <- struct{}{}
 			} else {
 				t.Fatal("unexpected error", err)
 			}
 		}
 	}()
 
-	time.Sleep(2 * time.Second)
+	select {
+	case <-errCh:
+		return
+	case <-time.After(2 * time.Second):
+		break
+	}
 
 	go func() {
 		b := make([]byte, 1500)
@@ -86,9 +92,11 @@ func TestMirrorIPFIX(t *testing.T) {
 
 	}()
 
-	_, ok := <-ready
-	if ok {
-		return
+	select {
+	case <-ready:
+		break
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout")
 	}
 
 	body := []byte("hello")
@@ -100,7 +108,15 @@ func TestMirrorIPFIX(t *testing.T) {
 		},
 	}
 
-	feedback := <-fb
+	var feedback IPFIXUDPMsg
+	select {
+	case feedback = <-fb:
+		break
+	case <-errCh:
+		return
+	case <-time.After(2 * time.Second):
+		t.Fatal("timeout")
+	}
 
 	if string(feedback.body) != "hello" {
 		t.Error("expect body is hello, got", string(feedback.body))
