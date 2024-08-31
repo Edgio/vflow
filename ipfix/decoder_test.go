@@ -31,7 +31,7 @@ import (
 var tpl, optsTpl, multiMessage, unknownDatasetMessage []byte
 
 func init() {
-	// IPFIX packet including template SetID:2, 25 fields
+	// IPFIX packet including template SetID:2, 25 fields, Domain id 33792
 	tpl = []byte{
 		0x0, 0xa, 0x0, 0x7c, 0x58, 0x90, 0xd6, 0x40, 0x28, 0xf7,
 		0xa0, 0x4a, 0x0, 0x0, 0x84, 0x0, 0x0, 0x2, 0x0, 0x6c, 0x1,
@@ -205,8 +205,8 @@ func TestUnknownDatasetsMessage(t *testing.T) {
 		t.Error("Did not expect any result datasets, but got", l)
 	}
 	expectedErrorStr := `Multiple errors:
-- 127.0.0.1 unknown ipfix template id# 264
-- 127.0.0.1 unknown ipfix template id# 264`
+- 127.0.0.1 unknown ipfix template id# 264 with domain ID 1
+- 127.0.0.1 unknown ipfix template id# 264 with domain ID 1`
 	if err == nil || err.Error() != expectedErrorStr {
 		t.Error("Received unexpected erorr:", err)
 	}
