@@ -24,18 +24,24 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net"
+	"net/http"
 	"sync"
 	"time"
 
 	"github.com/EdgeCast/vflow/stress/hammer"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/collectors"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var opts = struct {
 	vflowAddr      string
 	ipfixPort      int
 	sflowPort      int
+	prometheusPort int
 	ipfixTick      string
 	ipfixRateLimit int
 	sflowRateLimit int
@@ -43,6 +49,7 @@ var opts = struct {
 	"127.0.0.1",
 	4739,
 	6343,
+	8090,
 	"10s",
 	25000,
 	25000,
@@ -51,6 +58,7 @@ var opts = struct {
 func init() {
 	flag.IntVar(&opts.ipfixPort, "ipfix-port", opts.ipfixPort, "ipfix port number")
 	flag.IntVar(&opts.sflowPort, "sflow-port", opts.sflowPort, "sflow port number")
+	flag.IntVar(&opts.prometheusPort, "prometheus-port", opts.prometheusPort, "prometheus port number")
 	flag.StringVar(&opts.ipfixTick, "ipfix-interval", opts.ipfixTick, "ipfix template interval in seconds")
 	flag.IntVar(&opts.ipfixRateLimit, "ipfix-rate-limit", opts.ipfixRateLimit, "ipfix rate limit packets per second")
 	flag.IntVar(&opts.sflowRateLimit, "sflow-rate-limit", opts.sflowRateLimit, "sflow rate limit packets per second")
@@ -65,11 +73,19 @@ func main() {
 		vflow = net.ParseIP(opts.vflowAddr)
 	)
 
+	prometheus.Unregister(collectors.NewGoCollector())
+	http.Handle("/metrics", promhttp.Handler())
+	go func() {
+		log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", opts.prometheusPort), nil))
+	}()
+
 	wg.Add(1)
 	go func() {
-		var err error
 		defer wg.Done()
-		ipfix, _ := hammer.NewIPFIX(vflow)
+		ipfix, err := hammer.NewIPFIX(vflow)
+		if err != nil {
+			log.Fatalf("got error while NewIPFIX, %v", err)
+		}
 		ipfix.Port = opts.ipfixPort
 		ipfix.Tick, err = time.ParseDuration(opts.ipfixTick)
 		ipfix.RateLimit = opts.ipfixRateLimit
@@ -82,7 +98,10 @@ func main() {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		sflow, _ := hammer.NewSFlow(vflow)
+		sflow, err := hammer.NewSFlow(vflow)
+		if err != nil {
+			log.Fatalf("got error while NewSFlow, %v", err)
+		}
 		sflow.Port = opts.sflowPort
 		sflow.RateLimit = opts.sflowRateLimit
 		sflow.Run()
