@@ -31,7 +31,7 @@ import (
 func TestMemCacheRetrieve(t *testing.T) {
 	ip := net.ParseIP("127.0.0.1")
 	mCache := GetCache("cache.file")
-	d := NewDecoder(ip, tpl)
+	d := NewDecoder(ip, tpl, false)
 	d.Decode(mCache)
 	v, ok := mCache.retrieve(256, ip)
 	if !ok {

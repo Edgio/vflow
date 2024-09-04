@@ -33,6 +33,7 @@ The vFlow configuration contains the following keys
 |ipfix-mirror-workers    | 5                              | IPFIX replicator concurrent packet generator     |
 |ipfix-tpl-cache-file    | /tmp/vflow.templates           | IPFIX templates cache file                       |
 |ipfix-rpc-enabled       | true                           | enable/disable IPFIX RPC                         |
+|ipfix-skip-unknown      | false                          | enable/disable skipping of unknown elements      |
 |sflow-enabled           | true                           | enable/disable sFlow decoders                    |
 |sflow-port              | 6343                           | server sFlow UDP port                            |
 |sflow-workers           | 200                            | sFlow concurrent decoders                        |
@@ -50,6 +51,7 @@ The vFlow configuration contains the following keys
 |netflow9-topic          | vflow.netflow9                 | netflow v9 message queue topic name              |
 |netflow9-udp-size       | 1500                           | maximum netflow v9 UDP packet size               |
 |netflow9-tpl-cache-file | /tmp/netflow9.templates        | netflow v9 templates cache file                  |
+|netflow9-skip-unknown   | false                          | enable/disable skipping of unknown elements      |
 |dynamic-workers         | true                           | enable/disable dynamic workers feature           |
 |stats-enabled           | true                           | enable/disable web stats listener                |
 |stats-format            | prometheus                     | set prometheus or restful format                 |

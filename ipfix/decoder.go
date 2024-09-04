@@ -34,8 +34,9 @@ import (
 
 // Decoder represents IPFIX payload and remote address
 type Decoder struct {
-	raddr  net.IP
-	reader *reader.Reader
+	raddr               net.IP
+	reader              *reader.Reader
+	skipUnknownElements bool
 }
 
 // MessageHeader represents IPFIX message header
@@ -97,8 +98,8 @@ type nonfatalError struct {
 var rpcChan = make(chan RPCRequest, 1)
 
 // NewDecoder constructs a decoder
-func NewDecoder(raddr net.IP, b []byte) *Decoder {
-	return &Decoder{raddr, reader.NewReader(b)}
+func NewDecoder(raddr net.IP, b []byte, skipUnknownElements bool) *Decoder {
+	return &Decoder{raddr, reader.NewReader(b), skipUnknownElements}
 }
 
 // Decode decodes the IPFIX raw data
@@ -479,7 +480,7 @@ func (tr *TemplateRecord) unmarshalOpts(r *reader.Reader) error {
 	return nil
 }
 
-func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, error) {
+func (d *Decoder) getDataLength(fieldSpecifierLen uint16) (uint16, error) {
 	var (
 		err        error
 		readLength uint16
@@ -487,7 +488,7 @@ func (d *Decoder) getDataLength(fieldSpecifierLen uint16, t FieldType) (uint16, 
 
 	r := d.reader
 
-	if (t == String || t == OctetArray) && (fieldSpecifierLen == 65535) {
+	if fieldSpecifierLen == 65535 {
 		var len8 uint8
 		if len8, err = r.Uint8(); err != nil {
 			return 0, err
@@ -516,17 +517,35 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 	r := d.reader
 
 	for i := 0; i < len(tr.ScopeFieldSpecifiers); i++ {
+		if readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length); err != nil {
+			return nil, err
+		}
+
+		if b, err = r.Read(int(readLength)); err != nil {
+			return nil, err
+		}
+
 		m, ok := InfoModel[ElementKey{
 			tr.ScopeFieldSpecifiers[i].EnterpriseNo,
 			tr.ScopeFieldSpecifiers[i].ElementID,
 		}]
 
-		if !ok {
-			return nil, nonfatalError{fmt.Errorf("IPFIX element key (%d) not exist (scope)",
-				tr.ScopeFieldSpecifiers[i].ElementID)}
+		if ok {
+			fields = append(fields, DecodedField{
+				ID:           m.FieldID,
+				Value:        Interpret(&b, m.Type),
+				EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
+			})
+		} else {
+			if !d.skipUnknownElements {
+				return nil, nonfatalError{fmt.Errorf("IPFIX element key (%d) not exist (scope)",
+					tr.ScopeFieldSpecifiers[i].ElementID)}
+			}
 		}
+	}
 
-		if readLength, err = d.getDataLength(tr.ScopeFieldSpecifiers[i].Length, m.Type); err != nil {
+	for i := 0; i < len(tr.FieldSpecifiers); i++ {
+		if readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length); err != nil {
 			return nil, err
 		}
 
@@ -534,37 +553,23 @@ func (d *Decoder) decodeData(tr TemplateRecord) ([]DecodedField, error) {
 			return nil, err
 		}
 
-		fields = append(fields, DecodedField{
-			ID:           m.FieldID,
-			Value:        Interpret(&b, m.Type),
-			EnterpriseNo: tr.ScopeFieldSpecifiers[i].EnterpriseNo,
-		})
-	}
-
-	for i := 0; i < len(tr.FieldSpecifiers); i++ {
 		m, ok := InfoModel[ElementKey{
 			tr.FieldSpecifiers[i].EnterpriseNo,
 			tr.FieldSpecifiers[i].ElementID,
 		}]
 
-		if !ok {
-			return nil, nonfatalError{fmt.Errorf("IPFIX element key (%d) not exist",
-				tr.FieldSpecifiers[i].ElementID)}
+		if ok {
+			fields = append(fields, DecodedField{
+				ID:           m.FieldID,
+				Value:        Interpret(&b, m.Type),
+				EnterpriseNo: tr.FieldSpecifiers[i].EnterpriseNo,
+			})
+		} else {
+			if !d.skipUnknownElements {
+				return nil, nonfatalError{fmt.Errorf("IPFIX element key (%d) not exist",
+					tr.FieldSpecifiers[i].ElementID)}
+			}
 		}
-
-		if readLength, err = d.getDataLength(tr.FieldSpecifiers[i].Length, m.Type); err != nil {
-			return nil, err
-		}
-
-		if b, err = r.Read(int(readLength)); err != nil {
-			return nil, err
-		}
-
-		fields = append(fields, DecodedField{
-			ID:           m.FieldID,
-			Value:        Interpret(&b, m.Type),
-			EnterpriseNo: tr.FieldSpecifiers[i].EnterpriseNo,
-		})
 	}
 
 	if len(fields) == 0 {
