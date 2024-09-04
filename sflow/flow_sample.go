@@ -44,12 +44,35 @@ const (
 // FlowSample represents single flow sample
 type FlowSample struct {
 	SequenceNo   uint32 // Incremented with each flow sample
-	SourceID     byte   // sfSourceID
+	SourceID     uint32 // sfSourceID
 	SamplingRate uint32 // sfPacketSamplingRate
 	SamplePool   uint32 // Total number of packets that could have been sampled
 	Drops        uint32 // Number of times a packet was dropped due to lack of resources
 	Input        uint32 // SNMP ifIndex of input interface
 	Output       uint32 // SNMP ifIndex of input interface
+	RecordsNo    uint32 // Number of records to follow
+	Records      map[string]Record
+}
+
+type sflowDataSourceExpand struct{
+	sourceIdType  uint32;   /* sFlowDataSource type */
+	sourceIdIndex uint32;  /* sFlowDataSource index */
+}
+
+type interfaceExpand struct{
+	format uint32;            /* interface format */
+	value  uint32;             /* interface value */
+}
+
+// FlowSampleExpand represents single flow sample expand
+type FlowSampleExpand struct {
+	SequenceNo   uint32 // Incremented with each flow sample
+	SourceID     sflowDataSourceExpand // sfSourceID
+	SamplingRate uint32 // sfPacketSamplingRate
+	SamplePool   uint32 // Total number of packets that could have been sampled
+	Drops        uint32 // Number of times a packet was dropped due to lack of resources
+	Input        interfaceExpand // SNMP ifIndex of input interface
+	Output       interfaceExpand // SNMP ifIndex of input interface
 	RecordsNo    uint32 // Number of records to follow
 	Records      map[string]Record
 }
@@ -89,11 +112,13 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 		return err
 	}
 
-	if err = read(r, &fs.SourceID); err != nil {
-		return err
+	buf := make([]byte, 1)
+	if err = read(r, &buf); err != nil {
+			return err
 	}
+	fs.SourceID = uint32(buf[0])
+	r.Seek(3, 1) // skip unused bytes
 
-	r.Seek(3, 1) // skip counter sample decoding
 
 	if err = read(r, &fs.SamplingRate); err != nil {
 		return err
@@ -112,6 +137,54 @@ func (fs *FlowSample) unmarshal(r io.ReadSeeker) error {
 	}
 
 	if err = read(r, &fs.Output); err != nil {
+		return err
+	}
+
+	err = read(r, &fs.RecordsNo)
+
+	return err
+}
+
+func (fs *FlowSampleExpand) unmarshalExpand(r io.ReadSeeker) error {
+	var err error
+
+	if err = read(r, &fs.SequenceNo); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.SourceID.sourceIdType); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.SourceID.sourceIdType); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.SamplingRate); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.SamplePool); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Drops); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Input.format); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Input.value); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Output.format); err != nil {
+		return err
+	}
+
+	if err = read(r, &fs.Output.value); err != nil {
 		return err
 	}
 
@@ -206,6 +279,57 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 	)
 
 	if err = fs.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	fs.Records = make(map[string]Record)
+
+	for i := uint32(0); i < fs.RecordsNo; i++ {
+		if err = read(r, &rTypeFormat); err != nil {
+			return nil, err
+		}
+		if err = read(r, &rTypeLength); err != nil {
+			return nil, err
+		}
+
+		switch rTypeFormat {
+		case SFDataRawHeader:
+			d, err := decodeSampledHeader(r)
+			if err != nil {
+				return fs, err
+			}
+			fs.Records["RawHeader"] = d
+		case SFDataExtSwitch:
+			d, err := decodeExtSwitchData(r)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtSwitch"] = d
+		case SFDataExtRouter:
+			d, err := decodeExtRouterData(r, rTypeLength)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtRouter"] = d
+		default:
+			r.Seek(int64(rTypeLength), 1)
+		}
+	}
+
+	return fs, nil
+}
+
+func decodeFlowSampleExpand(r io.ReadSeeker) (*FlowSampleExpand, error) {
+	var (
+		fs          = new(FlowSampleExpand)
+		rTypeFormat uint32
+		rTypeLength uint32
+		err         error
+	)
+
+	if err = fs.unmarshalExpand(r); err != nil {
 		return nil, err
 	}
 
