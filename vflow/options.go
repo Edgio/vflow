@@ -74,6 +74,10 @@ type Options struct {
 	SFlowMirrorWorkers int            `yaml:"sflow-mirror-workers"`
 	SFlowTypeFilter    arrUInt32Flags `yaml:"sflow-type-filter"`
 
+	// sFlow OCI options
+	SFlowOCIEnabled   bool   `yaml:"sflow-oci-enabled"`
+	SFlowOCIConfigFile string `yaml:"sflow-oci-config-file"`
+
 	// IPFIX options
 	IPFIXEnabled       bool   `yaml:"ipfix-enabled"`
 	IPFIXRPCEnabled    bool   `yaml:"ipfix-rpc-enabled"`
@@ -159,6 +163,9 @@ func NewOptions() *Options {
 		SFlowMirrorPort:    4171,
 		SFlowMirrorWorkers: 5,
 		SFlowTypeFilter:    []uint32{},
+
+		SFlowOCIEnabled:    false,
+		SFlowOCIConfigFile: "oci.conf",
 
 		IPFIXEnabled:       true,
 		IPFIXRPCEnabled:    true,
@@ -332,6 +339,8 @@ func (opts *Options) flagSet() {
 	flag.StringVar(&opts.SFlowMirrorAddr, "sflow-mirror-addr", opts.SFlowMirrorAddr, "sflow mirror destination address")
 	flag.IntVar(&opts.SFlowMirrorPort, "sflow-mirror-port", opts.SFlowMirrorPort, "sflow mirror destination port number")
 	flag.IntVar(&opts.SFlowMirrorWorkers, "sflow-mirror-workers", opts.SFlowMirrorWorkers, "sflow mirror workers number")
+	flag.BoolVar(&opts.SFlowOCIEnabled, "sflow-oci-enabled", opts.SFlowOCIEnabled, "enable/disable sflow OCI Object Store upload")
+	flag.StringVar(&opts.SFlowOCIConfigFile, "sflow-oci-config", opts.SFlowOCIConfigFile, "sflow OCI configuration file")
 
 	// ipfix options
 	flag.BoolVar(&opts.IPFIXEnabled, "ipfix-enabled", opts.IPFIXEnabled, "enable/disable IPFIX listener")

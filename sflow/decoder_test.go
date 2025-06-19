@@ -334,11 +334,183 @@ func TestDecodeSampleHeader(t *testing.T) {
 
 }
 
+// Test data for Arista BGP extension (simulated)
+var TestAristaBGPData = []byte{
+	// Mock BGP extension data structure
+	0x00, 0x00, 0x00, 0x01, // IP version (IPv4)
+	0xc0, 0xa8, 0x01, 0x01, // Next hop IP: 192.168.1.1
+	0x00, 0x00, 0x00, 0x03, // AS path length: 3
+	0x00, 0x00, 0x01, 0x00, // AS 256
+	0x00, 0x00, 0x02, 0x00, // AS 512  
+	0x00, 0x00, 0x03, 0x00, // AS 768
+	0x00, 0x00, 0x00, 0x02, // Communities length: 2
+	0x01, 0x00, 0x00, 0x64, // Community 1:100
+	0x02, 0x00, 0x00, 0xc8, // Community 2:200
+	0x00, 0x00, 0x00, 0x64, // Local preference: 100
+	0x00, 0x00, 0x01, 0x00, // Source AS: 256
+	0x00, 0x00, 0x02, 0x00, // Dest AS: 512
+	0x00, 0x00, 0x03, 0x00, // Peer AS: 768
+	0x00, 0x00, 0x00, 0x32, // MED: 50
+	0x00, 0x00, 0x00, 0x01, // Origin: IGP
+}
+
+// Test data for Arista VPLS extension (simulated)
+var TestAristaVPLSData = []byte{
+	0x00, 0x00, 0x00, 0x08, // Instance name length: 8
+	'v', 'p', 'l', 's', '1', '2', '3', '4', // Instance name: "vpls1234"
+	0x00, 0x00, 0x01, 0x23, // Pseudowire ID: 291
+	0x00, 0x00, 0x04, 0x56, // VC ID: 1110
+	0x00, 0x00, 0x00, 0x05, // VC Type: 5
+}
+
+func TestExtAristaBGPDataUnmarshal(t *testing.T) {
+	reader := bytes.NewReader(TestAristaBGPData)
+	bgpData := &ExtAristaBGPData{}
+	
+	err := bgpData.unmarshal(reader, uint32(len(TestAristaBGPData)))
+	if err != nil {
+		t.Error("unexpected error unmarshaling BGP data:", err)
+	}
+	
+	// Verify next hop
+	expectedNextHop := "192.168.1.1"
+	if bgpData.NextHop.String() != expectedNextHop {
+		t.Errorf("expected next hop %s, got %s", expectedNextHop, bgpData.NextHop.String())
+	}
+	
+	// Verify AS path
+	expectedASPath := []uint32{256, 512, 768}
+	if len(bgpData.ASPath) != len(expectedASPath) {
+		t.Errorf("expected AS path length %d, got %d", len(expectedASPath), len(bgpData.ASPath))
+	}
+	for i, as := range expectedASPath {
+		if bgpData.ASPath[i] != as {
+			t.Errorf("expected AS path[%d] = %d, got %d", i, as, bgpData.ASPath[i])
+		}
+	}
+	
+	// Verify communities
+	expectedCommunities := []uint32{0x01000064, 0x020000c8}
+	if len(bgpData.Communities) != len(expectedCommunities) {
+		t.Errorf("expected communities length %d, got %d", len(expectedCommunities), len(bgpData.Communities))
+	}
+	for i, comm := range expectedCommunities {
+		if bgpData.Communities[i] != comm {
+			t.Errorf("expected community[%d] = 0x%x, got 0x%x", i, comm, bgpData.Communities[i])
+		}
+	}
+	
+	// Verify other BGP attributes
+	if bgpData.LocalPref != 100 {
+		t.Errorf("expected local preference 100, got %d", bgpData.LocalPref)
+	}
+	if bgpData.SourceAS != 256 {
+		t.Errorf("expected source AS 256, got %d", bgpData.SourceAS)
+	}
+	if bgpData.DestAS != 512 {
+		t.Errorf("expected dest AS 512, got %d", bgpData.DestAS)
+	}
+	if bgpData.PeerAS != 768 {
+		t.Errorf("expected peer AS 768, got %d", bgpData.PeerAS)
+	}
+	if bgpData.MED != 50 {
+		t.Errorf("expected MED 50, got %d", bgpData.MED)
+	}
+	if bgpData.Origin != 1 {
+		t.Errorf("expected origin 1, got %d", bgpData.Origin)
+	}
+}
+
+func TestExtAristaVPLSDataUnmarshal(t *testing.T) {
+	reader := bytes.NewReader(TestAristaVPLSData)
+	vplsData := &ExtAristaVPLSData{}
+	
+	err := vplsData.unmarshal(reader, uint32(len(TestAristaVPLSData)))
+	if err != nil {
+		t.Error("unexpected error unmarshaling VPLS data:", err)
+	}
+	
+	// Verify instance name
+	expectedInstanceName := "vpls1234"
+	if vplsData.InstanceName != expectedInstanceName {
+		t.Errorf("expected instance name %s, got %s", expectedInstanceName, vplsData.InstanceName)
+	}
+	
+	// Verify pseudowire ID
+	if vplsData.PseudowireID != 291 {
+		t.Errorf("expected pseudowire ID 291, got %d", vplsData.PseudowireID)
+	}
+	
+	// Verify VC ID
+	if vplsData.VCID != 1110 {
+		t.Errorf("expected VC ID 1110, got %d", vplsData.VCID)
+	}
+	
+	// Verify VC Type
+	if vplsData.VCType != 5 {
+		t.Errorf("expected VC type 5, got %d", vplsData.VCType)
+	}
+}
+
+func TestDecodeExtAristaBGPData(t *testing.T) {
+	reader := bytes.NewReader(TestAristaBGPData)
+	
+	bgpData, err := decodeExtAristaBGPData(reader, uint32(len(TestAristaBGPData)))
+	if err != nil {
+		t.Error("unexpected error decoding BGP data:", err)
+	}
+	
+	if bgpData == nil {
+		t.Error("expected non-nil BGP data")
+	}
+	
+	// Basic validation
+	if bgpData.NextHop == nil {
+		t.Error("expected non-nil next hop")
+	}
+	
+	if len(bgpData.ASPath) == 0 {
+		t.Error("expected non-empty AS path")
+	}
+}
+
+func TestDecodeExtAristaVPLSData(t *testing.T) {
+	reader := bytes.NewReader(TestAristaVPLSData)
+	
+	vplsData, err := decodeExtAristaVPLSData(reader, uint32(len(TestAristaVPLSData)))
+	if err != nil {
+		t.Error("unexpected error decoding VPLS data:", err)
+	}
+	
+	if vplsData == nil {
+		t.Error("expected non-nil VPLS data")
+	}
+	
+	// Basic validation
+	if vplsData.InstanceName == "" {
+		t.Error("expected non-empty instance name")
+	}
+}
+
 func BenchmarkSFDecode(b *testing.B) {
 	filter := []uint32{DataCounterSample}
 	for i := 0; i < b.N; i++ {
 		reader := bytes.NewReader(TestsFlowRawPacket)
 		d := NewSFDecoder(reader, filter)
 		d.SFDecode()
+	}
+}
+
+func BenchmarkExtAristaBGPDecode(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		reader := bytes.NewReader(TestAristaBGPData)
+		decodeExtAristaBGPData(reader, uint32(len(TestAristaBGPData)))
+	}
+}
+
+func BenchmarkExtAristaVPLSDecode(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		reader := bytes.NewReader(TestAristaVPLSData)
+		decodeExtAristaVPLSData(reader, uint32(len(TestAristaVPLSData)))
 	}
 }
