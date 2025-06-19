@@ -57,9 +57,11 @@ type SFlow struct {
 type SFlowStats struct {
 	UDPQueue     int
 	MessageQueue int
+	OCIQueue     int
 	UDPCount     uint64
 	DecodedCount uint64
 	MQErrorCount uint64
+	OCIErrorCount uint64
 	Workers      int32
 }
 
@@ -67,6 +69,7 @@ var (
 	sFlowUDPCh = make(chan SFUDPMsg, 1000)
 	sFlowMCh   = make(chan SFUDPMsg, 1000)
 	sFlowMQCh  = make(chan []byte, 1000)
+	sFlowOCICh = make(chan []byte, 1000)
 
 	sFlowMirrorEnabled bool
 
@@ -132,6 +135,23 @@ func (s *SFlow) run() {
 
 		if err := p.Run(); err != nil {
 			logger.Fatal(err)
+		}
+	}()
+
+	go func() {
+		if !opts.SFlowOCIEnabled {
+			return
+		}
+
+		p := producer.NewProducer("oci")
+		p.MQConfigFile = path.Join(opts.VFlowConfigPath, opts.SFlowOCIConfigFile)
+		p.MQErrorCount = &s.stats.MQErrorCount
+		p.Logger = logger
+		p.Chan = sFlowOCICh
+		p.Topic = "sflow-oci"
+
+		if err := p.Run(); err != nil {
+			logger.Printf("OCI producer error: %v", err)
 		}
 	}()
 
@@ -235,18 +255,28 @@ LOOP:
 		default:
 		}
 
+		// Send to OCI channel if enabled
+		if opts.SFlowOCIEnabled {
+			select {
+			case sFlowOCICh <- append([]byte{}, b...):
+			default:
+			}
+		}
+
 		sFlowBuffer.Put(msg.body[:opts.SFlowUDPSize])
 	}
 }
 
 func (s *SFlow) status() *SFlowStats {
 	return &SFlowStats{
-		UDPQueue:     len(sFlowUDPCh),
-		MessageQueue: len(sFlowMQCh),
-		UDPCount:     atomic.LoadUint64(&s.stats.UDPCount),
-		DecodedCount: atomic.LoadUint64(&s.stats.DecodedCount),
-		MQErrorCount: atomic.LoadUint64(&s.stats.MQErrorCount),
-		Workers:      atomic.LoadInt32(&s.stats.Workers),
+		UDPQueue:      len(sFlowUDPCh),
+		MessageQueue:  len(sFlowMQCh),
+		OCIQueue:      len(sFlowOCICh),
+		UDPCount:      atomic.LoadUint64(&s.stats.UDPCount),
+		DecodedCount:  atomic.LoadUint64(&s.stats.DecodedCount),
+		MQErrorCount:  atomic.LoadUint64(&s.stats.MQErrorCount),
+		OCIErrorCount: atomic.LoadUint64(&s.stats.OCIErrorCount),
+		Workers:       atomic.LoadInt32(&s.stats.Workers),
 	}
 }
 

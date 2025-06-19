@@ -39,6 +39,46 @@ const (
 
 	// SFDataExtRouter is sFlow Extended Router Data number
 	SFDataExtRouter = 1002
+
+	// SFDataExtGateway is sFlow Extended Gateway Data number
+	SFDataExtGateway = 1003
+
+	// SFDataExtUser is sFlow Extended User Data number
+	SFDataExtUser = 1004
+
+	// SFDataExtURL is sFlow Extended URL Data number
+	SFDataExtURL = 1005
+
+	// SFDataExtMPLS is sFlow Extended MPLS Data number
+	SFDataExtMPLS = 1006
+
+	// SFDataExtNAT is sFlow Extended NAT Data number
+	SFDataExtNAT = 1007
+
+	// SFDataExtMPLSTunnel is sFlow Extended MPLS Tunnel number
+	SFDataExtMPLSTunnel = 1008
+
+	// SFDataExtMPLSVC is sFlow Extended MPLS VC number
+	SFDataExtMPLSVC = 1009
+
+	// SFDataExtMPLSFTN is sFlow Extended MPLS FTN number
+	SFDataExtMPLSFTN = 1010
+
+	// SFDataExtMPLSLDP_FEC is sFlow Extended MPLS LDP FEC number
+	SFDataExtMPLSLDP_FEC = 1011
+
+	// SFDataExtVLANTunnel is sFlow Extended VLAN Tunnel number
+	SFDataExtVLANTunnel = 1012
+
+	// Arista-specific enterprise extensions
+	// SFDataExtAristaBGP is Arista BGP Route Information extension
+	SFDataExtAristaBGP = 1013
+
+	// SFDataExtAristaVPLS is Arista VPLS extension
+	SFDataExtAristaVPLS = 1014
+
+	// SFDataExtAristaDSCP is Arista DSCP extension
+	SFDataExtAristaDSCP = 1015
 )
 
 // FlowSample represents single flow sample
@@ -63,6 +103,13 @@ type SampledHeader struct {
 	Header       []byte // Header bytes
 }
 
+// DSCPInfo represents DSCP field information for Arista extensions
+type DSCPInfo struct {
+	OriginalDSCP uint8 // Original DSCP value before rewriting
+	RewrittenDSCP uint8 // DSCP value after rewriting (if applicable)
+	DSCPRewritten bool  // Flag indicating if DSCP was rewritten
+}
+
 // ExtSwitchData represents Extended Switch Data
 type ExtSwitchData struct {
 	SrcVlan     uint32 // The 802.1Q VLAN id of incoming frame
@@ -76,6 +123,27 @@ type ExtRouterData struct {
 	NextHop net.IP
 	SrcMask uint32
 	DstMask uint32
+}
+
+// ExtAristaBGPData represents Arista BGP Route Information extension
+type ExtAristaBGPData struct {
+	NextHop       net.IP   // BGP next hop IP address
+	ASPath        []uint32 // AS path sequence
+	Communities   []uint32 // BGP communities
+	LocalPref     uint32   // Local preference
+	SourceAS      uint32   // Source AS number
+	DestAS        uint32   // Destination AS number
+	PeerAS        uint32   // Peer AS number
+	MED           uint32   // Multi-exit discriminator
+	Origin        uint32   // BGP origin attribute
+}
+
+// ExtAristaVPLSData represents Arista VPLS extension
+type ExtAristaVPLSData struct {
+	InstanceName string // VPLS instance name
+	PseudowireID uint32 // Pseudowire ID
+	VCID         uint32 // VC ID
+	VCType       uint32 // VC Type
 }
 
 var (
@@ -197,6 +265,131 @@ func (er *ExtRouterData) unmarshal(r io.Reader, l uint32) error {
 	return err
 }
 
+func (eab *ExtAristaBGPData) unmarshal(r io.Reader, l uint32) error {
+	var err error
+	var ipVersion uint32
+	var pathLen uint32
+	var commLen uint32
+
+	// Read IP version for next hop
+	if err = read(r, &ipVersion); err != nil {
+		return err
+	}
+
+	// Read next hop IP address
+	ipLen := 4
+	if ipVersion == 2 {
+		ipLen = 16
+	}
+	nextHopBuff := make([]byte, ipLen)
+	if _, err = r.Read(nextHopBuff); err != nil {
+		return err
+	}
+	eab.NextHop = nextHopBuff
+
+	// Read AS path length and AS path
+	if err = read(r, &pathLen); err != nil {
+		return err
+	}
+	eab.ASPath = make([]uint32, pathLen)
+	for i := uint32(0); i < pathLen; i++ {
+		if err = read(r, &eab.ASPath[i]); err != nil {
+			return err
+		}
+	}
+
+	// Read communities length and communities
+	if err = read(r, &commLen); err != nil {
+		return err
+	}
+	eab.Communities = make([]uint32, commLen)
+	for i := uint32(0); i < commLen; i++ {
+		if err = read(r, &eab.Communities[i]); err != nil {
+			return err
+		}
+	}
+
+	// Read remaining BGP attributes
+	if err = read(r, &eab.LocalPref); err != nil {
+		return err
+	}
+	if err = read(r, &eab.SourceAS); err != nil {
+		return err
+	}
+	if err = read(r, &eab.DestAS); err != nil {
+		return err
+	}
+	if err = read(r, &eab.PeerAS); err != nil {
+		return err
+	}
+	if err = read(r, &eab.MED); err != nil {
+		return err
+	}
+	err = read(r, &eab.Origin)
+
+	return err
+}
+
+func (dscp *DSCPInfo) unmarshal(r io.Reader) error {
+	var err error
+
+	if err = read(r, &dscp.OriginalDSCP); err != nil {
+		return err
+	}
+
+	if err = read(r, &dscp.RewrittenDSCP); err != nil {
+		return err
+	}
+
+	var rewrittenFlag uint8
+	if err = read(r, &rewrittenFlag); err != nil {
+		return err
+	}
+	dscp.DSCPRewritten = rewrittenFlag != 0
+
+	// Skip padding byte to align to 4-byte boundary
+	var padding uint8
+	err = read(r, &padding)
+
+	return err
+}
+
+func (eav *ExtAristaVPLSData) unmarshal(r io.Reader, l uint32) error {
+	var err error
+	var nameLen uint32
+
+	// Read instance name length and name
+	if err = read(r, &nameLen); err != nil {
+		return err
+	}
+	
+	nameBuff := make([]byte, nameLen)
+	if _, err = r.Read(nameBuff); err != nil {
+		return err
+	}
+	eav.InstanceName = string(nameBuff)
+
+	// Read padding to align to 4-byte boundary
+	padding := (4 - nameLen%4) % 4
+	if padding > 0 {
+		paddingBuff := make([]byte, padding)
+		if _, err = r.Read(paddingBuff); err != nil {
+			return err
+		}
+	}
+
+	// Read VPLS identifiers
+	if err = read(r, &eav.PseudowireID); err != nil {
+		return err
+	}
+	if err = read(r, &eav.VCID); err != nil {
+		return err
+	}
+	err = read(r, &eav.VCType)
+
+	return err
+}
+
 func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 	var (
 		fs          = new(FlowSample)
@@ -240,6 +433,27 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 			}
 
 			fs.Records["ExtRouter"] = d
+		case SFDataExtAristaBGP:
+			d, err := decodeExtAristaBGPData(r, rTypeLength)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtAristaBGP"] = d
+		case SFDataExtAristaVPLS:
+			d, err := decodeExtAristaVPLSData(r, rTypeLength)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtAristaVPLS"] = d
+		case SFDataExtAristaDSCP:
+			d, err := decodeExtAristaDSCPData(r)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtAristaDSCP"] = d
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}
@@ -285,4 +499,34 @@ func decodeExtRouterData(r io.Reader, l uint32) (*ExtRouterData, error) {
 	}
 
 	return er, nil
+}
+
+func decodeExtAristaBGPData(r io.Reader, l uint32) (*ExtAristaBGPData, error) {
+	var eab = new(ExtAristaBGPData)
+
+	if err := eab.unmarshal(r, l); err != nil {
+		return nil, err
+	}
+
+	return eab, nil
+}
+
+func decodeExtAristaVPLSData(r io.Reader, l uint32) (*ExtAristaVPLSData, error) {
+	var eav = new(ExtAristaVPLSData)
+
+	if err := eav.unmarshal(r, l); err != nil {
+		return nil, err
+	}
+
+	return eav, nil
+}
+
+func decodeExtAristaDSCPData(r io.Reader) (*DSCPInfo, error) {
+	var dscp = new(DSCPInfo)
+
+	if err := dscp.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return dscp, nil
 }

@@ -117,7 +117,8 @@ func (d *SFDecoder) SFDecode() (*SFDatagram, error) {
 
 		switch sfTypeFormat {
 		case DataFlowSample:
-			d, err := decodeFlowSample(d.reader)
+			d, err := e
+			decodeFlowSample(d.reader)
 			if err != nil {
 				return datagram, err
 			}
