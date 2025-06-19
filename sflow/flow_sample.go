@@ -76,6 +76,9 @@ const (
 
 	// SFDataExtAristaVPLS is Arista VPLS extension
 	SFDataExtAristaVPLS = 1014
+
+	// SFDataExtAristaDSCP is Arista DSCP extension
+	SFDataExtAristaDSCP = 1015
 )
 
 // FlowSample represents single flow sample
@@ -327,6 +330,30 @@ func (eab *ExtAristaBGPData) unmarshal(r io.Reader, l uint32) error {
 	return err
 }
 
+func (dscp *DSCPInfo) unmarshal(r io.Reader) error {
+	var err error
+
+	if err = read(r, &dscp.OriginalDSCP); err != nil {
+		return err
+	}
+
+	if err = read(r, &dscp.RewrittenDSCP); err != nil {
+		return err
+	}
+
+	var rewrittenFlag uint8
+	if err = read(r, &rewrittenFlag); err != nil {
+		return err
+	}
+	dscp.DSCPRewritten = rewrittenFlag != 0
+
+	// Skip padding byte to align to 4-byte boundary
+	var padding uint8
+	err = read(r, &padding)
+
+	return err
+}
+
 func (eav *ExtAristaVPLSData) unmarshal(r io.Reader, l uint32) error {
 	var err error
 	var nameLen uint32
@@ -420,6 +447,13 @@ func decodeFlowSample(r io.ReadSeeker) (*FlowSample, error) {
 			}
 
 			fs.Records["ExtAristaVPLS"] = d
+		case SFDataExtAristaDSCP:
+			d, err := decodeExtAristaDSCPData(r)
+			if err != nil {
+				return fs, err
+			}
+
+			fs.Records["ExtAristaDSCP"] = d
 		default:
 			r.Seek(int64(rTypeLength), 1)
 		}
@@ -485,4 +519,14 @@ func decodeExtAristaVPLSData(r io.Reader, l uint32) (*ExtAristaVPLSData, error) 
 	}
 
 	return eav, nil
+}
+
+func decodeExtAristaDSCPData(r io.Reader) (*DSCPInfo, error) {
+	var dscp = new(DSCPInfo)
+
+	if err := dscp.unmarshal(r); err != nil {
+		return nil, err
+	}
+
+	return dscp, nil
 }

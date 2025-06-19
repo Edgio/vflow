@@ -363,6 +363,14 @@ var TestAristaVPLSData = []byte{
 	0x00, 0x00, 0x00, 0x05, // VC Type: 5
 }
 
+// Test data for Arista DSCP extension (simulated)
+var TestAristaDSCPData = []byte{
+	0x2e, // Original DSCP: 46 (EF)
+	0x00, // Rewritten DSCP: 0 (BE)
+	0x01, // DSCP Rewritten: true
+	0x00, // Padding byte
+}
+
 func TestExtAristaBGPDataUnmarshal(t *testing.T) {
 	reader := bytes.NewReader(TestAristaBGPData)
 	bgpData := &ExtAristaBGPData{}
@@ -492,6 +500,57 @@ func TestDecodeExtAristaVPLSData(t *testing.T) {
 	}
 }
 
+func TestDSCPInfoUnmarshal(t *testing.T) {
+	reader := bytes.NewReader(TestAristaDSCPData)
+	dscpInfo := &DSCPInfo{}
+	
+	err := dscpInfo.unmarshal(reader)
+	if err != nil {
+		t.Error("unexpected error unmarshaling DSCP data:", err)
+	}
+	
+	// Verify original DSCP
+	if dscpInfo.OriginalDSCP != 46 {
+		t.Errorf("expected original DSCP 46, got %d", dscpInfo.OriginalDSCP)
+	}
+	
+	// Verify rewritten DSCP
+	if dscpInfo.RewrittenDSCP != 0 {
+		t.Errorf("expected rewritten DSCP 0, got %d", dscpInfo.RewrittenDSCP)
+	}
+	
+	// Verify rewritten flag
+	if !dscpInfo.DSCPRewritten {
+		t.Error("expected DSCP rewritten flag to be true")
+	}
+}
+
+func TestDecodeExtAristaDSCPData(t *testing.T) {
+	reader := bytes.NewReader(TestAristaDSCPData)
+	
+	dscpData, err := decodeExtAristaDSCPData(reader)
+	if err != nil {
+		t.Error("unexpected error decoding DSCP data:", err)
+	}
+	
+	if dscpData == nil {
+		t.Error("expected non-nil DSCP data")
+	}
+	
+	// Verify values
+	if dscpData.OriginalDSCP != 46 {
+		t.Errorf("expected original DSCP 46, got %d", dscpData.OriginalDSCP)
+	}
+	
+	if dscpData.RewrittenDSCP != 0 {
+		t.Errorf("expected rewritten DSCP 0, got %d", dscpData.RewrittenDSCP)
+	}
+	
+	if !dscpData.DSCPRewritten {
+		t.Error("expected DSCP rewritten flag to be true")
+	}
+}
+
 func BenchmarkSFDecode(b *testing.B) {
 	filter := []uint32{DataCounterSample}
 	for i := 0; i < b.N; i++ {
@@ -512,5 +571,12 @@ func BenchmarkExtAristaVPLSDecode(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		reader := bytes.NewReader(TestAristaVPLSData)
 		decodeExtAristaVPLSData(reader, uint32(len(TestAristaVPLSData)))
+	}
+}
+
+func BenchmarkExtAristaDSCPDecode(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		reader := bytes.NewReader(TestAristaDSCPData)
+		decodeExtAristaDSCPData(reader)
 	}
 }
